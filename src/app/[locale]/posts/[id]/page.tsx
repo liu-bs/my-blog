@@ -21,7 +21,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { formatDate, getInitials, splitName } from "@/lib/format";
 import { getCategoryLabel } from "@/lib/category";
 import { estimateReadingTime, stripHtml, stripMarkdown } from "@/lib/markdown";
-import { decodePostId, encodePostId, isSafeImageUrl, postPath } from "@shared";
+import { decodePostId, encodePostId, postPath } from "@shared";
 import {
   getPublicPostServer,
   getNeighborPostsServer,
@@ -276,8 +276,8 @@ export default async function PostDetailPage({
               <AuthorActions postId={post.id} authorId={post.authorId} />
             </header>
 
-            {/* 封面图：先经 isSafeImageUrl 白名单校验，且因 next.config 未配置 remotePatterns 而关闭图片优化 */}
-            {post.coverImage && isSafeImageUrl(post.coverImage) && (
+            {/* 封面图 */}
+            {post.coverImage && (
               <Image
                 src={post.coverImage}
                 alt={post.title}
@@ -285,8 +285,6 @@ export default async function PostDetailPage({
                 height={514}
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 1200px, 1200px"
                 priority
-                referrerPolicy="no-referrer"
-                unoptimized
                 className="mb-10 aspect-21/9 w-full animate-fade-in rounded-2xl object-cover max-md:aspect-16/9"
               />
             )}

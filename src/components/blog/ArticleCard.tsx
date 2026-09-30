@@ -14,7 +14,6 @@ import { formatCount, formatDate } from "@/lib/format";
 import type { Locale } from "@/i18n/config";
 import { CATEGORY_LABEL_KEYS, isKnownCategory } from "@/lib/category";
 import { stripHtml, stripMarkdown } from "@/lib/markdown";
-import { isSafeImageUrl } from "@shared";
 import type { ArticleCardProps } from "@shared";
 
 /**
@@ -39,11 +38,8 @@ export const ArticleCard = memo(function ArticleCard({
 }: ArticleCardProps) {
   /** 当前语言，用于日期本地化格式化 */
   const locale = useLocale() as Locale;
-  /** common 命名空间文案，用于「阅读更多」的兜底文案 */
+  /** common 命名空间文案，用于分类与「阅读更多」的兜底文案 */
   const t = useTranslations("common");
-
-  /** 文章封面地址，渲染前还需经过 isSafeImageUrl 校验 */
-  const coverImage = post.coverImage;
 
   /** 分类展示名：内置分类走 i18n 文案，自定义分类原样展示 */
   const categoryLabel = isKnownCategory(post.category)
@@ -53,23 +49,20 @@ export const ArticleCard = memo(function ArticleCard({
   /** 是否纵向布局，纵向时封面满宽、正文改为上下排布 */
   const isVertical = variant === "vertical";
 
-  /** 封面区块：合法图片地址渲染 next/image，否则降级为 CoverFallback 占位 */
+  /** 封面区块：有封面地址渲染 next/image，否则降级为 CoverFallback 占位 */
   const cover = (
     <div
       className={`relative shrink-0 overflow-hidden rounded-md ${
         isVertical ? "aspect-16/10 w-full" : coverWidth
       }`}
     >
-      {/* 封面地址通过安全校验才渲染真实图片，避免注入白名单外的外链 */}
-      {coverImage && isSafeImageUrl(coverImage) ? (
+      {post.coverImage ? (
         <Image
-          src={coverImage}
+          src={post.coverImage}
           alt={post.title}
           fill
           priority={priority}
           sizes={isVertical ? "(max-width: 768px) 100vw, 400px" : "(max-width: 640px) 100vw, 200px"}
-          referrerPolicy="no-referrer"
-          unoptimized
           className="aspect-16/10 w-full rounded-md object-cover transition-transform duration-[var(--duration-slow)] ease-smooth group-hover:scale-103"
         />
       ) : (

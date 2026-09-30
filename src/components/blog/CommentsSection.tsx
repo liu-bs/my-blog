@@ -1,6 +1,6 @@
 /**
  * @file CommentsSection.tsx
- * @description 文章详情页评论区：评论列表的分页加载、发表 / 编辑 / 删除（含乐观更新与回滚）、未登录引导登录、表单校验与错误提示
+ * @description 文章详情页评论区：评论列表的分页加载、发表 / 编辑 / 删除（发表含乐观更新）、未登录引导登录、表单校验与错误提示
  */
 "use client";
 
@@ -36,6 +36,9 @@ import { buildLoginRedirect } from "@/lib/url";
 
 /** 空评论列表的稳定引用，避免每次渲染产生新数组导致多余的依赖变更 */
 const EMPTY_COMMENTS: Comment[] = [];
+
+/** 乐观列表动作：pending 插入临时评论，confirm 在真实数据进入列表后清除全部临时条目 */
+type OptimisticCommentAction = { type: "pending"; comment: Comment } | { type: "confirm" };
 
 /**
  * CommentsSection 评论区
@@ -88,16 +91,19 @@ export function CommentsSection({ postId, user: ssrUser, postAuthorId }: Comment
   const { user, updatePost, requireAuth } = usePostPageAuth(postId, ssrUser);
 
   /**
-   * 乐观评论列表：以真实列表为基准，发表时把临时评论插到列表最前
-   * @description 乐观值在 transition 结束后自动回落；因此发表成功时必须调用 appendComment 写入真实数据，
-   *              否则临时评论会闪回消失。失败时则不写入，界面自动回到原状。
+   * 乐观评论列表：pending 动作把临时评论插到最前；confirm 动作在真实数据已写入基础列表后
+   * 过滤掉全部临时条目，保证「真实落库」与「乐观清理」交替期间任何渲染都不会出现重复两条。
+   * 乐观值在 transition 结束后自动回落，因此发表失败时无需手动回滚。
    */
-  const [optimisticComments, addOptimisticComment] = useOptimistic<Comment[], Comment>(
+  const [optimisticComments, addOptimisticComment] = useOptimistic<Comment[], OptimisticCommentAction>(
     comments,
-    (current, newComment) => [newComment, ...current],
+    (current, action) =>
+      action.type === "pending"
+        ? [action.comment, ...current]
+        : current.filter((c) => !c.id.startsWith("optimistic-")),
   );
 
-  /** 发表评论请求的过渡状态，用作提交按钮 loading 与禁用 */
+  /** 发表评论请求的过渡状态，用作提交按钮 loading 与禁用；乐观值在其 pending 期间展示 */
   const [isPending, startTransition] = useTransition();
 
   /** 发表框的输入内容 */
@@ -151,7 +157,7 @@ export function CommentsSection({ postId, user: ssrUser, postAuthorId }: Comment
    * 发表评论
    * @description 流程：先做前端校验，未通过则内联提示并中断；通过后交给 requireAuth——
    *              未登录会跳转登录页带回跳地址，已登录则进入 transition：先插入乐观临时评论并清空输入，
-   *              再调用 mutation。成功时用服务端返回的真实评论替换并让文章评论数 +1；失败时写入 createError。
+   *              再调用 mutation。成功时把真实评论写入列表、评论数 +1 并 confirm 清除临时条目；失败时写入 createError
    */
   const submitComment = () => {
     const invalid = validateComment(commentText);
@@ -163,7 +169,7 @@ export function CommentsSection({ postId, user: ssrUser, postAuthorId }: Comment
     const text = commentText.trim();
     requireAuth(() => {
       startTransition(async () => {
-        /** 乐观占位评论：id 用时间戳临时生成，展示名 / 头像取当前用户，成功后会被真实数据替换 */
+        /** 乐观占位评论：id 用 optimistic- 前缀临时生成，confirm 时统一清除 */
         const tempComment: Comment = {
           id: `optimistic-${Date.now()}`,
           postId,
@@ -174,7 +180,7 @@ export function CommentsSection({ postId, user: ssrUser, postAuthorId }: Comment
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        addOptimisticComment(tempComment);
+        addOptimisticComment({ type: "pending", comment: tempComment });
         setCommentText("");
         const data = await createCommentMutation.mutate(
           { content: text },
@@ -187,10 +193,11 @@ export function CommentsSection({ postId, user: ssrUser, postAuthorId }: Comment
           },
         );
 
-        /** 请求成功：写入真实评论并同步文章评论数，使乐观占位平稳过渡为真实条目 */
+        /** 请求成功：真实评论写入列表并同步评论数，再 confirm 清除临时条目避免两条并存 */
         if (data) {
           appendComment(data);
           updatePost((prev) => ({ ...prev, commentsCount: prev.commentsCount + 1 }));
+          addOptimisticComment({ type: "confirm" });
         }
       });
     });

@@ -112,7 +112,7 @@ export function CoverField({
           className="flex-1"
         />
 
-        {/* 预览缩略图：仅在地址合法、防抖已生效且图片未加载失败时出现；referrerPolicy 防止外站借此拿到本站来源信息 */}
+        {/* 预览缩略图：仅在地址合法、防抖已生效且图片未加载失败时出现 */}
         {previewSrc !== "" && !previewFailed && (
           <div className="shrink-0 overflow-hidden rounded-md border border-stroke-strong">
             <Image
@@ -120,8 +120,6 @@ export function CoverField({
               alt={t("coverPreview")}
               width={40}
               height={40}
-              unoptimized
-              referrerPolicy="no-referrer"
               onError={() => setPreviewFailed(true)}
               className="h-10 w-10 object-cover"
             />

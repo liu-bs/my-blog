@@ -15,7 +15,8 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
 
-    remotePatterns: [],
+    // 封面为用户填写的任意外链，写入口已限定 https（isSafeImageUrl），这里放行全部 https 主机交给优化器
+    remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
   experimental: {
     inlineCss: true,
