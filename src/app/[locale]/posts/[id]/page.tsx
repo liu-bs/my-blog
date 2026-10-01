@@ -66,7 +66,10 @@ export async function generateMetadata({
   const metaResult = await getPublicPostServer(id);
   if (!metaResult) {
     await redirectIfRenamed(id, locale);
-    notFound();
+    return {
+      title: tMeta("siteTitle"),
+      robots: { index: false, follow: false },
+    };
   }
   const { post } = metaResult;
   const cleanTitle = stripMarkdown(post.title);

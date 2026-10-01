@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/Button";
 import type { PostActionsProps, PostUserStateData } from "@shared";
 
 interface OptimisticState {
-
   likes: number;
 
   favorites: number;
@@ -23,7 +22,6 @@ interface OptimisticState {
 }
 
 export function PostActions({ user: ssrUser }: PostActionsProps) {
-
   const t = useTranslations("post");
 
   const likeMutation = useToggleLike();
@@ -59,6 +57,8 @@ export function PostActions({ user: ssrUser }: PostActionsProps) {
   const favorited = myState?.favorited ?? false;
 
   const guestCls = !user ? "opacity-60" : "";
+
+  const stateLoading = !!user && myState === null;
 
   const [optimisticState, addOptimistic] = useOptimistic<OptimisticState, Partial<OptimisticState>>(
     { likes: post.likes, favorites: post.favorites ?? 0, liked, favorited },
@@ -116,13 +116,12 @@ export function PostActions({ user: ssrUser }: PostActionsProps) {
 
   return (
     <div className="mt-8 row-md flex-wrap border-t border-b border-stroke py-8">
-
       <Button
         variant={optimisticState.liked ? "primary" : "outline"}
         size="md"
         onClick={toggleLike}
         loading={isLikePending}
-        disabled={isLikePending || isFavPending}
+        disabled={isLikePending || isFavPending || stateLoading}
         aria-pressed={optimisticState.liked}
         title={!user ? t("loginToLike") : undefined}
         className={`rounded-full ${guestCls}`}
@@ -142,7 +141,7 @@ export function PostActions({ user: ssrUser }: PostActionsProps) {
         size="md"
         onClick={toggleFavorite}
         loading={isFavPending}
-        disabled={isLikePending || isFavPending}
+        disabled={isLikePending || isFavPending || stateLoading}
         aria-pressed={optimisticState.favorited}
         title={!user ? t("loginToFavorite") : undefined}
         className={`rounded-full ${guestCls}`}

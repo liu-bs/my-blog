@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, getLocale } from "next-intl/server";
 import { assertLocale } from "@/i18n/locale";
@@ -6,14 +7,12 @@ import "@/app/globals.css";
 import { Navbar } from "@/components/layouts/Navbar";
 import { Footer } from "@/components/layouts/Footer";
 import { Providers } from "@/components/Providers";
-import { RouteTransition } from "@/components/layouts/RouteTransition";
 import { htmlLang, ogLocale, type Locale } from "@/i18n/config";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/config/site";
 import { THEME_INIT_SCRIPT } from "@/app/errorPageShell";
 
 type Props = {
-
   children: React.ReactNode;
 
   params: Promise<{ locale: string }>;
@@ -100,11 +99,9 @@ export default async function LocaleLayout({ children, params }: Props) {
       className="font-sans"
     >
       <body className="antialiased">
-
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
-
             <a
               href="#main-content"
               className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-(--z-skip) focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-page"
@@ -112,10 +109,12 @@ export default async function LocaleLayout({ children, params }: Props) {
               {t("skipToContent")}
             </a>
 
-            <Navbar />
+            <Suspense fallback={null}>
+              <Navbar />
+            </Suspense>
 
             <main id="main-content" className="min-h-[calc(100vh-var(--nav-h))] pb-12">
-              <RouteTransition>{children}</RouteTransition>
+              {children}
             </main>
 
             <Footer />

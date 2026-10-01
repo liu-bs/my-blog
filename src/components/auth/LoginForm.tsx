@@ -27,7 +27,6 @@ import { safeRedirect } from "@/lib/url";
 import { loginSchema } from "@/shared/validation/auth";
 
 interface LoginState {
-
   emailError: string | null;
 
   pwdError: string | null;
@@ -52,7 +51,7 @@ function LoginContent() {
 
   const searchParams = useSearchParams();
 
-  const { refreshMe } = useAuth();
+  const { setMe } = useAuth();
   const router = useRouter();
 
   const redirectRaw = searchParams.get("redirect") || "/";
@@ -96,18 +95,12 @@ function LoginContent() {
         focusFirstInvalid();
         return toLoginState(failed);
       }
-      try {
-        await refreshMe();
-      } catch {
-
-        notify.error(msg("session", "loginFailed"));
-      }
+      setMe(result.data.user);
       notify.success(msg("session", "loggedIn"));
 
       router.replace(safeR);
       return initialState;
     } catch (err) {
-
       const failed = resolveSubmitError(err, loginErrorRules);
       focusFirstInvalid();
       return toLoginState(failed);
@@ -116,7 +109,6 @@ function LoginContent() {
 
   return (
     <div className="auth-card">
-
       <div className="mb-10">
         <h1 className="auth-title">{t("loginTitle")}</h1>
         <p className="auth-subtitle">{t("loginSubtitle")}</p>
@@ -135,7 +127,6 @@ function LoginContent() {
       )}
 
       <form action={formAction} noValidate className="auth-form-stack">
-
         <FormField label={t("email")} required error={formState.emailError ?? undefined}>
           <Input
             id="email"
