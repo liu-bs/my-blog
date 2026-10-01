@@ -1,9 +1,15 @@
+/**
+ * @file feedback.ts
+ * @description 英文文案 - 操作反馈与 Toast 提示：通用错误、增删改结果、点赞/收藏切换、
+ *              会话状态、表单校验模板及实体/字段名映射（供 {entity}/{field} 插值复用）
+ */
 import type feedback from "../zh/feedback";
 
+/**
+ * 操作反馈文案集合
+ */
 const en: typeof feedback = {
-
   common: {
-
     actionFailed: "Action failed. Please try again.",
 
     unknownError: "Something went wrong. Please try again.",
@@ -65,7 +71,6 @@ const en: typeof feedback = {
   },
 
   form: {
-
     requiredInput: "Please enter {field}",
 
     tooShort: "The {field} must be at least {min} characters",

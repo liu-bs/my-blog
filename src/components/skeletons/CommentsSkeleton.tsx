@@ -1,3 +1,7 @@
+/**
+ * @file CommentsSkeleton.tsx
+ * @description 评论区骨架屏：评论输入框与评论卡片占位，文章详情页的评论加载占位；导出 CommentCardSkeleton 供列表复用
+ */
 import { BAR, line } from "@/components/skeletons/primitives";
 
 const TITLE_LINE = line("h-[27px]");
@@ -11,11 +15,9 @@ const BODY_LINE = line("h-[24px]");
 export function CommentCardSkeleton() {
   return (
     <div className="row-md card p-4">
-
       <span className={`${BAR} h-9 w-9 shrink-0 rounded-full`} />
 
       <div className="min-w-0 flex-1">
-
         <div className="mb-1.5 row-md">
           <span className={NAME_LINE}>
             <span className={`${BAR} block h-3.5 w-24 rounded-xs`} />
@@ -41,9 +43,7 @@ export function CommentCardSkeleton() {
 
 export function CommentsSkeleton() {
   return (
-
     <section className="mt-10 mb-12" aria-hidden="true">
-
       <h2 className="mb-6 section-title">
         <span className={TITLE_LINE}>
           <span className={`${BAR} block h-4 w-28 rounded-xs`} />

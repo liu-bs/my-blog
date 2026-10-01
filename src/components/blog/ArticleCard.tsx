@@ -1,3 +1,8 @@
+/**
+ * @file ArticleCard.tsx
+ * @description 文章卡片组件：支持水平/垂直两种布局，展示封面、分类、标题、摘要、标签、作者、日期、浏览/点赞数及自定义操作区；
+ *              通过 memo 避免父级重渲染导致的重复绘制，外层整卡可点击跳转（覆盖式 Link + aria-label）
+ */
 import { memo } from "react";
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
@@ -12,6 +17,11 @@ import { CATEGORY_LABEL_KEYS, isKnownCategory } from "@/lib/category";
 import { stripHtml, stripMarkdown } from "@/lib/markdown";
 import type { ArticleCardProps } from "@shared";
 
+/**
+ * ArticleCard 文章卡片
+ * @description memo 包裹的纯展示组件，数据与交互均由 props 驱动；
+ *              传入 href 时渲染覆盖整卡的链接层实现整卡可点
+ */
 export const ArticleCard = memo(function ArticleCard({
   post,
   href,
@@ -25,17 +35,19 @@ export const ArticleCard = memo(function ArticleCard({
   variant = "horizontal",
   priority = false,
 }: ArticleCardProps) {
-
   const locale = useLocale() as Locale;
 
   const t = useTranslations("common");
 
+  /** 分类展示文案：已知分类走 i18n 词条，未知分类原样展示 */
   const categoryLabel = isKnownCategory(post.category)
     ? t(CATEGORY_LABEL_KEYS[post.category])
     : post.category;
 
+  /** 是否垂直布局（卡片列表页使用，横向卡片用于文章页推荐位） */
   const isVertical = variant === "vertical";
 
+  /** 封面区域：有封面走 next/image 优化器，无封面渲染占位组件 */
   const cover = (
     <div
       className={`relative shrink-0 overflow-hidden rounded-md ${
@@ -57,6 +69,7 @@ export const ArticleCard = memo(function ArticleCard({
     </div>
   );
 
+  /** 卡片主体：标题/摘要渲染前剥离 Markdown 标记与 HTML 标签，防止原文符号泄漏到展示层 */
   const card = isVertical ? (
     <div className="flex h-full flex-col gap-4">
       {cover}
@@ -172,7 +185,7 @@ export const ArticleCard = memo(function ArticleCard({
 
   return (
     <div className={baseClass}>
-
+      {/* 传入 href 时渲染覆盖整卡的透明链接层，使整卡可点且保留子内容交互层级 */}
       {href && (
         <Link
           href={href}

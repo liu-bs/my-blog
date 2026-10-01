@@ -1,3 +1,7 @@
+/**
+ * @file PostsBodySkeleton.tsx
+ * @description 文章列表正文骨架屏：移动端筛选按钮、工具栏与文章卡片列表占位，供 PostsListSkeleton 复用
+ */
 import { BAR, line } from "@/components/skeletons/primitives";
 import { PostSidebarSkeleton } from "@/components/skeletons/PostSidebarSkeleton";
 
@@ -13,11 +17,9 @@ function CardSkeleton() {
   return (
     <div className="card p-6">
       <div className="flex flex-col gap-4 sm:flex-row">
-
         <div className={`${BAR} aspect-16/10 w-full shrink-0 rounded-md sm:aspect-auto sm:w-50`} />
 
         <div className="flex min-w-0 flex-1 flex-col gap-3">
-
           <div className="row-sm">
             <span className={CAT_LINE}>
               <span className={`${BAR} block h-3 w-12 rounded-xs`} />
@@ -72,19 +74,15 @@ function CardSkeleton() {
 
 export function PostsBodySkeleton() {
   return (
-
     <div aria-hidden="true">
-
       <div className="mb-5 flex lg:hidden">
         <span className={`${BAR} h-8 w-24 rounded-md`} />
       </div>
 
       <div className="flex gap-12 max-lg:flex-col">
-
         <PostSidebarSkeleton />
 
         <div className="min-w-0 flex-1">
-
           <div className="mb-6 page-actions">
             <p className="text-(length:--type-xs) leading-normal font-medium text-body">
               <span className={line("h-[21px]")}>

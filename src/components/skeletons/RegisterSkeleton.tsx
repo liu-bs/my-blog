@@ -1,3 +1,7 @@
+/**
+ * @file RegisterSkeleton.tsx
+ * @description 注册页骨架屏：注册表单（姓名/用户名/邮箱/密码字段）占位，Register 页面的加载占位
+ */
 import { BAR, line } from "@/components/skeletons/primitives";
 
 const LABEL_LINE = line("h-[21px]");
@@ -28,9 +32,7 @@ function Field({ width = "w-12", hint = false }: { width?: string; hint?: boolea
 
 export function RegisterSkeleton() {
   return (
-
     <div className="auth-card" aria-hidden="true">
-
       <div className="mb-10">
         <span className="auth-title block">
           <span className={line("h-[30px]")}>

@@ -1,7 +1,13 @@
+/**
+ * @file home.ts
+ * @description 英文文案 - 首页：主视觉区（hero）、最新文章列表及加载失败提示
+ */
 import type { Messages } from "../zh/home";
 
+/**
+ * 首页文案集合
+ */
 const home: Messages = {
-
   heroSection: "Hero",
 
   heroBadge: "Technical writing · Engineering notes",

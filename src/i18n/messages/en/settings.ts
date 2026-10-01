@@ -1,5 +1,12 @@
+/**
+ * @file settings.ts
+ * @description 英文文案 - 账号设置页：个人资料编辑（头像/简介/网站）与修改密码表单及其校验提示
+ */
 import type { Messages } from "../zh/settings";
 
+/**
+ * 设置页文案集合
+ */
 const settings: Messages = {
   title: "Account settings",
   subtitle: "Manage profile, password & security.",

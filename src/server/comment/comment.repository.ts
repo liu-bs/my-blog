@@ -1,13 +1,21 @@
+/**
+ * @file comment.repository.ts
+ * @description 评论数据访问层。负责 Comment 领域模型与 Prisma 行结构的双向映射
+ * （日期转 ISO 字符串），提供按文章分页查询、计数、增删改查及历史评论作者冗余字段的批量同步。
+ */
 import "server-only";
 
 import type { PrismaClient } from "@prisma/client";
 import type { Comment } from "@shared";
 import { getPrisma } from "@server/common/db";
 
+/** 可执行数据库操作的客户端：普通实例或事务客户端 */
 type Tx = PrismaClient | Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0];
 
+/**
+ * Prisma Comment 行结构（userName/userAvatar 为创建时的作者信息快照）
+ */
 type PrismaComment = {
-
   id: string;
 
   postId: string;
@@ -25,6 +33,11 @@ type PrismaComment = {
   updatedAt: Date;
 };
 
+/**
+ * 将 Prisma 评论行映射为 Comment 领域模型（日期转 ISO 字符串，null 归一为 undefined）
+ * @param p Prisma 评论行
+ * @returns Comment 领域模型
+ */
 export function mapToComment(p: PrismaComment): Comment {
   return {
     id: p.id,
@@ -38,6 +51,13 @@ export function mapToComment(p: PrismaComment): Comment {
   };
 }
 
+/**
+ * 按文章查询评论列表，创建时间倒序（同刻以 id 兜底保证稳定排序）
+ * @param postId 文章 id
+ * @param opts.take 返回条数上限
+ * @param opts.skip 跳过条数
+ * @returns 评论列表
+ */
 export async function findCommentsByPostId(
   postId: string,
   opts?: { take?: number; skip?: number },
@@ -52,10 +72,20 @@ export async function findCommentsByPostId(
   return rows.map(mapToComment);
 }
 
+/**
+ * 统计文章评论总数
+ * @param postId 文章 id
+ * @returns 评论总数
+ */
 export async function countComments(postId: string): Promise<number> {
   return getPrisma().comment.count({ where: { postId } });
 }
 
+/**
+ * 创建评论记录
+ * @param comment 待写入的 Comment
+ * @param tx 可选事务客户端
+ */
 export async function createCommentRecord(comment: Comment, tx?: Tx): Promise<void> {
   const client = tx ?? getPrisma();
   await client.comment.create({
@@ -72,18 +102,32 @@ export async function createCommentRecord(comment: Comment, tx?: Tx): Promise<vo
   });
 }
 
+/**
+ * 删除评论记录
+ * @param id 评论 id
+ * @param tx 可选事务客户端
+ */
 export async function deleteCommentRecord(id: string, tx?: Tx): Promise<void> {
   const client = tx ?? getPrisma();
   await client.comment.delete({ where: { id } });
 }
 
+/**
+ * 按 id 查询评论
+ * @param id 评论 id
+ * @returns Comment，不存在时为 null
+ */
 export async function findCommentById(id: string): Promise<Comment | null> {
   const row = await getPrisma().comment.findUnique({ where: { id } });
   return row ? mapToComment(row) : null;
 }
 
+/**
+ * 查询删除评论所需的权限判定信息（评论作者 + 所属文章作者）
+ * @param id 评论 id
+ * @returns 判定信息，评论不存在时为 null
+ */
 export async function findCommentForDelete(id: string): Promise<{
-
   id: string;
 
   postId: string;
@@ -110,6 +154,13 @@ export async function findCommentForDelete(id: string): Promise<{
   };
 }
 
+/**
+ * 更新评论内容
+ * @param id 评论 id
+ * @param data.content 新内容（已净化）
+ * @param data.updatedAt 更新时间（ISO 字符串）
+ * @returns 更新后的 Comment，评论已被并发删除（P2025）时为 null
+ */
 export async function updateCommentRecord(
   id: string,
   data: { content: string; updatedAt: string },
@@ -126,6 +177,13 @@ export async function updateCommentRecord(
   }
 }
 
+/**
+ * 批量同步指定用户全部评论的作者昵称与头像（用户资料变更后调用）
+ * @param userId 评论作者用户 id
+ * @param userName 新昵称
+ * @param userAvatar 新头像，可为 null
+ * @returns 更新的评论条数
+ */
 export async function updateCommentsAuthor(
   userId: string,
   userName: string,

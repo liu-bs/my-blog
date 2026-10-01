@@ -1,5 +1,11 @@
+/**
+ * @file meta.ts
+ * @description 中文文案 - SEO 元数据：站点标题、描述及 Open Graph 图片替代文本
+ */
+/**
+ * 元数据文案集合
+ */
 const meta = {
-
   siteTitle: "工程笔记",
 
   siteDescription: "工程笔记 · 深度思考 · 极致极简",

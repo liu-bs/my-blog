@@ -1,3 +1,7 @@
+/**
+ * @file PostSidebarSkeleton.tsx
+ * @description 文章列表侧边栏骨架屏：分类筛选列表与热门标签占位，供 PostsBodySkeleton 复用
+ */
 import { BAR, line } from "@/components/skeletons/primitives";
 
 const FILTER_LINE = line("h-[22.4px]");
@@ -6,7 +10,6 @@ export function PostSidebarSkeleton() {
   return (
     <aside className="hidden w-65 shrink-0 lg:block">
       <div className="sticky-below-nav content-stack-lg">
-
         <div>
           <h3 className="mb-3 filter-heading">
             <span className={line("h-[19.2px]")}>

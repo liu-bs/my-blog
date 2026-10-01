@@ -4,16 +4,16 @@
 
 ## 技术栈
 
-| 领域 | 选型 |
-| --- | --- |
-| 框架 | Next.js 16（App Router、PPR、cacheComponents、Turbopack） |
-| UI | React 19 + TypeScript + Tailwind CSS v4 |
-| 数据库 | PostgreSQL（Neon Serverless）+ Prisma 6 |
-| 国际化 | next-intl（zh / en） |
-| 认证 | JWT（httpOnly Cookie + tokenVersion 失效机制）+ bcryptjs |
-| 内容渲染 | marked + highlight.js + sanitize-html（白名单清洗） |
-| 校验 | zod（仅 `zod/mini` 子路径，服务端与表单共享） |
-| 其他 | next-themes、sonner、lucide-react |
+| 领域     | 选型                                                      |
+| -------- | --------------------------------------------------------- |
+| 框架     | Next.js 16（App Router、PPR、cacheComponents、Turbopack） |
+| UI       | React 19 + TypeScript + Tailwind CSS v4                   |
+| 数据库   | PostgreSQL（Neon Serverless）+ Prisma 6                   |
+| 国际化   | next-intl（zh / en）                                      |
+| 认证     | JWT（httpOnly Cookie + tokenVersion 失效机制）+ bcryptjs  |
+| 内容渲染 | marked + highlight.js + sanitize-html（白名单清洗）       |
+| 校验     | zod（仅 `zod/mini` 子路径，服务端与表单共享）             |
+| 其他     | next-themes、sonner、lucide-react                         |
 
 ## 功能特性
 
@@ -52,13 +52,13 @@ pnpm db:push                 # 同步 Prisma schema 到数据库
 
 `.env.local` 关键变量（详见 [.env.example](.env.example)）：
 
-| 变量 | 说明 |
-| --- | --- |
-| `DATABASE_URL` | Neon PostgreSQL 连接串（必填） |
-| `JWT_SECRET` | JWT 签名密钥；生产必填且 ≥ 32 字符，本地缺省自动生成随机密钥 |
-| `JWT_EXPIRES_IN` | 访问令牌有效期，默认 `7d` |
-| `BCRYPT_SALT_ROUNDS` | bcrypt 轮数，默认 10 |
-| `NEXT_PUBLIC_BASE_URL` | 站点对外地址，用于 sitemap / OG 绝对链接；生产必填 |
+| 变量                   | 说明                                                         |
+| ---------------------- | ------------------------------------------------------------ |
+| `DATABASE_URL`         | Neon PostgreSQL 连接串（必填）                               |
+| `JWT_SECRET`           | JWT 签名密钥；生产必填且 ≥ 32 字符，本地缺省自动生成随机密钥 |
+| `JWT_EXPIRES_IN`       | 访问令牌有效期，默认 `7d`                                    |
+| `BCRYPT_SALT_ROUNDS`   | bcrypt 轮数，默认 10                                         |
+| `NEXT_PUBLIC_BASE_URL` | 站点对外地址，用于 sitemap / OG 绝对链接；生产必填           |
 
 > 文章搜索依赖 pg_trgm 扩展与两个 GIN 索引，位于 `prisma/migrations/20260929000000_post_search_trgm/migration.sql`。该迁移刻意不写入 `schema.prisma`（Prisma 无法声明 `gin_trgm_ops` 操作符类），请确认已应用；SQL 语句幂等，可重复执行。
 
@@ -78,16 +78,16 @@ pnpm build:clean  # 清空 .next 后构建（Turbopack 增量构建可能复用�
 
 ## 常用脚本
 
-| 命令 | 作用 |
-| --- | --- |
-| `pnpm dev:free-port` | 仅清理占用的开发端口，不启动服务器 |
-| `pnpm typecheck` | TypeScript 严格模式类型检查 |
-| `pnpm lint` / `pnpm lint:fix` | ESLint 检查 / 自动修复 |
-| `pnpm format` / `pnpm format:check` | Prettier 格式化 / 校验 |
-| `pnpm check` | typecheck + lint + format:check 全量检查 |
-| `pnpm analyze` | 构建并输出 bundle 分析报告 |
-| `pnpm db:push` / `pnpm db:generate` | 同步数据库 schema / 生成 Prisma Client |
-| `pnpm strip-comments` / `pnpm strip-comments:check` | 剥离代码注释 / 校验是否已剥离 |
+| 命令                                                | 作用                                     |
+| --------------------------------------------------- | ---------------------------------------- |
+| `pnpm dev:free-port`                                | 仅清理占用的开发端口，不启动服务器       |
+| `pnpm typecheck`                                    | TypeScript 严格模式类型检查              |
+| `pnpm lint` / `pnpm lint:fix`                       | ESLint 检查 / 自动修复                   |
+| `pnpm format` / `pnpm format:check`                 | Prettier 格式化 / 校验                   |
+| `pnpm check`                                        | typecheck + lint + format:check 全量检查 |
+| `pnpm analyze`                                      | 构建并输出 bundle 分析报告               |
+| `pnpm db:push` / `pnpm db:generate`                 | 同步数据库 schema / 生成 Prisma Client   |
+| `pnpm strip-comments` / `pnpm strip-comments:check` | 剥离代码注释 / 校验是否已剥离            |
 
 ## 架构概览
 

@@ -1,3 +1,7 @@
+/**
+ * @file PostsListSkeleton.tsx
+ * @description 文章列表页骨架屏（页头标题/副标题 + 正文卡片列表），用作 /posts 页面的加载占位
+ */
 import { Container } from "@/components/ui/Container";
 import { BAR, PAGE_SUBTITLE_LINE, PAGE_TITLE_LINE } from "@/components/skeletons/primitives";
 import { PostsBodySkeleton } from "@/components/skeletons/PostsBodySkeleton";
@@ -5,9 +9,7 @@ import { PostsBodySkeleton } from "@/components/skeletons/PostsBodySkeleton";
 export function PostsListSkeleton() {
   return (
     <Container className="page-section">
-
       <div aria-hidden="true">
-
         <header className="page-header">
           <div>
             <span className="block page-title max-md:page-title-mobile">

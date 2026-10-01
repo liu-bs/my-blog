@@ -1,3 +1,9 @@
+/**
+ * @file layout.tsx
+ * @description 多语言根布局：校验 locale、注入 next-intl 国际化消息与全站 Providers，
+ *              渲染 html/body、Navbar（Suspense 包裹以避免 usePathname 中止预渲染）、Footer；
+ *              同时定义全站级 SEO 元数据（canonical/hreflang/OG/Twitter）与视口配置
+ */
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { NextIntlClientProvider } from "next-intl";
@@ -18,10 +24,16 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
+/** 预生成所有 locale 的静态参数，支撑 PPR/SSG */
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+/**
+ * 生成全站基础元数据
+ * @param params 路由参数，含 locale
+ * @returns 站点标题/描述、canonical 与各语言 hreflang 互链、OG/Twitter 卡片配置
+ */
 export async function generateMetadata({
   params,
 }: {
@@ -78,14 +90,23 @@ export async function generateMetadata({
   };
 }
 
+/** 移动端视口配置：宽度跟随设备、禁止初始缩放 */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
 };
 
+/**
+ * 多语言根布局组件
+ * @param children 子路由内容
+ * @param params 路由参数，含 locale
+ * @returns 完整 html 骨架：主题防闪烁脚本、intl Provider、全站 Providers、
+ *          无障碍跳转链接、Suspense 包裹的 Navbar 与 Footer
+ */
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
 
+  // locale 非法时直接抛错，交由错误边界/404 处理
   assertLocale(locale);
 
   const messages = await getMessages();
@@ -99,6 +120,7 @@ export default async function LocaleLayout({ children, params }: Props) {
       className="font-sans"
     >
       <body className="antialiased">
+        {/* 主题防闪烁脚本：首帧渲染前根据偏好设置 dark 类 */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
@@ -109,6 +131,7 @@ export default async function LocaleLayout({ children, params }: Props) {
               {t("skipToContent")}
             </a>
 
+            {/* Navbar 内部使用 usePathname，置于 Suspense 中避免中止静态预渲染 */}
             <Suspense fallback={null}>
               <Navbar />
             </Suspense>

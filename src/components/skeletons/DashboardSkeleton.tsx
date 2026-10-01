@@ -1,12 +1,14 @@
+/**
+ * @file DashboardSkeleton.tsx
+ * @description 仪表盘页骨架屏：页头与表单区块占位，Dashboard 页面的加载占位，也被 AuthGate 的认证加载态复用
+ */
 import { Container } from "@/components/ui/Container";
 import { BAR, PAGE_SUBTITLE_LINE, PAGE_TITLE_LINE } from "@/components/skeletons/primitives";
 
 export function DashboardSkeleton() {
   return (
     <Container className="page-section">
-
       <div aria-hidden="true">
-
         <header className="page-header">
           <div>
             <span className="block page-title max-md:page-title-mobile">

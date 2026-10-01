@@ -1,5 +1,11 @@
+/**
+ * @file post.ts
+ * @description 中文文案 - 文章详情页：阅读信息、目录、点赞/收藏、评论交互及上下篇导航
+ */
+/**
+ * 文章详情页文案集合
+ */
 const post = {
-
   readingTime: "约 {minutes} 分钟",
 
   tocLabel: "文章目录",

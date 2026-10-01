@@ -1,7 +1,13 @@
+/**
+ * @file posts.ts
+ * @description 英文文案 - 文章列表页：标题、分类/标签筛选、搜索、分页及空态/加载失败提示
+ */
 import type { Messages } from "../zh/posts";
 
+/**
+ * 文章列表页文案集合
+ */
 const posts: Messages = {
-
   title: "All posts",
   subtitle: "Browse all posts — filter by category or tag.",
 

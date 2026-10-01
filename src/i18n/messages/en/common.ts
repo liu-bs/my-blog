@@ -1,7 +1,13 @@
+/**
+ * @file common.ts
+ * @description 英文文案 - 通用词条：全局复用的操作按钮、状态提示及分类名映射，供各页面共享
+ */
 import type { Messages } from "../zh/common";
 
+/**
+ * 通用文案集合
+ */
 const common: Messages = {
-
   close: "Close",
 
   backToTop: "Back to top",

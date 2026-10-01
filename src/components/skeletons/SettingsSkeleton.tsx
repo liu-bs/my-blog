@@ -1,3 +1,7 @@
+/**
+ * @file SettingsSkeleton.tsx
+ * @description 个人设置页骨架屏：页头、分段 Tab、头像上传与表单字段占位，Settings 页面的加载占位
+ */
 import { Container } from "@/components/ui/Container";
 import { BAR, PAGE_SUBTITLE_LINE, PAGE_TITLE_LINE } from "@/components/skeletons/primitives";
 
@@ -34,9 +38,7 @@ function Field({ labelW = "w-14", hintW }: { labelW?: string; hintW?: string }) 
 export function SettingsSkeleton() {
   return (
     <Container className="page-section">
-
       <div aria-hidden="true">
-
         <header className="page-header">
           <div>
             <span className="block page-title max-md:page-title-mobile">
@@ -63,7 +65,6 @@ export function SettingsSkeleton() {
         </div>
 
         <div className="form-stack">
-
           <div className="flex items-center gap-8">
             <span className={`${BAR} h-10 w-10 shrink-0 rounded-full`} />
             <div className="min-w-0 flex-1">

@@ -1,3 +1,8 @@
+/**
+ * @file LanguageToggle.tsx
+ * @description 语言切换（中文/英文）：useLocaleSwitch 在当前路径（保留查询参数）上切换 locale，
+ *              经 useTransition 软导航；导出 glyph 与 hook 供 MobileMenu 复用
+ */
 "use client";
 
 import { useTransition } from "react";
@@ -5,6 +10,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { type Locale } from "@/i18n/config";
 
+/** 各语言的展示文案 */
 export const LOCALE_LABELS: Record<Locale, string> = { zh: "中文", en: "English" };
 
 const GLYPH_PROPS = {
@@ -20,6 +26,7 @@ const GLYPH_PROPS = {
   "aria-hidden": true,
 } as const;
 
+/** 语言 glyph 图标 */
 function WenGlyph() {
   return (
     <svg {...GLYPH_PROPS}>
@@ -31,6 +38,7 @@ function WenGlyph() {
   );
 }
 
+/** 语言 glyph 图标 */
 function AGlyph() {
   return (
     <svg {...GLYPH_PROPS}>
@@ -40,19 +48,31 @@ function AGlyph() {
   );
 }
 
+/**
+ * 按当前语言渲染对应 glyph 图标
+ */
 export function LocaleGlyph({ locale }: { locale: Locale }) {
   return locale === "zh" ? <WenGlyph /> : <AGlyph />;
 }
 
+/**
+ * 语言切换 Hook：提供当前/下一语言、切换中状态与切换方法
+ * @returns locale 当前语言、next 待切换语言、isPending 切换中、switchTo 切换方法
+ */
 export function useLocaleSwitch() {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
 
+  /** 切换中的 transition 标记，期间禁用切换按钮 */
   const [isPending, startTransition] = useTransition();
 
+  /** 待切换的目标语言 */
   const next: Locale = locale === "zh" ? "en" : "zh";
 
+  /**
+   * 切换语言：在当前路径上 replace 并携带原查询参数，i18n 路由按目标 locale 生成前缀
+   */
   const switchTo = (target: Locale) => {
     if (isPending || target === locale) return;
 
@@ -65,6 +85,9 @@ export function useLocaleSwitch() {
   return { locale, next, isPending, switchTo };
 }
 
+/**
+ * LanguageToggle 语言切换按钮（桌面端，展示当前语言标识）
+ */
 export function LanguageToggle() {
   const t = useTranslations("nav");
   const { locale, next, isPending, switchTo } = useLocaleSwitch();

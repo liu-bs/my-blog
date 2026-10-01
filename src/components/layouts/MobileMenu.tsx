@@ -1,3 +1,9 @@
+/**
+ * @file MobileMenu.tsx
+ * @description 移动端抽屉菜单：汉堡按钮 + Portal 渲染遮罩与面板（挂载后才渲染避免 SSR 报错）；
+ *              含主导航、登录后的用户菜单项、主题/语言切换、退出登录；
+ *              打开时锁定滚动并把焦点移入面板、Tab 循环焦点陷阱，关闭后焦点归还汉堡按钮；路由高亮基于 usePathname
+ */
 "use client";
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
@@ -16,10 +22,15 @@ import { ThemeGlyph, useThemeMode } from "./ThemeToggle";
 import { LocaleGlyph, LOCALE_LABELS, useLocaleSwitch } from "./LanguageToggle";
 import { userMenuItems } from "./UserMenu";
 
+/** 导航项图标映射 */
 const NAV_ICONS = { home: Home, posts: FileText } as const;
 
+/** 行内图标统一样式 */
 const ROW_ICON = { size: 18, strokeWidth: 2.25, className: "h-4.5 w-4.5 shrink-0" } as const;
 
+/**
+ * MobileMenu 移动端抽屉菜单
+ */
 export function MobileMenu() {
   const pathname = usePathname();
   const t = useTranslations("nav");
@@ -27,36 +38,50 @@ export function MobileMenu() {
   const { isDark, setDark } = useThemeMode();
   const { locale, next, isPending, switchTo } = useLocaleSwitch();
 
+  /** 抽屉展开状态 */
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  /** 是否已完成客户端挂载（Portal 仅挂载后渲染） */
   const [mounted, setMounted] = useState(false);
 
+  /** 抽屉面板引用：焦点管理（打开时移入、Tab 陷阱） */
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
+  /** 汉堡按钮引用：关闭后焦点归还 */
   const toggleRef = useRef<HTMLButtonElement>(null);
 
+  /** 上一帧展开状态：仅在"开→关"时归还焦点 */
   const wasOpenRef = useRef(false);
 
+  /** 是否已登录 */
   const isLoggedIn = !!user;
 
+  /** 用户显示名 */
   const displayName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim();
 
+  /** 头像兜底首字母 */
   const initials = getInitials(user?.firstName ?? "", user?.lastName ?? "");
 
+  /** 关闭抽屉 */
   const close = () => setMobileOpen(false);
 
+  /** 退出登录：清理登录态后关闭抽屉并跳转 */
   const handleLogout = useLogoutRedirect(close);
 
+  /** 当前路由是否命中导航项 */
   const isActive = (href: string) => isRouteActive(pathname, href);
 
+  /** 挂载后才启用 Portal */
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  /** 外点/Escape 关闭，并锁定背景滚动 */
   useDismissable(mobileOpen, close, [mobileMenuRef, toggleRef], {
     lockScroll: true,
   });
 
+  /** 焦点管理：打开时焦点移入面板，关闭时归还汉堡按钮 */
   useEffect(() => {
     if (mobileOpen) {
       mobileMenuRef.current?.focus();
@@ -66,6 +91,7 @@ export function MobileMenu() {
     wasOpenRef.current = mobileOpen;
   }, [mobileOpen]);
 
+  /** 焦点陷阱：Tab 在面板内首尾循环，阻止焦点逃逸到背景内容 */
   const handleTrap = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== "Tab" || !mobileOpen) return;
     const root = mobileMenuRef.current;
@@ -88,7 +114,6 @@ export function MobileMenu() {
 
   return (
     <>
-
       <button
         ref={toggleRef}
         onClick={() => setMobileOpen((v) => !v)}
@@ -127,7 +152,6 @@ export function MobileMenu() {
                 : "invisible -translate-y-1 opacity-0"
             }`}
           >
-
             {isLoggedIn && (
               <Link href="/profile" onClick={close} className="sheet-identity">
                 <Avatar
@@ -200,7 +224,6 @@ export function MobileMenu() {
             )}
 
             <div className="sheet-group">
-
               <button onClick={() => setDark(!isDark)} className="sheet-item-sub">
                 <ThemeGlyph isDark={isDark} />
                 {t("theme")}

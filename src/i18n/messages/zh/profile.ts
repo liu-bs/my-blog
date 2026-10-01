@@ -1,5 +1,11 @@
+/**
+ * @file profile.ts
+ * @description 中文文案 - 个人主页：认证标识、统计数据、文章/草稿/收藏标签页及空态提示
+ */
+/**
+ * 个人主页文案集合
+ */
 const profile = {
-
   verified: "已认证",
 
   noBio: "暂无简介",

@@ -1,5 +1,11 @@
+/**
+ * @file home.ts
+ * @description 中文文案 - 首页：主视觉区（hero）、最新文章列表及加载失败提示
+ */
+/**
+ * 首页文案集合
+ */
 const home = {
-
   heroSection: "首页主视觉",
 
   heroBadge: "技术写作 · 工程笔记",

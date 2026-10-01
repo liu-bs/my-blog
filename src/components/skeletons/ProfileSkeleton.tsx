@@ -1,3 +1,7 @@
+/**
+ * @file ProfileSkeleton.tsx
+ * @description 个人主页骨架屏：左侧个人资料卡（头像/统计/按钮）与右侧文章 Tab 列表占位，Profile 页面的加载占位
+ */
 import { Container } from "@/components/ui/Container";
 import { BAR, line } from "@/components/skeletons/primitives";
 
@@ -32,7 +36,6 @@ function CardSkeleton() {
   return (
     <div className="card p-6">
       <div className="flex flex-col gap-4 sm:flex-row">
-
         <div className={`${BAR} aspect-16/10 w-full shrink-0 rounded-md sm:aspect-auto sm:w-50`} />
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <span className={CAT_LINE}>
@@ -63,16 +66,13 @@ function CardSkeleton() {
 export function ProfileSkeleton() {
   return (
     <Container className="page-section">
-
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-[300px_1fr]" aria-hidden="true">
         <aside>
           <div className="sticky-below-nav">
             <section className="overflow-hidden card shadow-(--shadow-sm)">
-
               <div className="h-24 w-full profile-cover-band" />
 
               <div className="px-6 pb-7">
-
                 <div className="-mt-5">
                   <span className={`${BAR} block h-14 w-14 rounded-full border-4 border-card-bg`} />
                 </div>
@@ -127,7 +127,6 @@ export function ProfileSkeleton() {
         </aside>
 
         <div className="min-w-0">
-
           <div className="segmented">
             <span className="segmented-item segmented-item-on">
               <span className={`${BAR} block h-[21px] w-13 rounded-xs`} />

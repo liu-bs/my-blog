@@ -1,3 +1,7 @@
+/**
+ * @file LoginSkeleton.tsx
+ * @description 登录页骨架屏：登录表单（邮箱/密码字段与提交按钮）占位，Login 页面的加载占位
+ */
 import { BAR, line } from "@/components/skeletons/primitives";
 
 const LABEL_LINE = line("h-[21px]");
@@ -18,9 +22,7 @@ function Field({ width = "w-12" }: { width?: string }) {
 
 export function LoginSkeleton() {
   return (
-
     <div className="auth-card" aria-hidden="true">
-
       <div className="mb-10">
         <span className="auth-title block">
           <span className={line("h-[30px]")}>

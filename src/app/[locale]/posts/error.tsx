@@ -1,3 +1,7 @@
+/**
+ * @file error.tsx
+ * @description 文章列表段错误边界：列表页渲染/数据异常时展示本地化错误空态，提供返回列表页入口
+ */
 "use client";
 
 import { Search } from "lucide-react";

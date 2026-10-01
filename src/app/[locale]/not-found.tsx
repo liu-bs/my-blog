@@ -1,3 +1,8 @@
+/**
+ * @file not-found.tsx
+ * @description locale 段 404 页面：路由未匹配或页面调用 notFound() 时渲染，
+ *              使用 next-intl 本地化文案，提供返回首页与浏览文章入口
+ */
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";

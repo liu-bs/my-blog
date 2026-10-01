@@ -1,7 +1,13 @@
+/**
+ * @file feedback.ts
+ * @description 中文文案 - 操作反馈与 Toast 提示：通用错误、增删改结果、点赞/收藏切换、
+ *              会话状态、表单校验模板及实体/字段名映射（供 {entity}/{field} 插值复用）
+ */
+/**
+ * 操作反馈文案集合
+ */
 const feedback = {
-
   common: {
-
     actionFailed: "操作失败，请稍后重试",
 
     unknownError: "系统异常，请稍后重试",
@@ -63,7 +69,6 @@ const feedback = {
   },
 
   form: {
-
     requiredInput: "请输入{field}",
 
     tooShort: "{field}至少 {min} 个字符",

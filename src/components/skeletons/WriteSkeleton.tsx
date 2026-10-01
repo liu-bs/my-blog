@@ -1,3 +1,7 @@
+/**
+ * @file WriteSkeleton.tsx
+ * @description 写作/编辑页骨架屏：标题输入、Markdown 编辑与预览双栏（移动端单栏）及元信息表单占位，Write 页面的加载占位
+ */
 import { Container } from "@/components/ui/Container";
 import { BAR, line, PAGE_TITLE_LINE } from "@/components/skeletons/primitives";
 
@@ -88,9 +92,7 @@ function Field({
 export function WriteSkeleton() {
   return (
     <Container className="page-section">
-
       <div aria-hidden="true">
-
         <header className="page-header page-actions">
           <span className="block page-title max-md:page-title-mobile">
             <span className={PAGE_TITLE_LINE}>
@@ -109,13 +111,11 @@ export function WriteSkeleton() {
         </header>
 
         <div className="form-stack">
-
           <div>
             <span className={`${BAR} block h-9 w-full rounded-md`} />
           </div>
 
           <div>
-
             <div className="hidden grid-cols-2 gap-4 lg:grid">
               <EditorPane />
               <PreviewPane />

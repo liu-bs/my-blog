@@ -1,3 +1,10 @@
+/**
+ * @file markdown.service.ts
+ * @description 服务端 markdown 渲染服务。marked + marked-highlight 渲染（按需注册
+ * highlight.js 语言子集以控制包体），标题 slug 化注入 id 供 TOC 锚点跳转；
+ * 输出经 sanitize-html 白名单净化：外链强制 target=_blank + rel=noopener noreferrer nofollow，
+ * 白名单外的标签一律转义而非删除（disallowedTagsMode: escape）。
+ */
 import "server-only";
 
 import { Marked } from "marked";
@@ -25,6 +32,7 @@ import {
 } from "@/lib/markdown";
 import sanitizeHtml from "sanitize-html";
 
+/** 按需注册的 highlight.js 语言子集（键为语言名），避免引入全量语言包 */
 const LANGUAGE_MODULES: Record<string, Parameters<typeof hljs.registerLanguage>[1]> = {
   javascript,
 
@@ -66,6 +74,11 @@ const marked = new Marked(
 
 marked.setOptions(MARKED_OPTIONS);
 
+/**
+ * 将标题文本转为 TOC 锚点 slug：小写、空白转连字符、去除字母/数字外的字符、合并连续连字符
+ * @param text 标题纯文本
+ * @returns slug，纯符号标题返回空串
+ */
 function slugifyHeading(text: string): string {
   return text
     .trim()
@@ -76,6 +89,7 @@ function slugifyHeading(text: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+// 后处理钩子：为 h2/h3 注入 id（重复标题追加序号保证唯一），供目录锚点跳转
 marked.use({
   hooks: {
     postprocess(html) {
@@ -96,11 +110,13 @@ marked.use({
   },
 });
 
+/**
+ * sanitize-html 白名单配置
+ * 仅放行安全标签/属性/协议；a 标签外链强制新窗口打开并带 noopener noreferrer nofollow
+ */
 const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
-
   allowedTags: [...ALLOWED_TAGS],
   allowedAttributes: {
-
     "*": ["class", "id"],
 
     a: ["href", "title", "target", "rel"],
@@ -124,7 +140,6 @@ const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
     img: ["http", "https", "data"],
   },
   transformTags: {
-
     a: (tagName, attribs) => {
       if (attribs.href && !attribs.href.startsWith("#")) {
         return {
@@ -143,6 +158,12 @@ const SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   disallowedTagsMode: "escape",
 };
 
+/**
+ * 将 markdown 渲染为安全的 HTML
+ * 流程：marked 解析（含代码高亮与标题锚点注入）→ sanitize-html 白名单净化
+ * @param markdown markdown 原文
+ * @returns 净化后的 HTML，空入参返回空串
+ */
 export function renderMarkdown(markdown: string): string {
   if (!markdown) return "";
 

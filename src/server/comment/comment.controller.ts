@@ -1,5 +1,11 @@
 "use server";
 
+/**
+ * @file comment.controller.ts
+ * @description 评论模块 Server Action 控制器（"use server" 边界）。统一经 runAction 包装并
+ * 按 IP 限流（创建 10 次/5 分钟，编辑/删除 30 次/分钟），写操作成功后对所属文章做
+ * 小范围缓存失效与多语言页面 revalidate。
+ */
 import {
   runAction,
   requireAuthPayload,
@@ -13,6 +19,13 @@ import { invalidatePostCache, revalidatePostPathAllLocales } from "@server/blog/
 import { NotFoundError } from "@server/common/errors";
 import type { Comment, CreateCommentDto } from "@shared";
 
+/**
+ * 创建评论 Server Action，需登录；IP 限流 10 次/5 分钟
+ * 成功后失效该文章缓存并 revalidate 各语言文章页
+ * @param postId 文章 id
+ * @param input 评论表单数据
+ * @returns ActionResult，成功携带新评论
+ */
 export async function createCommentAction(
   postId: string,
   input: CreateCommentDto,
@@ -38,6 +51,12 @@ export async function createCommentAction(
   });
 }
 
+/**
+ * 编辑评论 Server Action，仅评论作者可改；IP 限流 30 次/分钟
+ * @param commentId 评论 id
+ * @param input 评论表单数据（复用创建 schema 校验）
+ * @returns ActionResult，成功携带更新后的评论
+ */
 export async function updateCommentAction(
   commentId: string,
   input: CreateCommentDto,
@@ -60,6 +79,12 @@ export async function updateCommentAction(
   });
 }
 
+/**
+ * 删除评论 Server Action，评论作者或文章作者可删；IP 限流 30 次/分钟
+ * 成功后按被删评论所属文章失效缓存并 revalidate 各语言文章页
+ * @param commentId 评论 id
+ * @returns ActionResult，data 恒为 null
+ */
 export async function deleteCommentAction(commentId: string): Promise<ActionResult<null>> {
   return runAction("Comment", async ({ authPayload }) => {
     await ensureNotRateLimited(

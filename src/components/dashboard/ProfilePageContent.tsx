@@ -1,3 +1,8 @@
+/**
+ * @file ProfilePageContent.tsx
+ * @description 个人中心页面主体（服务端组件）：左侧作者信息卡（头像、认证标识、简介、社交链接、文章/获赞/浏览统计、写作与设置入口），
+ *              右侧 ProfileTabs 展示已发布/收藏/草稿三个文章列表；数据由服务端整页注入
+ */
 import { MapPin, Globe, Calendar, Users, Check, PenLine, UserPen } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -31,8 +36,18 @@ function LinkedinIcon() {
   );
 }
 
+/** 元信息行内图标统一样式 */
 const META_ICON = "size-3.5 text-faint";
 
+/**
+ * ProfilePageContent 个人中心主体
+ * @param user 当前登录用户（含统计与社交信息）
+ * @param published 已发布文章列表
+ * @param favorites 收藏文章列表
+ * @param drafts 草稿列表
+ * @param locale 当前语言
+ * @param t 服务端传入的翻译函数
+ */
 export function ProfilePageContent({
   user,
   published,
@@ -41,29 +56,35 @@ export function ProfilePageContent({
   locale,
   t,
 }: {
-
+  /** 当前登录用户 */
   user: User;
 
+  /** 已发布文章列表 */
   published: Post[];
 
+  /** 收藏文章列表 */
   favorites: Post[];
 
+  /** 草稿列表 */
   drafts: Post[];
 
+  /** 当前语言 */
   locale: Locale;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   t: (key: any, values?: any) => string;
 }) {
-
+  /** 用户名首字母缩写，头像兜底 */
   const userInitials = getInitials(user.firstName, user.lastName);
 
+  /** 统计卡数据：文章数/获赞/总浏览 */
   const stats = [
     { label: t("statsArticles"), value: formatCount(user.stats?.articles ?? 0) },
     { label: t("statsLikes"), value: formatCount(user.stats?.likes ?? 0) },
     { label: t("statsViews"), value: formatCount(user.stats?.views ?? 0) },
   ];
 
+  /** 社交链接归一化：手写 handle 补全为完整 URL，已是 http 开头则原样使用 */
   const socialTwitter = user.social?.twitter
     ? user.social.twitter.startsWith("http")
       ? user.social.twitter
@@ -82,19 +103,16 @@ export function ProfilePageContent({
       : `https://linkedin.com/in/${user.social.linkedin}`
     : undefined;
 
+  /** 是否配置了任一社交链接 */
   const hasSocial = !!(socialTwitter || socialGithub || socialLinkedin);
 
   return (
-
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr] lg:gap-12">
       <aside className="animate-fade-in">
-
         <div className="sticky-below-nav max-lg:static">
           <section className="overflow-hidden card shadow-(--shadow-sm)">
-
             <div className="h-24 w-full profile-cover-band" />
             <div className="px-6 pb-7">
-
               <div className="-mt-5">
                 <Avatar
                   size="lg"
@@ -147,7 +165,6 @@ export function ProfilePageContent({
                   </span>
                 )}
                 {user.website && (
-
                   <a
                     href={
                       user.website.startsWith("http") ? user.website : `https://${user.website}`

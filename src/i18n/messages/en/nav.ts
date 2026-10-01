@@ -1,7 +1,13 @@
+/**
+ * @file nav.ts
+ * @description 英文文案 - 顶部导航栏：品牌名、主导航链接、用户菜单、主题/语言切换及无障碍标签
+ */
 import type { Messages } from "../zh/nav";
 
+/**
+ * 导航栏文案集合
+ */
 const nav: Messages = {
-
   brand: "Engineering Notes",
   home: "Home",
   posts: "Posts",

@@ -1,3 +1,8 @@
+/**
+ * @file global-error.tsx
+ * @description 根级错误兜底页（替换整个 html/body 渲染），仅在 layout 之外发生的严重错误时触发；
+ *              自带主题初始化脚本与内联样式，按路径前缀 /en 区分中英文文案，支持点击重试恢复
+ */
 "use client";
 
 import { useEffect } from "react";
@@ -27,7 +32,6 @@ export default function GlobalError({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
-
   useEffect(() => {
     console.error(error);
   }, [error]);

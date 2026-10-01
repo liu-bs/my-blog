@@ -1,7 +1,13 @@
+/**
+ * @file write.ts
+ * @description 英文文案 - 文章编辑器：新建/编辑标题、Markdown 工具栏、标签/封面/摘要表单及离开确认
+ */
 import type { Messages } from "../zh/write";
 
+/**
+ * 文章编辑器文案集合
+ */
 const write: Messages = {
-
   editTitle: "Edit post",
 
   createTitle: "New post",

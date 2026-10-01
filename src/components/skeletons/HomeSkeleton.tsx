@@ -1,3 +1,7 @@
+/**
+ * @file HomeSkeleton.tsx
+ * @description 首页骨架屏：Hero 区（含代码窗口装饰）与最新文章卡片网格占位，Home 页面的加载占位
+ */
 import { Container } from "@/components/ui/Container";
 import { BAR, line } from "@/components/skeletons/primitives";
 
@@ -32,11 +36,9 @@ function HomeCardSkeleton() {
   return (
     <div className="card p-5">
       <div className="flex h-full flex-col gap-4">
-
         <div className={`${BAR} aspect-16/10 w-full shrink-0 rounded-md`} />
 
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-
           <div className="row-sm">
             <span className={CAT_LINE}>
               <span className={`${BAR} block h-3 w-16 rounded-xs`} />
@@ -69,14 +71,11 @@ function HomeCardSkeleton() {
 
 export function HomeSkeleton() {
   return (
-
     <div aria-hidden="true">
-
       <section className="hero-section">
         <Container>
           <div className="grid grid-cols-1 items-center gap-(--space-10) max-lg:gap-10 lg:grid-cols-[1fr_480px]">
             <div className="max-w-152 max-lg:max-w-none">
-
               <div className="m-0 mb-8 row-sm flex">
                 <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full hero-dot" />
                 <span className={HERO_KICKER_LINE}>
@@ -139,7 +138,6 @@ export function HomeSkeleton() {
         <Container>
           <div className="page-header flex items-end justify-between gap-4">
             <div>
-
               <h2 className="section-title">
                 <span className={TITLE_LINE}>
                   <span className={`${BAR} block h-4 w-28 rounded-xs`} />

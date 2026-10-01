@@ -1,5 +1,11 @@
+/**
+ * @file write.ts
+ * @description 中文文案 - 文章编辑器：新建/编辑标题、Markdown 工具栏、标签/封面/摘要表单及离开确认
+ */
+/**
+ * 文章编辑器文案集合
+ */
 const write = {
-
   editTitle: "编辑文章",
 
   createTitle: "新建文章",

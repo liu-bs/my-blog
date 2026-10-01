@@ -1,3 +1,7 @@
+/**
+ * @file error.tsx
+ * @description 文章详情段错误边界：详情页渲染/数据异常时展示本地化错误空态，提供返回列表页入口
+ */
 "use client";
 
 import { AlertCircle } from "lucide-react";

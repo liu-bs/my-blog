@@ -1,3 +1,9 @@
+/**
+ * @file page.tsx
+ * @description 文章列表页（Server Component）：支持分类/标签/搜索词/页码四类查询参数，
+ *              数据走 'use cache' 缓存函数并包 withDbRetry 容忍数据库冷启动；
+ *              页码越界时 redirect 到最后一页，加载失败降级为错误空态，含侧栏筛选与分页导航
+ */
 import { Container } from "@/components/ui/Container";
 import type { Metadata } from "next";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
@@ -23,6 +29,11 @@ import { PostsSearchInput } from "@/components/blog/PostsSearchInput";
 import { buildPostsUrl } from "@/lib/buildPostsUrl";
 import { postPath } from "@shared";
 
+/**
+ * 生成列表页元数据
+ * @param params 路由参数，含 locale
+ * @returns 标题/描述、canonical 与各语言 hreflang 互链（固定指向不带筛选参数的 /posts）
+ */
 export async function generateMetadata({
   params,
 }: {
@@ -46,6 +57,12 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * 文章列表页组件
+ * @param params 路由参数，含 locale
+ * @param searchParams 查询参数：category/tag/q/page
+ * @returns 列表页：侧栏筛选 + 文章卡片 + 分页导航；越界页码 redirect、加载失败降级空态
+ */
 export default async function PostsPage({
   params,
   searchParams,
@@ -74,10 +91,11 @@ export default async function PostsPage({
     page: page > 1 ? String(page) : undefined,
   };
 
+  // 三路数据并行读取：文章分页走 withDbRetry 包裹的缓存函数（失败 catch 为 null 降级），
+  // 分类/标签为侧栏数据，失败时兜底为空
   const [postsResult, categoriesData, tagsData] = await Promise.all([
     withDbRetry(() =>
       listPostsServer({
-
         category: category !== ALL_CATEGORY ? category : undefined,
         tag: tag ?? undefined,
 
@@ -100,6 +118,7 @@ export default async function PostsPage({
 
   const currentTag = tag ?? null;
 
+  // 页码越界（如手动输入超大 page）时，携带原筛选条件 redirect 到最后一页，避免空列表页
   if (
     !postsLoadError &&
     postsResult &&
@@ -108,7 +127,6 @@ export default async function PostsPage({
   ) {
     const correctedParams = new URLSearchParams();
     for (const [k, v] of Object.entries(baseParams)) {
-
       if (v && k !== "page") correctedParams.set(k, v);
     }
     correctedParams.set("page", String(postsResult.totalPages));
@@ -127,6 +145,7 @@ export default async function PostsPage({
 
   const hasFilters = !!(q?.trim() || category || tag);
 
+  // 分页导航窗口：最多展示 5 个页码，以当前页为中心，越靠近首尾自动收拢
   const maxPages = Math.min(5, totalPages);
 
   let pageStart = Math.max(1, currentPage - 2);
@@ -148,10 +167,8 @@ export default async function PostsPage({
         currentTag={currentTag}
         zeroResults={posts.length === 0}
       >
-
         <div className="mb-6 page-actions animate-fade-in">
           <p className="text-(length:--type-xs) leading-normal font-medium text-body">
-
             {totalPages > 1
               ? t("totalWithPage", { count: total, current: currentPage, total: totalPages })
               : t("totalOnly", { count: total })}
@@ -161,6 +178,7 @@ export default async function PostsPage({
           </div>
         </div>
 
+        {/* 数据加载失败：降级为错误空态，引导刷新 */}
         {postsLoadError ? (
           <div className="animate-fade-in">
             <EmptyState
@@ -175,13 +193,13 @@ export default async function PostsPage({
             />
           </div>
         ) : posts.length === 0 ? (
+          // 空结果态：带筛选条件时提供"清除筛选"入口
           <div className="animate-fade-in">
             <EmptyState
               icon={<Search size={20} strokeWidth={2.5} />}
               title={t("noResultsTitle")}
               description={t("noResultsDesc")}
               action={
-
                 hasFilters ? (
                   <Button href="/posts" variant="ghost">
                     {t("clearFilters")}
@@ -192,7 +210,6 @@ export default async function PostsPage({
           </div>
         ) : (
           <div className="card-list animate-fade-in">
-
             {posts.map((p, i) => (
               <ArticleCard
                 key={p.id}
@@ -206,6 +223,7 @@ export default async function PostsPage({
           </div>
         )}
 
+        {/* 分页导航：上一页/下一页在边界时渲染为禁用占位符，页码链接保留原筛选参数 */}
         {totalPages > 1 && (
           <nav
             className="mt-12 flex items-center justify-center gap-2"

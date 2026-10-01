@@ -1,5 +1,12 @@
+/**
+ * @file auth.ts
+ * @description 英文文案 - 登录/注册页：表单字段、校验错误提示、密码强度及跳转引导
+ */
 import type { Messages } from "../zh/auth";
 
+/**
+ * 认证页面文案集合
+ */
 const auth: Messages = {
   loginTitle: "Welcome back",
   loginSubtitle: "Sign in to write, comment & engage.",

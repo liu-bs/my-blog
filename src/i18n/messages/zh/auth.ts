@@ -1,3 +1,10 @@
+/**
+ * @file auth.ts
+ * @description 中文文案 - 登录/注册页：表单字段、校验错误提示、密码强度及跳转引导
+ */
+/**
+ * 认证页面文案集合
+ */
 const auth = {
   loginTitle: "欢迎回来",
   loginSubtitle: "登录以发布文章、评论与互动。",

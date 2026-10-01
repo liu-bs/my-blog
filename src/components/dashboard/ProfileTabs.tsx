@@ -1,3 +1,8 @@
+/**
+ * @file ProfileTabs.tsx
+ * @description 个人中心文章 Tab 面板：文章/草稿/收藏三个列表（tablist 键盘导航）；
+ *              草稿支持"继续编辑"与删除，收藏支持取消收藏；删除/取消成功后从本地列表移除（removedIds 过滤）
+ */
 "use client";
 
 import { useState } from "react";
@@ -12,37 +17,55 @@ import { DeletePostButton } from "@/components/blog/DeletePostButton";
 import { postEditPath, postPath } from "@shared";
 import type { Post } from "@shared";
 
+/** Tab 标识 */
 type Tab = "articles" | "drafts" | "favorites";
 
+/** Tab 顺序（键盘导航用） */
 const TAB_ORDER: readonly Tab[] = ["articles", "drafts", "favorites"];
 
+/**
+ * ProfileTabs 组件入参
+ */
 interface ProfileTabsProps {
-
+  /** 已发布文章列表 */
   published: Post[];
 
+  /** 收藏文章列表 */
   favorites: Post[];
 
+  /** 草稿列表 */
   drafts: Post[];
 }
 
+/**
+ * ProfileTabs 个人中心文章 Tab
+ * @param published 已发布文章
+ * @param favorites 收藏文章
+ * @param drafts 草稿
+ */
 export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) {
   const t = useTranslations("profile");
 
+  /** 当前激活 Tab */
   const [tab, setTab] = useState<Tab>("articles");
 
+  /** tablist 键盘导航（左右方向键切换） */
   const tabKeyNav = useTablistKeyboard(TAB_ORDER, setTab);
 
+  /** 已从收藏列表移除的文章ID（本地过滤，免整页刷新） */
   const [removedIds, setRemovedIds] = useState<string[]>([]);
 
+  /** 已从草稿列表移除的文章ID（本地过滤） */
   const [removedDraftIds, setRemovedDraftIds] = useState<string[]>([]);
 
+  /** 收藏列表视图：过滤已取消收藏的条目 */
   const favoriteList = favorites.filter((p) => !removedIds.includes(p.id));
 
+  /** 草稿列表视图：过滤已删除的条目 */
   const draftList = drafts.filter((p) => !removedDraftIds.includes(p.id));
 
   return (
     <div className="min-w-0">
-
       <div className="segmented animate-fade-in" role="tablist" onKeyDown={tabKeyNav}>
         <button
           type="button"
@@ -93,7 +116,6 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
           aria-labelledby="profile-tab-articles"
         >
           {published.length === 0 ? (
-
             <EmptyState
               icon={<FileText size={20} strokeWidth={2.5} />}
               title={t("noArticlesTitle")}
@@ -134,7 +156,6 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
           aria-labelledby="profile-tab-drafts"
         >
           {draftList.length === 0 ? (
-
             <EmptyState
               icon={<NotebookPen size={20} strokeWidth={2.5} />}
               title={t("noDraftsTitle")}
@@ -162,7 +183,6 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
                   }
                   readMoreLabel={t("continueEditing")}
                   actions={
-
                     <DeletePostButton
                       postId={post.id}
                       variant="compact"
@@ -184,7 +204,6 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
           aria-labelledby="profile-tab-favorites"
         >
           {favoriteList.length === 0 ? (
-
             <EmptyState
               icon={<Bookmark size={20} strokeWidth={2.5} />}
               title={t("noFavoritesTitle")}
@@ -203,7 +222,6 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
                   post={post}
                   href={postPath(post.id)}
                   actions={
-
                     <RemoveFavoriteButton
                       postId={post.id}
                       onRemoved={() => setRemovedIds((ids) => [...ids, post.id])}

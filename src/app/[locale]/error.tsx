@@ -1,3 +1,8 @@
+/**
+ * @file error.tsx
+ * @description locale 段错误边界：捕获子路由渲染/数据异常，展示本地化错误文案；
+ *              提供重试、返回首页与一键复制错误详情（含堆栈与当前 URL）便于反馈排查
+ */
 "use client";
 
 import { useEffect, useState } from "react";

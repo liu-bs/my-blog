@@ -18,7 +18,7 @@ function gitShow(rev, file) {
       maxBuffer: 64 * 1024 * 1024,
     });
   } catch {
-    return null; 
+    return null;
   }
 }
 

@@ -1,3 +1,9 @@
+/**
+ * @file page.tsx
+ * @description 首页（Server Component）：Hero 区展示站点介绍与代码窗口装饰，
+ *              下方通过 'use cache' 缓存函数读取最新文章列表；数据加载失败时降级为错误空态，
+ *              无文章时不渲染列表区块。缓存函数外再包 withDbRetry 以容忍数据库冷启动
+ */
 import { Search } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -12,6 +18,11 @@ import { postPath } from "@shared";
 import { HOME_PAGE_SIZE } from "@/config/site";
 import { routing } from "@/i18n/routing";
 
+/**
+ * 生成首页元数据
+ * @param params 路由参数，含 locale
+ * @returns 标题/描述及各语言 hreflang 互链，canonical 指向当前 locale 首页
+ */
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   assertLocale(locale);
@@ -29,6 +40,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
+/**
+ * 首页组件
+ * @param params 路由参数，含 locale
+ * @returns Hero 区 + 最新文章列表；数据失败时渲染错误空态，无文章时不渲染列表
+ */
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
 
@@ -36,6 +52,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   const [t, tCommon] = await Promise.all([getTranslations("home"), getTranslations("common")]);
 
+  // 'use cache' 缓存读取外层包 withDbRetry：数据库冷启动失败时退避重试；
+  // 重试仍失败则 catch 为 null，页面降级为加载错误空态而非抛错
   const postsData = await withDbRetry(() =>
     listPostsServer({ page: 1, limit: HOME_PAGE_SIZE }),
   ).catch(() => null);
@@ -44,13 +62,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   const postsLoadError = postsData === null;
 
+  // 总数超过当前页条数时，"查看全部"按钮附带文章总数
   const hasMore = (postsData?.total ?? 0) > latestPosts.length;
 
   const hasPosts = latestPosts.length > 0;
 
   return (
     <>
-
       <section className="hero-section" aria-label={t("heroSection")}>
         <Container>
           <div className="grid grid-cols-1 items-center gap-(--space-10) max-lg:gap-10 lg:grid-cols-[1fr_480px]">
@@ -134,6 +152,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </Container>
       </section>
 
+      {/* 数据加载失败：降级为错误空态，提供刷新重试 */}
       {postsLoadError ? (
         <section className="animate-fade-in page-section" aria-label={t("latestSection")}>
           <Container>
@@ -152,8 +171,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           </Container>
         </section>
       ) : (
+        // 有文章才渲染最新列表区块，空数据时首页仅保留 Hero
         hasPosts && (
-
           <section className="animate-fade-in page-section" aria-label={t("latestSection")}>
             <Container>
               <div className="page-header flex items-end justify-between gap-4">

@@ -1,5 +1,11 @@
+/**
+ * @file errors.ts
+ * @description 中文文案 - 错误与异常边界：全局 error/not-found 页面、文章加载失败及登录引导提示
+ */
+/**
+ * 错误页面文案集合
+ */
 const errors = {
-
   errorTitle: "出错了",
   errorDesc: "页面加载失败，请稍后重试。",
 

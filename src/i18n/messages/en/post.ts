@@ -1,7 +1,13 @@
+/**
+ * @file post.ts
+ * @description 英文文案 - 文章详情页：阅读信息、目录、点赞/收藏、评论交互及上下篇导航
+ */
 import type { Messages } from "../zh/post";
 
+/**
+ * 文章详情页文案集合
+ */
 const post: Messages = {
-
   readingTime: "{minutes} min read",
 
   tocLabel: "Contents",

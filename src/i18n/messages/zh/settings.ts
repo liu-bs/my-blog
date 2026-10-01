@@ -1,3 +1,10 @@
+/**
+ * @file settings.ts
+ * @description 中文文案 - 账号设置页：个人资料编辑（头像/简介/网站）与修改密码表单及其校验提示
+ */
+/**
+ * 设置页文案集合
+ */
 const settings = {
   title: "账号设置",
   subtitle: "管理个人资料、密码与安全。",

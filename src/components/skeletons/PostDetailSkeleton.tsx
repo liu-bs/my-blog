@@ -1,3 +1,7 @@
+/**
+ * @file PostDetailSkeleton.tsx
+ * @description 文章详情页骨架屏：标题、作者信息、封面、正文段落、标签、互动按钮、评论与右侧目录占位，PostDetail 页面的加载占位
+ */
 import { Container } from "@/components/ui/Container";
 import { BAR } from "@/components/skeletons/primitives";
 
@@ -9,13 +13,11 @@ const PARAGRAPHS = [
 export function PostDetailSkeleton() {
   return (
     <Container className="page-section">
-
       <div
         className="grid grid-cols-1 gap-10 pb-12 max-lg:gap-0 max-lg:pb-8 lg:grid-cols-[1fr_220px]"
         aria-hidden="true"
       >
         <article>
-
           <span className={`${BAR} mb-6 block h-4 w-20 rounded-xs`} />
 
           <header className="mb-10">
@@ -32,7 +34,6 @@ export function PostDetailSkeleton() {
             </div>
 
             <div className="mt-8 row-lg flex-wrap border-t border-stroke pt-6">
-
               <div className="flex items-center gap-3 max-md:gap-2.5">
                 <span className={`${BAR} h-10 w-10 shrink-0 rounded-full`} />
                 <div className="flex flex-col gap-1.5">
@@ -54,7 +55,6 @@ export function PostDetailSkeleton() {
           <div className={`${BAR} mb-10 aspect-21/9 w-full rounded-2xl max-md:aspect-16/9`} />
 
           <div className="space-y-8">
-
             {PARAGRAPHS.map((lines, i) => (
               <div key={i} className="space-y-3">
                 {lines.map((width, j) => (
@@ -92,7 +92,6 @@ export function PostDetailSkeleton() {
 
         <aside className="max-lg:hidden">
           <div className="sticky-below-nav space-y-3">
-
             <span className={`${BAR} block h-3 w-16 rounded-xs`} />
             <div className="space-y-2.5 border-l border-stroke pl-4">
               {[0, 1, 2, 3, 4, 5].map((i) => (

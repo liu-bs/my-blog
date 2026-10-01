@@ -1,3 +1,7 @@
+/**
+ * @file RegisterForm.tsx
+ * @description 注册表单组件：五个字段受控管理，输入即按 registerSchema 单字段校验并显示对勾/叉图标与密码强度条；useActionState 提交 registerAction，409 冲突映射「账号已存在」；注册成功跳转登录页
+ */
 "use client";
 
 import { useActionState, useState } from "react";
@@ -26,17 +30,24 @@ import { registerAction } from "@server/auth/auth.controller";
 import { registerSchema } from "@/shared/validation/auth";
 import type { FieldId, FieldState } from "@shared";
 
+/** 单字段初始状态 */
 const initialField: FieldState = { value: "", touched: false, valid: null, error: null };
 
+/**
+ * 注册表单提交状态
+ */
 interface RegisterState {
-
+  /** 表单级错误文案 */
   error: string | null;
 }
 
+/** 初始表单状态：无错误 */
 const initialState: RegisterState = { error: null };
 
+/** 字段顺序，用于按序回填服务端字段错误与聚焦 */
 const fieldOrder: readonly FieldId[] = ["firstName", "lastName", "username", "email", "password"];
 
+/** 从 registerSchema 拆出的各字段校验规则，供输入时单字段校验 */
 const fieldSchemas = {
   firstName: registerSchema.shape.firstName,
   lastName: registerSchema.shape.lastName,
@@ -45,11 +56,16 @@ const fieldSchemas = {
   password: registerSchema.shape.password,
 };
 
+/**
+ * RegisterForm 注册表单
+ * @description 字段级实时校验 + 提交时整体校验；服务端错误按字段回填，成功后跳转登录页
+ */
 export function RegisterForm() {
   const router = useRouter();
 
   const t = useTranslations("auth");
 
+  /** 各字段状态：值、是否触碰、校验结果与错误文案 */
   const [fields, setFields] = useState<Record<FieldId, FieldState>>({
     firstName: { ...initialField },
     lastName: { ...initialField },
@@ -58,8 +74,10 @@ export function RegisterForm() {
     password: { ...initialField },
   });
 
+  /** 密码是否明文显示 */
   const [showPassword, setShowPassword] = useState(false);
 
+  /** 各字段校验失败时的默认文案 */
   const fieldMessage: Record<FieldId, string> = {
     firstName: t("errNameLength"),
     lastName: t("errNameLength"),
@@ -68,6 +86,12 @@ export function RegisterForm() {
     password: t("errPassword"),
   };
 
+  /**
+   * 更新字段值并即时校验
+   * 清空输入时重置为初始状态，避免尚未输入完成就展示校验错误
+   * @param id 字段标识
+   * @param value 新输入值
+   */
   const updateField = (id: FieldId, value: string) => {
     setFields((prev) => {
       const next = { ...prev };
@@ -81,6 +105,10 @@ export function RegisterForm() {
     });
   };
 
+  /**
+   * 将整体校验/服务端返回的字段错误按 fieldOrder 顺序回填到对应字段
+   * @param errors 字段错误映射
+   */
   const applyFieldErrors = (errors: FieldErrors<FieldId>) => {
     setFields((prev) => {
       const next = { ...prev };
@@ -93,6 +121,10 @@ export function RegisterForm() {
     });
   };
 
+  /**
+   * 注册失败错误映射规则
+   * 409 → 表单级「账号已存在」（用户名或邮箱重复）；其余走兜底文案
+   */
   const registerErrorRules: ErrorFeedbackOptions<FieldId> = {
     fields: fieldOrder,
     fallback: msg("session", "registerFailed"),
@@ -101,6 +133,10 @@ export function RegisterForm() {
     },
   };
 
+  /**
+   * 表单提交动作：整体 zod 校验 → 调用 registerAction
+   * 成功：提示并跳转登录页；失败：回填字段错误并聚焦首个错误字段
+   */
   const [formState, formAction] = useActionState<RegisterState, FormData>(
     async (_prev, formData) => {
       const firstName = (formData.get("firstName") as string)?.trim() ?? "";
@@ -131,6 +167,7 @@ export function RegisterForm() {
         }
         notify.success(msg("session", "registered"));
 
+        // 注册成功：跳转登录页（不自动登录）
         router.replace("/login");
         return { error: null };
       } catch (err) {
@@ -143,6 +180,10 @@ export function RegisterForm() {
     initialState,
   );
 
+  /**
+   * 渲染字段校验状态图标：通过显示对勾、失败显示叉、未校验不显示
+   * @param id 字段标识
+   */
   const renderStatusIcon = (id: FieldId) => {
     const f = fields[id];
     if (f.valid === null) return null;
@@ -155,12 +196,12 @@ export function RegisterForm() {
 
   return (
     <div className="auth-card">
-
       <div className="mb-10">
         <h1 className="auth-title">{t("registerTitle")}</h1>
         <p className="auth-subtitle">{t("registerSubtitle")}</p>
       </div>
 
+      {/* 表单级错误提示（如账号已存在） */}
       {formState.error && (
         <Alert variant="error" className="mb-4">
           {formState.error}
@@ -168,7 +209,6 @@ export function RegisterForm() {
       )}
 
       <form action={formAction} noValidate className="auth-form-stack">
-
         <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
           <FormField label={t("firstName")} required error={fields.firstName.error ?? undefined}>
             <Input
@@ -257,6 +297,7 @@ export function RegisterForm() {
             error={fields.password.valid === false}
             success={fields.password.valid === true}
           />
+          {/* 密码强度实时指示 */}
           <PasswordStrength password={fields.password.value} />
         </FormField>
 

@@ -1,3 +1,8 @@
+/**
+ * @file global-not-found.tsx
+ * @description 根级 404 兜底页（替换整个 html/body 渲染），处理未匹配任何路由的请求；
+ *              自带主题初始化脚本与内联样式，按路径前缀 /en 区分中英文文案并提供返回首页/浏览文章入口
+ */
 "use client";
 
 import {
@@ -36,7 +41,6 @@ const linkBaseStyle = {
 } as const;
 
 export default function GlobalNotFound() {
-
   const lang =
     typeof window !== "undefined" && window.location.pathname.startsWith("/en") ? "en" : "zh";
   const t = copy[lang];

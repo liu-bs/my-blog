@@ -1,5 +1,11 @@
+/**
+ * @file common.ts
+ * @description 中文文案 - 通用词条：全局复用的操作按钮、状态提示及分类名映射，供各页面共享
+ */
+/**
+ * 通用文案集合
+ */
 const common = {
-
   close: "关闭",
 
   backToTop: "回到顶部",
