@@ -10,7 +10,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { CoverFallback } from "@/components/ui/CoverFallback";
 import { Avatar } from "@/components/ui/Avatar";
 import { Tag, tagVariantFor } from "@/components/ui/Tag";
-import { formatCount, formatDate } from "@/lib/format";
+import { formatCount, formatDate, getInitials } from "@/lib/format";
 import type { Locale } from "@/i18n/config";
 import { CATEGORY_LABEL_KEYS, isKnownCategory } from "@/lib/category";
 import { stripHtml, stripMarkdown } from "@/lib/markdown";
@@ -94,7 +94,7 @@ export const ArticleCard = memo(function ArticleCard({
 
         <div className="mt-auto flex items-center gap-2 meta-text">
           <span className="inline-flex items-center gap-1 truncate">
-            <Avatar initials={(post.authorName?.charAt(0) || "U").toUpperCase()} size="xs" />
+            <Avatar initials={getInitials(post.authorName ?? "", "")} size="xs" />
             {post.authorName}
           </span>
           <span className="meta-dot" aria-hidden="true" />
@@ -136,7 +136,7 @@ export const ArticleCard = memo(function ArticleCard({
         {/* 元信息：作者、发布时间、浏览量、点赞数，以及上层追加的统计项 */}
         <div className="mt-auto row-sm flex-wrap meta-text">
           <span className="inline-flex items-center gap-2 truncate">
-            <Avatar initials={(post.authorName?.charAt(0) || "U").toUpperCase()} size="xs" />
+            <Avatar initials={getInitials(post.authorName ?? "", "")} size="xs" />
             {post.authorName}
           </span>
           <span className="meta-dot" aria-hidden="true" />

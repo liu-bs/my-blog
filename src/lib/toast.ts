@@ -7,9 +7,6 @@
 import { toast as sonner } from "sonner";
 import { currentMsgLocale, entityName, errorToMsg, msg, type EntityKey } from "@/lib/message";
 
-/** 写操作动词，用于拼装「xx 失败」类文案的 key */
-export type MutationVerb = "create" | "update" | "delete";
-
 /**
  * 全局提示方法集合
  * @description 统一在此调用 sonner，业务侧只依赖语义方法即可，将来替换提示库或调整文案只需改这一处
@@ -37,15 +34,6 @@ export const notify = {
    */
   deleted(entity: EntityKey): void {
     sonner.success(msg("delete", "success", { entity: entityName(entity) }));
-  },
-
-  /**
-   * 操作失败提示（已知动词 + 实体）
-   * @param verb 失败的写操作类型
-   * @param entity 实体 key
-   */
-  failed(verb: MutationVerb, entity: EntityKey): void {
-    sonner.error(msg(verb, "failed", { entity: entityName(entity) }));
   },
 
   /**

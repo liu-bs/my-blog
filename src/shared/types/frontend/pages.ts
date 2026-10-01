@@ -22,6 +22,6 @@ export interface ErrorBoundaryProps {
   /** 抛出的错误对象；`digest` 是服务端错误的摘要哈希，用于与服务端日志关联排查，生产环境不暴露具体堆栈 */
   error: Error & { digest?: string };
 
-  /** 重试回调，调用后框架会重新渲染出错的路由段 */
-  reset: () => void;
+  /** 重试回调；调用后框架会重新取数并重新渲染出错的路由段。Next 16.3 起 `retry` 稳定，优先于旧的 `reset`（后者仅重渲染、不重新取数） */
+  retry: () => void;
 }

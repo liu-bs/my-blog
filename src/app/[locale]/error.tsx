@@ -15,9 +15,9 @@ import type { ErrorBoundaryProps } from "@shared";
  * @param props {@link ErrorBoundaryProps}
  * @description 与 global-error 的区别：这里仍处于根 layout 之内，能使用 next-intl 与 Tailwind 组件；因此只负责呈现，不渲染 html/body
  * @param props.error 触发的错误对象
- * @param props.reset 由 Next.js 注入的重试函数
+ * @param props.retry 由 Next.js 注入的重试函数（重新取数并重渲染该路由段）
  */
-export default function Error({ error, reset }: ErrorBoundaryProps) {
+export default function Error({ error, retry }: ErrorBoundaryProps) {
   const t = useTranslations("errors");
 
   /** 错误信息是否已复制成功，用于切换按钮文案并在 2 秒后复位 */
@@ -55,7 +55,7 @@ export default function Error({ error, reset }: ErrorBoundaryProps) {
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button onClick={reset}>{t("reload")}</Button>
+          <Button onClick={retry}>{t("reload")}</Button>
           <Button variant="ghost" href="/">
             {t("goHome")}
           </Button>

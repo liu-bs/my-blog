@@ -27,16 +27,16 @@ const RELOAD_CSS = `
 
 /**
  * GlobalError 全局错误页
- * @description 根 layout 也崩溃时的最后兜底：必须自带 <html>/<body>，内联注入主题脚本与错误页样式，并提供 reset 重新渲染
+ * @description 根 layout 也崩溃时的最后兜底：必须自带 <html>/<body>，内联注入主题脚本与错误页样式，并提供 retry 重新取数并重渲染出错的分支
  * @param error 触发的错误对象，Next.js 会附带 digest 作为服务端错误的可追踪标识
- * @param reset 由 Next.js 注入的重试函数，点击「重新加载」时调用以重新渲染出错的分支
+ * @param retry 由 Next.js 注入的重试函数，点击「重新加载」时调用以重新取数并重渲染出错的分支
  */
 export default function GlobalError({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   /** 错误上报到控制台，便于线上排查（此处无 logger 依赖，因整棵样式与 Provider 可能已失效） */
   useEffect(() => {
@@ -61,19 +61,17 @@ export default function GlobalError({
 
   return (
     <html lang={isEn ? "en" : "zh-CN"} suppressHydrationWarning>
-      <body className="antialiased">
+      <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <style>{ERROR_PAGE_CSS + RELOAD_CSS}</style>
 
-        <div
-          className="flex min-h-screen flex-col items-center justify-center text-center"
-          style={errorShellStyle}
-        >
+        {/* 布局完全由 errorShellStyle 内联提供；global-error 不加载 Tailwind，工具类在此为空转 */}
+        <div style={errorShellStyle}>
           <h1 style={errorTitleStyle}>{copy.title}</h1>
           <p style={errorDescStyle}>{copy.desc}</p>
 
           <button
-            onClick={reset}
+            onClick={retry}
             className="ge-reload"
             style={{
               height: "40px",

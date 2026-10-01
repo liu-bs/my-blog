@@ -43,16 +43,6 @@ export function setAuthCookies(res: NextResponse, user: User): void {
 }
 
 /**
- * 从响应清除认证 cookie
- * @param res 待清理 cookie 的响应对象
- * @returns 无返回值，通过 maxAge=0 覆盖写入空值实现删除
- */
-export function clearAuthCookies(res: NextResponse): void {
-  res.cookies.set(AUTH_TOKEN_COOKIE, "", cookieOptions({ httpOnly: true, maxAge: 0 }));
-  res.cookies.set(AUTH_STATUS_COOKIE, "", cookieOptions({ httpOnly: false, maxAge: 0 }));
-}
-
-/**
  * 向 Server Action 的 cookie jar 写入认证 cookie（用于 action 中 await cookies() 得到的可写 jar）
  * @param jar 来自 next/headers 的可写请求 cookie 容器
  * @param user 已通过认证的用户
