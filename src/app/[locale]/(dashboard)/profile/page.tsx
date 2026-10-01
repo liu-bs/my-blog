@@ -16,6 +16,14 @@ import {
 import { ProfilePageContent } from "@/components/dashboard/ProfilePageContent";
 
 /**
+ * 关闭本 segment 的 instant 导航校验
+ * @description 本页读取会话（requireUserOrRedirect）且根部挂载了 ssr:false 的 sonner Toaster，
+ * 二者都无法被服务端预渲染，instant 校验必然 bail 到客户端渲染（dev 专属告警，构建与生产均不受影响）。
+ * 按官方 route-segment-config/instant，显式声明 instant = false 表示「允许阻塞」即可消除该告警。
+ */
+export const instant = false;
+
+/**
  * 个人资料页
  * @description 登录守卫在本页内完成：requireUserOrRedirect 在无有效会话时抛出跳转（带 redirect 回跳地址与 stale=1 标记），
  * 因此页面余下逻辑可以安全地假定 user 存在。三份列表相互独立故并行获取；任一份失败都降级为空数组，
