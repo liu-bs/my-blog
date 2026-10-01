@@ -23,7 +23,7 @@ const sizeClass: Record<ButtonSize, string> = {
 
 /** 各尺寸共用的基础样式，集中处理禁用与 aria-disabled 态 */
 const baseClass =
-  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-medium transition-[background-color,color,border-color,box-shadow,opacity] duration-[var(--duration-fast)] ease-smooth disabled:cursor-not-allowed disabled:opacity-50 disabled:pointer-events-none &[aria-disabled='true']:opacity-50 &[aria-disabled='true']:pointer-events-none";
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-medium transition-[background-color,color,border-color,box-shadow,opacity] duration-[var(--duration-fast)] ease-smooth disabled:cursor-not-allowed disabled:opacity-50 &[aria-disabled='true']:opacity-50 &[aria-disabled='true']:pointer-events-none";
 
 /**
  * Button 通用按钮

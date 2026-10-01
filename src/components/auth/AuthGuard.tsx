@@ -40,6 +40,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     if (new URLSearchParams(window.location.search).get("stale") === "1") {
       setMe(null);
       clearAuthStatus();
+      // 抹掉 stale 参数，避免用户把这个一次性标记带进收藏/分享的 URL 后每次进来都强制登出
+      router.replace(new URL(window.location.href).pathname);
       return;
     }
 

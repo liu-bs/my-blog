@@ -23,6 +23,7 @@ import { ALL_CATEGORY } from "@/lib/category";
 import { getTranslations } from "next-intl/server";
 import { assertLocale } from "@/i18n/locale";
 import { Link, redirect } from "@/i18n/navigation";
+import { routing } from "@/i18n/routing";
 import { PostSidebar } from "@/components/blog/PostSidebar";
 import { PostsSearchInput } from "@/components/blog/PostsSearchInput";
 import { buildPostsUrl } from "@/lib/buildPostsUrl";
@@ -47,6 +48,14 @@ export async function generateMetadata({
   return {
     title: `${t("title")} · ${tMeta("siteTitle")}`,
     description: t("subtitle"),
+    // canonical 固定为不带 query 的列表页本身：筛选/翻页参数视为同一页的变体，避免污染收录
+    alternates: {
+      canonical: `/${locale}/posts`,
+      languages: {
+        ...Object.fromEntries(routing.locales.map((l) => [l, `/${l}/posts`])),
+        "x-default": `/${routing.defaultLocale}/posts`,
+      },
+    },
   };
 }
 

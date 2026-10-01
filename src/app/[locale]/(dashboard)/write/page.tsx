@@ -30,7 +30,7 @@ export default async function WritePage({
   const { locale } = await params;
   assertLocale(locale);
 
-  await requireUserOrRedirect(locale, `/${locale}/write`);
+  const user = await requireUserOrRedirect(locale, `/${locale}/write`);
 
   const sp = await searchParams;
   /** 待编辑文章 ID；重复参数会形成数组，非字符串一律视为未传（即新建模式） */
@@ -41,7 +41,12 @@ export default async function WritePage({
 
   // 仅编辑模式才预取；取不到（不存在 / 非本人草稿）时降级为 null，交给编辑器自行处理
   if (editId) {
-    initialPost = await getPostServer(editId).catch(() => null);
+    const data = await getPostServer(editId).catch(() => null);
+    // 已发布文章对任何人可读，但编辑态只对作者开放；非作者进编辑器保存必然 403，
+    // 这里提前按「取不到」处理，让页面降级为空态而不是一个注定失败的表单
+    if (data && data.post.authorId === user.id) {
+      initialPost = data;
+    }
   }
 
   return <WriteEditor editId={editId ?? null} initialPost={initialPost} />;

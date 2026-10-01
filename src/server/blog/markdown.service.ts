@@ -80,6 +80,46 @@ const marked = new Marked(
 marked.setOptions(MARKED_OPTIONS);
 
 /**
+ * 把标题文本转成 URL 安全的锚点 slug
+ * @description 保留字母/数字（含中日韩文字）/连字符/下划线，其余标点剔除；空白折叠为单个 `-`
+ */
+function slugifyHeading(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^\p{Letter}\p{Number}\-_]/gu, "")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * 为 H2/H3 生成确定性 id
+ * @description 作者手写的 `[章节](#锚点)` 内链与分享出去的深链都依赖标题 id；此前 id 只由
+ * 客户端 PostToc 运行时按序号补，深链在服务端产物里永远落空。这里在渲染管道内补 id，
+ * 同名标题按出现顺序追加 `-1`、`-2` 后缀；清洗配置已放行 id 属性，无需再动白名单
+ */
+marked.use({
+  hooks: {
+    postprocess(html) {
+      const seen = new Map<string, number>();
+      return (html as string).replace(
+        /<h([23])>([\s\S]*?)<\/h\1>/g,
+        (whole, level: string, inner: string) => {
+          const text = inner.replace(/<[^>]+>/g, "");
+          let slug = slugifyHeading(text);
+          if (!slug) return whole;
+          const count = seen.get(slug) ?? 0;
+          seen.set(slug, count + 1);
+          if (count > 0) slug = `${slug}-${count}`;
+          return `<h${level} id="${slug}">${inner}</h${level}>`;
+        },
+      );
+    },
+  },
+});
+
+/**
  * sanitize-html 清洗配置：用户正文渲染出的 HTML 一律先过这里，再交给前端
  * @description 采用白名单策略——只放行 ALLOWED_TAGS 中的标签和显式列出的属性，未匹配的一律处理，
  * 从根本上阻断脚本注入与事件属性等 XSS 载体

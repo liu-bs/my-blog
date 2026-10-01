@@ -121,7 +121,13 @@ export function PostToc({ articleId }: PostTocProps) {
     scrollTimer.current = setTimeout(() => {
       scrollTimer.current = null;
     }, 800);
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    // JS 显式 behavior 覆盖 CSS scroll-behavior，故遵循 prefers-reduced-motion：偏好朋友直接跳转而非平滑滚动
+    el.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? "auto"
+        : "smooth",
+      block: "start",
+    });
   }, []);
 
   /** 卸载时清理冷却计时器，防止组件已卸载后回调仍被执行 */

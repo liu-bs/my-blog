@@ -34,7 +34,15 @@ export function BackToTop() {
     >
       {/* 点击平滑滚动到页首；隐藏态置 tabIndex=-1 避免键盘聚焦到不可见元素 */}
       <button
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        onClick={() =>
+          window.scrollTo({
+            top: 0,
+            // JS 显式传入的 behavior 会覆盖 CSS scroll-behavior，故此处也需读 reduced-motion，否则关闭动画偏好的用户仍看到平滑滚动
+            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+              ? "auto"
+              : "smooth",
+          })
+        }
         aria-label={t("backToTop")}
         tabIndex={visible ? 0 : -1}
         className="flex h-11 w-11 items-center justify-center rounded-full border border-stroke bg-card-bg text-heading shadow-(--shadow-md) transition-[background-color,box-shadow] duration-[var(--duration-fast)] ease-smooth hover:bg-btn-hover-bg hover:shadow-(--shadow-lg) max-md:h-10 max-md:w-10"

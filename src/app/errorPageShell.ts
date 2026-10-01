@@ -43,9 +43,11 @@ export const ERROR_PAGE_CSS = `
 
 /**
  * 主题初始化脚本（内联执行）
- * @description 读取 localStorage 中的 theme，缺省时回退系统偏好，命中暗色则给 <html> 挂上 .dark；在 error / not-found 页里兜底，避免这些页面丢失主题或闪烁
+ * @description 读取 localStorage 中的 theme：仅当显式选了 light 才强制亮色；
+ *   值为 "system"（next-themes 默认存储值）或未设置时回退系统偏好，命中暗色则给 <html> 挂上 .dark。
+ *   在 error / not-found 页里兜底，同时被根布局头部注入以在流式渲染下阻止主题闪烁
  */
-export const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem("theme");var d=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;if(d)document.documentElement.classList.add("dark")}catch(e){}`;
+export const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem("theme");var d=t==="dark"||(t!=="light"&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark")}catch(e){}`;
 
 /**
  * 页面外层容器的内联样式：撑满视口并让内容水平垂直居中

@@ -165,15 +165,31 @@ export function WriteEditor({
     }
   }, [draftKey, editId]);
 
-  /** 表单有改动时防抖持久化草稿；isDirty 回落后由 clearDraft 负责清理，这里只在脏值时写入 */
+  /** 表单有改动时防抖持久化草稿；从脏回落到基线时删除本地草稿，避免清空的旧稿下次被误恢复 */
+  const wasDirty = useRef(false);
   useEffect(() => {
-    if (!isDirty) return;
+    if (!isDirty) {
+      if (wasDirty.current) clearDraft(draftKey);
+      wasDirty.current = false;
+      return;
+    }
+    wasDirty.current = true;
 
     const timer = setTimeout(() => {
       persistDraft(draftKey, { title, category, tags, content, coverImage, summary });
     }, DRAFT_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [isDirty, draftKey, title, category, tags, content, coverImage, summary]);
+
+  /** 浏览器级离开守卫：刷新 / 关标签 / 硬件后退不经过站内 guard，脏值时提示确认，最多丢失一个防抖窗口的输入 */
+  useEffect(() => {
+    if (!isDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [isDirty]);
 
   /** 切换编辑对象（新建 <-> 编辑，或编辑另一篇）时清空表单与错误、重置基线，避免串稿 */
   useEffect(() => {
@@ -411,6 +427,10 @@ export function WriteEditor({
                 setTitle(e.target.value);
                 clearFieldError("title");
               }}
+              // 单行标题栏内直接回车会触发整表隐式提交（意外发布/保存），拦截 Enter，有意提交只走「发布」按钮
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.preventDefault();
+              }}
               maxLength={200}
               error={!!fieldErrors.title}
               className="py-3 text-(length:--type-lg) leading-tight font-bold text-heading max-md:py-2 max-md:text-(length:--type-md)"
@@ -507,11 +527,14 @@ export function WriteEditor({
         </div>
       </form>
 
-      {/* 未保存离开确认弹窗，确认放弃后走 navigateBack 真正离开 */}
+      {/* 未保存离开确认弹窗，确认放弃后先删本地草稿再真正离开，兑现「放弃」的承诺而不是下次进来又被恢复 */}
       <UnsavedChangesDialog
         open={confirmOpen}
         onOpenChange={(v) => !v && setConfirmOpen(false)}
-        onDiscard={navigateBack}
+        onDiscard={() => {
+          clearDraft(draftKey);
+          navigateBack();
+        }}
       />
     </Container>
   );

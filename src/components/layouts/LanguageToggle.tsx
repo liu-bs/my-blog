@@ -91,8 +91,11 @@ export function useLocaleSwitch() {
    */
   const switchTo = (target: Locale) => {
     if (isPending || target === locale) return;
+    // 切换时保留当前查询串（筛选/翻页状态）；在点击回调里读 window，
+    // 而非 useSearchParams，避免该 Hook 把静态路由拽入运行时依赖导致预渲染失败
+    const search = typeof window !== "undefined" ? window.location.search.replace(/^\?/, "") : "";
     startTransition(() => {
-      router.replace(pathname, { locale: target });
+      router.replace(search ? `${pathname}?${search}` : pathname, { locale: target });
     });
   };
 

@@ -191,8 +191,8 @@
 }
 
 .input-focus:focus {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 20%, transparent);
+  /* --color-accent 即调色板最深的一档(900)，直接当边框太抢眼；向中性 stroke-strong 混色，得到柔和但仍有对比度的聚焦描边 */
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-stroke-strong));
 }
 
 .input-focus-within {
@@ -201,8 +201,7 @@
     box-shadow var(--duration-fast) var(--ease-smooth);
 }
 .input-focus-within:focus-within {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-stroke-strong));
 }
 
 .input-error {

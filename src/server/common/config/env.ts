@@ -54,6 +54,23 @@ if (NODE_ENV === "production" && JWT_SECRET.length < 32) {
 
 const DATABASE_URL = getEnv("DATABASE_URL");
 
+/** JWT_EXPIRES_IN 在此之后，用于把 "7d" / "12h" / "30m" / 纯秒数这类时长串换算成秒 */
+const DURATION_UNITS: Record<string, number> = { s: 1, m: 60, h: 3600, d: 86_400 };
+
+/**
+ * 解析 jsonwebtoken 风格的时长字符串为秒数
+ * @param value 形如 "7d"、"12h"、"30m"、"3600"；无法识别时回退 7 天
+ * @returns 对应秒数
+ */
+function durationToSeconds(value: string): number {
+  const match = /^(\d+)([smhd])?$/.exec(value.trim());
+  const seconds = match ? Number(match[1]) * (DURATION_UNITS[match[2] ?? "s"] ?? 1) : NaN;
+  // 无法解析或单位为 jsonwebtoken 支持但此处未覆盖的 "w" 等，一律回退 7 天，避免把 COOKIE_MAX_AGE 算成过小的值
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : 7 * 24 * 60 * 60;
+}
+
+const JWT_EXPIRES_IN = getEnv("JWT_EXPIRES_IN", "7d");
+
 /**
  * 应用配置集合
  * @description 所有字段在模块加载时即完成读取与校验，业务代码直接读取常量而不再访问 process.env
@@ -69,7 +86,7 @@ export const env = {
   JWT_SECRET,
 
   /** 访问令牌有效期，形如 "7d" / "12h"，直接交给 jsonwebtoken 解析 */
-  JWT_EXPIRES_IN: getEnv("JWT_EXPIRES_IN", "7d"),
+  JWT_EXPIRES_IN,
 
   /** 令牌过期后的宽限时间，单位秒；用于容忍并发刷新时旧 token 的短暂复用 */
   JWT_REFRESH_GRACE_SECONDS: getInt("JWT_REFRESH_GRACE_SECONDS", 60 * 60),
@@ -77,8 +94,16 @@ export const env = {
   /** bcrypt 加盐轮数，越大越安全但登录越慢 */
   BCRYPT_SALT_ROUNDS: getInt("BCRYPT_SALT_ROUNDS", 10),
 
-  /** 登录 cookie 的最大存活时间，单位秒，默认 7 天，与 JWT_EXPIRES_IN 保持一致 */
-  COOKIE_MAX_AGE: getInt("COOKIE_MAX_AGE", 7 * 24 * 60 * 60),
+  /**
+   * 登录 cookie 的最大存活时间，单位秒
+   * @description 默认取「令牌有效期 + 刷新宽限期」：cookie 与令牌同时到期的话，
+   * 浏览器会在令牌失效的同一刻删掉 cookie，宽限窗口内的无感续期根本带不出 token；
+   * 让 cookie 多活一个宽限期，滑动续期链路才真正可达
+   */
+  COOKIE_MAX_AGE: getInt(
+    "COOKIE_MAX_AGE",
+    durationToSeconds(JWT_EXPIRES_IN) + getInt("JWT_REFRESH_GRACE_SECONDS", 60 * 60),
+  ),
 
   /** 数据库连接串，用于构造 Prisma Neon adapter */
   DATABASE_URL,

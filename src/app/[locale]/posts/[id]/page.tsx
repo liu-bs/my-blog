@@ -235,7 +235,11 @@ export default async function PostDetailPage({
   const categoryLabel = getCategoryLabel(post.category, tCommon as (k: string) => string);
 
   return (
-    <PostStateProvider initialPost={post}>
+    <PostStateProvider
+      // 客户端岛屿只消费计数字段；正文 HTML 已由下方 dangerouslySetInnerHTML 服务端注入，
+      // 若整包传入会把正文（含渲染 HTML 与原始 Markdown 两份）序列化进 RSC 载荷，随文章长度膨胀
+      initialPost={{ ...post, content: "", contentRaw: undefined }}
+    >
       <Container className="page-section">
         <div className="grid grid-cols-1 gap-10 pb-12 max-lg:gap-0 max-lg:pb-8 lg:grid-cols-[1fr_220px]">
           <article>

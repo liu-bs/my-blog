@@ -14,10 +14,12 @@ import { assertLocale } from "@/i18n/locale";
 import { listPostsServer, withDbRetry } from "@server/blog/blog.cache";
 import { postPath } from "@shared";
 import { HOME_PAGE_SIZE } from "@/config/site";
+import { routing } from "@/i18n/routing";
 
 /**
  * 生成首页 metadata
- * @description 标题取「heroKicker · 站点名」，描述取 heroLead；与根布局的 metadata 合并
+ * @description 标题取「heroKicker · 站点名」，描述取 heroLead；canonical 指向本语言首页，
+ * alternates 原先挂在根布局会把所有子页 canonical 污染成首页，现收回页面自身声明
  * @param params 路由参数，await 后得到 locale
  * @throws 非法 locale 由 assertLocale 触发 notFound
  */
@@ -28,6 +30,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return {
     title: `${t("heroKicker")} · ${tMeta("siteTitle")}`,
     description: t("heroLead"),
+    alternates: {
+      canonical: `/${locale}`,
+      languages: {
+        ...Object.fromEntries(routing.locales.map((l) => [l, `/${l}`])),
+        "x-default": `/${routing.defaultLocale}`,
+      },
+    },
   };
 }
 

@@ -106,6 +106,10 @@ export function CoverField({
           onChange={(e) => {
             onChange(e.target.value.replace(/\s+/g, ""));
           }}
+          // 该输入框位于发文表单内，单行 URL 回车同样会触发隐式提交，拦截 Enter
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.preventDefault();
+          }}
           onFocus={() => setTouched(false)}
           onBlur={() => setTouched(true)}
           error={!!shownError}

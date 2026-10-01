@@ -107,11 +107,16 @@ export function useComments(postId: string, pageSize = COMMENTS_PAGE_SIZE) {
       });
       // 期间列表已被重置/重载，则丢弃本次结果
       if (genRef.current !== gen) return;
-      setData((prev) => ({
-        comments: [...(prev?.comments ?? []), ...result.comments],
-        total: result.total,
-        hasMore: result.hasMore,
-      }));
+      setData((prev) => {
+        const loaded = prev?.comments ?? [];
+        // offset 分页期间若有新评论插入会使窗口整体位移，按 id 去重防止翻页出现重复条目
+        const ids = new Set(loaded.map((c) => c.id));
+        return {
+          comments: [...loaded, ...result.comments.filter((c) => !ids.has(c.id))],
+          total: result.total,
+          hasMore: result.hasMore,
+        };
+      });
       loadedRef.current = offset + result.comments.length;
     } catch (err) {
       // 仅在结果仍有效时提示，避免给用户看已过期请求的错误

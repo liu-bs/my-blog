@@ -14,6 +14,7 @@ import { RouteTransition } from "@/components/layouts/RouteTransition";
 import { htmlLang, ogLocale, type Locale } from "@/i18n/config";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/config/site";
+import { THEME_INIT_SCRIPT } from "@/app/errorPageShell";
 
 /** LocaleLayout 入参 */
 type Props = {
@@ -125,6 +126,8 @@ export default async function LocaleLayout({ children, params }: Props) {
       className="font-sans"
     >
       <body className="antialiased">
+        {/* 阻塞式主题初始化：在首帧绘制前给 <html> 挂 .dark，流式 SSR 下 next-themes 注入在 body 的脚本偏晚，仍有白闪 */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
             {/* 键盘可达性跳转链接：平时对屏幕阅读器隐藏，聚焦后浮出到左上角 */}

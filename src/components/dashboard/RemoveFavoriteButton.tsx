@@ -40,8 +40,11 @@ export function RemoveFavoriteButton({ postId, onRemoved }: RemoveFavoriteButton
       disabled={toggleFavoriteMutation.isPending}
       onClick={() =>
         toggleFavoriteMutation.mutate(postId, {
-          // 仅在成功后通知父级移除，失败时保留原条目
-          onSuccess: () => onRemoved?.(),
+          // toggle 语义下点击也可能命中「重新收藏」（列表是 SSR 快照，服务端状态可能已变）；
+          // 仅当服务端确认结果为未收藏时才通知父级移除，避免 UI 与数据库相反
+          onSuccess: (data) => {
+            if (data.favorited === false) onRemoved?.();
+          },
         })
       }
     >

@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { MessageCircle, PenLine, FileText, Bookmark, NotebookPen } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useTablistKeyboard } from "@/hooks/useTablistKeyboard";
 import { ArticleCard } from "@/components/blog/ArticleCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
@@ -19,6 +20,9 @@ import type { Post } from "@shared";
 
 /** 可切换的 Tab 标识 */
 type Tab = "articles" | "drafts" | "favorites";
+
+/** Tab 的固定顺序，供左右方向键环绕漫游使用（模块级常量，保证传给 Hook 的引用稳定） */
+const TAB_ORDER: readonly Tab[] = ["articles", "drafts", "favorites"];
 
 /**
  * ProfileTabs 入参
@@ -45,6 +49,9 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
   /** 当前选中的标签页，仅本地状态，不回写 URL */
   const [tab, setTab] = useState<Tab>("articles");
 
+  /** tablist 容器的键盘漫游：← → / Home / End 切换 tab 并同步选中面板 */
+  const tabKeyNav = useTablistKeyboard(TAB_ORDER, setTab);
+
   /** 已取消收藏的文章 ID；用于在不重新取数的情况下把条目从收藏列表隐去 */
   const [removedIds, setRemovedIds] = useState<string[]>([]);
 
@@ -60,30 +67,42 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
   return (
     <div className="min-w-0">
       {/* 标签切换栏，计数展示的是「本地过滤后」的数量，能即时反映删除/取消收藏的结果 */}
-      <div className="segmented animate-fade-in">
+      <div className="segmented animate-fade-in" role="tablist" onKeyDown={tabKeyNav}>
         <button
           type="button"
-          onClick={() => setTab("articles")}
+          id="profile-tab-articles"
+          data-tab="articles"
           role="tab"
           aria-selected={tab === "articles"}
+          aria-controls="profile-panel-articles"
+          tabIndex={tab === "articles" ? 0 : -1}
+          onClick={() => setTab("articles")}
           className={`segmented-item ${tab === "articles" ? "segmented-item-on" : ""}`}
         >
           {t("articlesTab", { count: published.length })}
         </button>
         <button
           type="button"
-          onClick={() => setTab("drafts")}
+          id="profile-tab-drafts"
+          data-tab="drafts"
           role="tab"
           aria-selected={tab === "drafts"}
+          aria-controls="profile-panel-drafts"
+          tabIndex={tab === "drafts" ? 0 : -1}
+          onClick={() => setTab("drafts")}
           className={`segmented-item ${tab === "drafts" ? "segmented-item-on" : ""}`}
         >
           {t("draftsTab", { count: draftList.length })}
         </button>
         <button
           type="button"
-          onClick={() => setTab("favorites")}
+          id="profile-tab-favorites"
+          data-tab="favorites"
           role="tab"
           aria-selected={tab === "favorites"}
+          aria-controls="profile-panel-favorites"
+          tabIndex={tab === "favorites" ? 0 : -1}
+          onClick={() => setTab("favorites")}
           className={`segmented-item ${tab === "favorites" ? "segmented-item-on" : ""}`}
         >
           {t("favoritesTab", { count: favoriteList.length })}
@@ -92,7 +111,12 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
 
       {/* 已发布文章列表 */}
       {tab === "articles" && (
-        <div className="mt-10">
+        <div
+          className="mt-10"
+          role="tabpanel"
+          id="profile-panel-articles"
+          aria-labelledby="profile-tab-articles"
+        >
           {published.length === 0 ? (
             // 空态引导用户去写文章
             <EmptyState
@@ -129,7 +153,12 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
 
       {/* 草稿列表 */}
       {tab === "drafts" && (
-        <div className="mt-10">
+        <div
+          className="mt-10"
+          role="tabpanel"
+          id="profile-panel-drafts"
+          aria-labelledby="profile-tab-drafts"
+        >
           {draftList.length === 0 ? (
             // 空态引导用户去写文章
             <EmptyState
@@ -175,7 +204,12 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
 
       {/* 收藏列表 */}
       {tab === "favorites" && (
-        <div className="mt-10">
+        <div
+          className="mt-10"
+          role="tabpanel"
+          id="profile-panel-favorites"
+          aria-labelledby="profile-tab-favorites"
+        >
           {favoriteList.length === 0 ? (
             // 空态引导用户去文章列表浏览
             <EmptyState

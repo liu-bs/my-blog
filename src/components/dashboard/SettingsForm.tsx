@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { PasswordStrength } from "@/components/ui/PasswordStrength";
 import { useAuth } from "@/components/AuthProvider";
+import { useTablistKeyboard } from "@/hooks/useTablistKeyboard";
 import { clearAuthStatus } from "@/lib/authStatus";
 import { updateProfileAction, changePasswordAction } from "@server/auth/auth.controller";
 import { getInitials } from "@/lib/format";
@@ -37,6 +38,12 @@ import type { ChangePasswordField, ProfileField } from "@shared";
 
 /** useActionState 返回的状态结构，仅承载表单级错误信息（字段错误另行用 state 保存） */
 type FormError = { error: string | null };
+
+/** 设置页的两个 Tab 标识 */
+type SettingsTab = "profile" | "password";
+
+/** Tab 固定顺序，供左右方向键漫游使用（模块级常量保证引用稳定） */
+const SETTINGS_TABS: readonly SettingsTab[] = ["profile", "password"];
 
 /** 改密表单需要做错误映射与重置的字段清单，顺序与表单字段展示顺序一致 */
 const PWD_FIELDS: readonly ChangePasswordField[] = [
@@ -61,7 +68,10 @@ export function SettingsForm() {
   const { user, refreshMe, setMe } = useAuth();
 
   /** 当前选中的 Tab */
-  const [tab, setTab] = useState<"profile" | "password">("profile");
+  const [tab, setTab] = useState<SettingsTab>("profile");
+
+  /** tablist 容器的键盘漫游：← → / Home / End 切换 tab 并同步选中面板 */
+  const tabKeyNav = useTablistKeyboard(SETTINGS_TABS, setTab);
 
   /** 资料表单：名 */
   const [firstName, setFirstName] = useState("");
@@ -262,21 +272,29 @@ export function SettingsForm() {
   return (
     <div className="animate-fade-in">
       {/* 资料/改密切换分组 */}
-      <div className="mb-8 segmented">
+      <div className="mb-8 segmented" role="tablist" onKeyDown={tabKeyNav}>
         <button
           type="button"
-          onClick={() => setTab("profile")}
+          id="settings-tab-profile"
+          data-tab="profile"
           role="tab"
           aria-selected={tab === "profile"}
+          aria-controls="settings-panel-profile"
+          tabIndex={tab === "profile" ? 0 : -1}
+          onClick={() => setTab("profile")}
           className={`segmented-item ${tab === "profile" ? "segmented-item-on" : ""}`}
         >
           {t("tabProfile")}
         </button>
         <button
           type="button"
-          onClick={() => setTab("password")}
+          id="settings-tab-password"
+          data-tab="password"
           role="tab"
           aria-selected={tab === "password"}
+          aria-controls="settings-panel-password"
+          tabIndex={tab === "password" ? 0 : -1}
+          onClick={() => setTab("password")}
           className={`segmented-item ${tab === "password" ? "segmented-item-on" : ""}`}
         >
           {t("tabPassword")}
@@ -285,7 +303,12 @@ export function SettingsForm() {
 
       {/* 个人资料表单 */}
       {tab === "profile" && (
-        <form action={profileAction} noValidate className="form-stack">
+        <div
+          role="tabpanel"
+          id="settings-panel-profile"
+          aria-labelledby="settings-tab-profile"
+        >
+          <form action={profileAction} noValidate className="form-stack">
           {/* 表单级错误（无法归入具体字段时的兜底提示） */}
           {profileState.error && (
             <Alert variant="error" icon={<Info size={16} strokeWidth={2.5} />} className="shake">
@@ -419,11 +442,17 @@ export function SettingsForm() {
             </SubmitButton>
           </div>
         </form>
+        </div>
       )}
 
       {/* 修改密码表单 */}
       {tab === "password" && (
-        <form action={pwdAction} noValidate className="form-stack">
+        <div
+          role="tabpanel"
+          id="settings-panel-password"
+          aria-labelledby="settings-tab-password"
+        >
+          <form action={pwdAction} noValidate className="form-stack">
           {/* 表单级错误（无法归入具体字段时的兜底提示） */}
           {pwdState.error && (
             <Alert variant="error" icon={<Info size={16} strokeWidth={2.5} />} className="shake">
@@ -497,6 +526,7 @@ export function SettingsForm() {
             </SubmitButton>
           </div>
         </form>
+        </div>
       )}
     </div>
   );

@@ -188,7 +188,8 @@ export function CommentsSection({ postId, user: ssrUser, postAuthorId }: Comment
             onError: (err) => {
               const failed = resolveSubmitError(err, createErrorRules);
               setCreateError(failed.fields.content ?? failed.form);
-              setCommentText(text);
+              // 仅当用户没在失败期间重新输入时才回填原文，避免顶掉新敲的内容
+              setCommentText((prev) => (prev.trim() ? prev : text));
             },
           },
         );
@@ -280,7 +281,7 @@ export function CommentsSection({ postId, user: ssrUser, postAuthorId }: Comment
               aria-invalid={!!createError}
               maxLength={COMMENT_MAX_LENGTH}
               rows={4}
-              className="textarea-field"
+              className="input-focus textarea-field"
             />
             {/* 发表校验 / 服务端错误：内联展示在输入框下方，role=alert 便于读屏播报 */}
             {createError && (
@@ -389,7 +390,7 @@ export function CommentsSection({ postId, user: ssrUser, postAuthorId }: Comment
                       aria-invalid={!!editError}
                       rows={3}
                       maxLength={COMMENT_MAX_LENGTH}
-                      className="textarea-field resize-y"
+                      className="input-focus textarea-field resize-y"
                     />
                     {/* 编辑错误提示：与发表区一致，内联展示并可被读屏播报 */}
                     {editError && (

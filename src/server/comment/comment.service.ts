@@ -9,6 +9,7 @@ import "server-only";
 
 import type { Comment } from "@shared";
 import { randomUUID } from "node:crypto";
+import { Prisma } from "@prisma/client";
 import { ForbiddenError, NotFoundError, ValidationError } from "@server/common/errors";
 import sanitizeHtml from "sanitize-html";
 import type { CreateCommentDto, ListCommentsOptions } from "@shared";
@@ -100,10 +101,21 @@ export async function createComment(
     updatedAt: now,
   };
 
-  await getPrisma().$transaction(async (tx) => {
-    await createCommentRecord(comment, tx);
-    await incrementPostField(dto.postId, "commentsCount", 1, tx);
-  });
+  try {
+    await getPrisma().$transaction(async (tx) => {
+      await createCommentRecord(comment, tx);
+      await incrementPostField(dto.postId, "commentsCount", 1, tx);
+    });
+  } catch (err) {
+    // 校验与写入之间文章被并发删除：计数或评论外键写入失败（P2025 / P2003），按「文章不存在」返回而非 500
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      (err.code === "P2025" || err.code === "P2003")
+    ) {
+      throw new NotFoundError("Post not found");
+    }
+    throw err;
+  }
 
   return comment;
 }
@@ -171,10 +183,18 @@ export async function deleteComment(
     throw new ForbiddenError("Not authorized to delete this comment");
   }
 
-  await getPrisma().$transaction(async (tx) => {
-    await deleteCommentRecord(id, tx);
-    await incrementPostField(row.postId, "commentsCount", -1, tx);
-  });
+  try {
+    await getPrisma().$transaction(async (tx) => {
+      await deleteCommentRecord(id, tx);
+      await incrementPostField(row.postId, "commentsCount", -1, tx);
+    });
+  } catch (err) {
+    // 并发窗口内文章已被删除：评论计数目标不存在（P2025），评论行也已随外键级联消失，视为删除成功
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
+      return { postId: row.postId };
+    }
+    throw err;
+  }
 
   return { postId: row.postId };
 }
