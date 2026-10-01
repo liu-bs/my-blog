@@ -416,7 +416,7 @@ export async function incrementUserStats(
  * @param field 关联类型：likedArticles 对应 UserPostLike 表，favoritedArticles 对应 UserPostFavorite 表
  * @param postId 文章 id
  * @param tx 可选事务句柄
- * @returns 切换后处于「已关联」状态返回 true（本次为新增），处于「未关联」返回 false（本次为取消）
+ * @returns wasPresent 语义：true 表示本次调用「之前已存在关联」（本次实际执行的是取消），false 表示之前不存在（本次为新增）。调用方（blog.service）据此换算点赞/收藏的最终状态并计算计数增量
  */
 export async function toggleUserAssociation(
   id: string,

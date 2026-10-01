@@ -14,7 +14,7 @@ import { ForbiddenError, NotFoundError, ValidationError } from "@server/common/e
 import sanitizeHtml from "sanitize-html";
 import type { CreateCommentDto, ListCommentsOptions } from "@shared";
 import { findUserById } from "@server/user/user.repository";
-import { getPrisma } from "@server/common/db";
+import { runInTransaction } from "@server/common/db";
 import { assertPostReadable, assertPostCommentable } from "@server/blog/blog.service";
 import { incrementPostField } from "@server/blog/blog.repository";
 import {
@@ -102,7 +102,7 @@ export async function createComment(
   };
 
   try {
-    await getPrisma().$transaction(async (tx) => {
+    await runInTransaction(async (tx) => {
       await createCommentRecord(comment, tx);
       await incrementPostField(dto.postId, "commentsCount", 1, tx);
     });
@@ -184,7 +184,7 @@ export async function deleteComment(
   }
 
   try {
-    await getPrisma().$transaction(async (tx) => {
+    await runInTransaction(async (tx) => {
       await deleteCommentRecord(id, tx);
       await incrementPostField(row.postId, "commentsCount", -1, tx);
     });

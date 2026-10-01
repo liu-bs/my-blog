@@ -31,7 +31,7 @@ import {
   isValidPostId,
 } from "@shared";
 import { stripMarkdown } from "@/lib/markdown";
-import { getPrisma } from "@server/common/db";
+import { runInTransaction } from "@server/common/db";
 import { renderMarkdown } from "./markdown.service";
 import type { PostUpdateData } from "./blog.repository";
 import {
@@ -270,7 +270,7 @@ export async function incrementView(id: string): Promise<void> {
 
   after(async () => {
     try {
-      await getPrisma().$transaction(async (tx) => {
+      await runInTransaction(async (tx) => {
         await incrementPostField(postId, "views", 1, tx);
         if (authorId) {
           await incrementUserStats(authorId, "views", 1, tx);
@@ -344,7 +344,7 @@ export async function createPost(dto: CreatePostDto & { authorId: string }): Pro
   }
 
   // 建文章与作者文章数 +1 必须同事务，避免出现「有文章但统计没加」的脏数据
-  await getPrisma().$transaction(async (tx) => {
+  await runInTransaction(async (tx) => {
     await createPostRecord(post, tx);
 
     if (!isDraft) {
@@ -426,7 +426,7 @@ export async function updatePost(
     updateData.publishedAt = null;
   }
 
-  return getPrisma().$transaction(async (tx) => {
+  return runInTransaction(async (tx) => {
     const updated = await updatePostRecord(id, updateData, tx);
 
     // 以「更新后的实际状态」判断是否跨越了草稿边界，据此增减作者文章数
@@ -460,7 +460,7 @@ export async function deletePost(id: string, currentUserId: string): Promise<voi
   }
   assertPostOwner(post, currentUserId);
 
-  await getPrisma().$transaction(async (tx) => {
+  await runInTransaction(async (tx) => {
     await deletePostRecord(id, tx);
     if (post.authorId) {
       // 草稿本就不计入文章数，无需回退
@@ -540,7 +540,7 @@ async function toggleUserPostAssociation(
   // 仅点赞需要同步作者累计点赞，收藏不进入作者统计
   const tracksAuthorStats = userField === "likedArticles";
 
-  return getPrisma().$transaction(async (tx) => {
+  return runInTransaction(async (tx) => {
     const wasPresent = await toggleUserAssociation(currentUserId, userField, id, tx);
     const delta = wasPresent ? -1 : 1;
 

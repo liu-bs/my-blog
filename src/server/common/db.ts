@@ -6,7 +6,7 @@
  */
 import "server-only";
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Prisma } from "@prisma/client";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { env } from "@server/common/config/env";
 
@@ -32,3 +32,20 @@ export const getPrisma = (): PrismaClient => {
   globalForPrisma.__prisma = prisma;
   return prisma;
 };
+
+/** Prisma 交互式事务回调注入的事务客户端类型；供数据/业务层把一批写操作放进同一事务边界 */
+export type PrismaTransaction = Prisma.TransactionClient;
+
+/**
+ * 在一个交互式事务中执行一批操作
+ * @description 封装 Prisma 官方交互式事务 API（`prisma.$transaction(async (tx) => {...})`）：
+ * 业务层只需传入以事务客户端为参数的回调，无需再直接持有 PrismaClient，从而把「连接获取 /
+ * 事务边界」这一持久化关注点收敛到本数据访问模块，Service 层不再出现裸 Prisma。
+ * 回调内任一操作抛错即整体回滚，正常返回则提交，并把回调返回值原样透出——与直接调用
+ * `$transaction` 行为完全等价。
+ * @param fn 接收事务客户端、返回任意结果的回调
+ * @returns 回调的执行结果
+ */
+export function runInTransaction<T>(fn: (tx: PrismaTransaction) => Promise<T>): Promise<T> {
+  return getPrisma().$transaction(fn);
+}
