@@ -191,7 +191,7 @@
 }
 
 .input-focus:focus {
-  /* 聚焦只用柔和的 box-shadow 光晕表达（与全站自定义控件同一套焦点语言），边框保持中性不变，避免出现「实色描边 + 光环」两条边 */
+
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 

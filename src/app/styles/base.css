@@ -22,9 +22,7 @@ body {
 }
 
 *:focus-visible {
-  /* 全站兜底焦点：与输入框光晕同一 accent 色系，但用半透明描边而非实色，柔化观感；
-     保留 outline + offset 是因为 btn-* 已有 resting shadow（box-shadow 焦点会覆盖它），
-     且内联链接用 outline 才能正确环绕文字片段 */
+
   outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
   outline-offset: 2px;
 }

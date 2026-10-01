@@ -1,7 +1,3 @@
-/**
- * @file global-not-found.tsx
- * @description 全局 404 页面，处理连 [locale] 段都无法匹配的路径。因在根 layout 之外渲染，需自带 <html>/<body>，且不依赖 next-intl
- */
 "use client";
 
 import {
@@ -12,7 +8,6 @@ import {
   errorDescStyle,
 } from "./errorPageShell";
 
-/** 全局 404 的中英双语文案；不使用 next-intl，直接用字面量避免依赖未挂载的 Provider */
 const copy = {
   zh: {
     title: "404",
@@ -28,7 +23,6 @@ const copy = {
   },
 } as const;
 
-/** 两个操作链接共用的基础样式，各自再覆盖背景 / 描边 */
 const linkBaseStyle = {
   height: "40px",
   padding: "0 20px",
@@ -41,12 +35,8 @@ const linkBaseStyle = {
   textDecoration: "none",
 } as const;
 
-/**
- * GlobalNotFound 全局 404 页
- * @description 根 layout 之外渲染的兜底页，必须自带 <html>/<body>；通过路径前缀判语言，链接指向对应语言前缀的首页与文章列表
- */
 export default function GlobalNotFound() {
-  /** 全局 404 读不到语言上下文，用 URL 前缀判断；默认中文 */
+
   const lang =
     typeof window !== "undefined" && window.location.pathname.startsWith("/en") ? "en" : "zh";
   const t = copy[lang];

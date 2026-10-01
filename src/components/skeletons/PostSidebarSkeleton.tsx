@@ -1,21 +1,12 @@
-/**
- * @file PostSidebarSkeleton.tsx
- * @description 文章列表页左侧筛选栏骨架：对应「分类列表 + 标签云」两组筛选区，窄屏隐藏与真实侧栏一致
- */
 import { BAR, line } from "@/components/skeletons/primitives";
 
-/** 分类条目行，对应侧栏筛选链接的行高 */
 const FILTER_LINE = line("h-[22.4px]");
 
-/**
- * PostSidebarSkeleton 文章筛选侧栏骨架
- * @returns 分类与标签两段占位；lg 以下隐藏，与真实侧栏的响应式行为保持一致
- */
 export function PostSidebarSkeleton() {
   return (
     <aside className="hidden w-65 shrink-0 lg:block">
       <div className="sticky-below-nav content-stack-lg">
-        {/* 分类分组：标题 + 4 条分类项 */}
+
         <div>
           <h3 className="mb-3 filter-heading">
             <span className={line("h-[19.2px]")}>
@@ -36,7 +27,6 @@ export function PostSidebarSkeleton() {
           </ul>
         </div>
 
-        {/* 标签分组：标题 + 3 个不同宽度的标签胶囊 */}
         <div className="mt-8">
           <h3 className="mb-3 filter-heading">
             <span className={line("h-[19.2px]")}>

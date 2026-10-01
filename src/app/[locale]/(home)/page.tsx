@@ -1,7 +1,3 @@
-/**
- * @file (home)/page.tsx
- * @description 首页（Server Component）。在服务端直接调用 blog 数据层拿最新文章，展示 Hero 与最新文章列表，并处理加载失败 / 空数据分支
- */
 import { Search } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
@@ -16,13 +12,6 @@ import { postPath } from "@shared";
 import { HOME_PAGE_SIZE } from "@/config/site";
 import { routing } from "@/i18n/routing";
 
-/**
- * 生成首页 metadata
- * @description 标题取「heroKicker · 站点名」，描述取 heroLead；canonical 指向本语言首页，
- * alternates 原先挂在根布局会把所有子页 canonical 污染成首页，现收回页面自身声明
- * @param params 路由参数，await 后得到 locale
- * @throws 非法 locale 由 assertLocale 触发 notFound
- */
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   assertLocale(locale);
@@ -40,38 +29,28 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-/**
- * HomePage 首页
- * @description 数据获取走服务端直接调用 blog.cache 的 listPostsServer（内部带 "use cache" + cacheLife，不是 fetch），因此不会向前端暴露接口；首页只取第一页
- * @param params 路由参数，await 后得到 locale
- * @throws 非法 locale 由 assertLocale 触发 notFound
- */
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  /** 校验并收窄 locale 类型，非法值 404 */
+
   assertLocale(locale);
 
   const [t, tCommon] = await Promise.all([getTranslations("home"), getTranslations("common")]);
 
-  /** withDbRetry 对非业务类（数据库抖动）错误重试一次；仍失败则 catch 成 null，转为页面内的错误态而非整页崩溃 */
   const postsData = await withDbRetry(() =>
     listPostsServer({ page: 1, limit: HOME_PAGE_SIZE }),
   ).catch(() => null);
 
   const latestPosts = postsData?.posts ?? [];
 
-  /** null 代表数据获取失败，用于渲染「加载失败」空态 */
   const postsLoadError = postsData === null;
 
-  /** 总数大于本页条数说明还有更多，用于「查看全部」按钮文案 */
   const hasMore = (postsData?.total ?? 0) > latestPosts.length;
 
-  /** 是否有关键内容可渲染；无文章时不渲染最新区块 */
   const hasPosts = latestPosts.length > 0;
 
   return (
     <>
-      {/* Hero 区：左侧文案与 CTA，右侧装饰性代码窗口 */}
+
       <section className="hero-section" aria-label={t("heroSection")}>
         <Container>
           <div className="grid grid-cols-1 items-center gap-(--space-10) max-lg:gap-10 lg:grid-cols-[1fr_480px]">
@@ -101,7 +80,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </div>
             </div>
 
-            {/* 装饰性代码窗口：纯展示（aria-hidden），语法高亮由 tok-* 类给出，文案来自翻译 */}
             <div className="hero-code-window animate-fade-in overflow-hidden" aria-hidden="true">
               <div className="row-sm border-b border-stroke px-5 py-3.5 hero-titlebar">
                 <span className="h-3 w-3 shrink-0 rounded-full hero-dot-close" />
@@ -156,7 +134,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </Container>
       </section>
 
-      {/* 数据获取失败：展示可重试的错误空态 */}
       {postsLoadError ? (
         <section className="animate-fade-in page-section" aria-label={t("latestSection")}>
           <Container>
@@ -176,7 +153,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </section>
       ) : (
         hasPosts && (
-          /* 正常分支：仅在有文章时渲染最新文章区块 */
+
           <section className="animate-fade-in page-section" aria-label={t("latestSection")}>
             <Container>
               <div className="page-header flex items-end justify-between gap-4">
@@ -190,7 +167,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                   {hasMore ? t("viewAllCount", { count: postsData?.total ?? "" }) : t("viewAll")}
                 </Button>
               </div>
-              {/* 最新文章网格：props 均为可序列化的纯数据（post、字符串 href、tags），首屏第一张图用 priority 提前加载 */}
+
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {latestPosts.map((p, i) => (
                   <ArticleCard
