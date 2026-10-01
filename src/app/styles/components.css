@@ -187,12 +187,12 @@
 .input-focus {
   transition:
     border-color var(--duration-fast) var(--ease-smooth),
-    background-color var(--duration-fast) var(--ease-smooth);
+    box-shadow var(--duration-fast) var(--ease-smooth);
 }
 
 .input-focus:focus {
-  /* --color-accent 即调色板最深的一档(900)，直接当边框太抢眼；向中性 stroke-strong 混色，得到柔和但仍有对比度的聚焦描边 */
-  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-stroke-strong));
+  /* 聚焦只用柔和的 box-shadow 光晕表达（与全站自定义控件同一套焦点语言），边框保持中性不变，避免出现「实色描边 + 光环」两条边 */
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 
 .input-focus-within {
@@ -201,7 +201,7 @@
     box-shadow var(--duration-fast) var(--ease-smooth);
 }
 .input-focus-within:focus-within {
-  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-stroke-strong));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 20%, transparent);
 }
 
 .input-error {
