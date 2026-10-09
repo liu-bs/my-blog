@@ -1,0 +1,177 @@
+/*
+ * @file base.css
+ * @description 元素级重置与全站默认样式：根字号/配色、焦点环、占位符、选区、滚动条、
+ * 表单控件外观归一化、图片与链接基线，以及 prefers-reduced-motion 无障碍降级。
+ * 业务场景：所有页面共享的底层默认，组件样式（components.css）在其之后加载以便覆盖。
+ * 使用限制：只允许标签选择器与极少数全局伪元素，不要在此添加业务类；@layer base 内的规则
+ * 优先级低于未分层的工具类，组件侧用 Tailwind 类即可覆盖。
+ */
+
+/* 全站边框默认色，配合 Tailwind 的 border 工具类使用（仅需写 border 不必再写颜色） */
+* {
+  border-color: var(--color-stroke);
+}
+
+/* 根元素：锚点平滑滚动 + 滚动条槽位稳定 */
+html {
+  /* 锚点跳转（如文章目录）平滑滚动 */
+  scroll-behavior: smooth;
+
+  /* 预留滚动条槽位，避免弹层锁滚动时页面横向跳动 */
+  scrollbar-gutter: stable;
+}
+
+/* 文档主体基线：页面底色、正文色/字号/行高与字体栈均来自 tokens.css */
+body {
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-body);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  font-size: var(--type-sm);
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+}
+
+/* 键盘可达性焦点环，仅 :focus-visible 触发，鼠标点击不显示 */
+*:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+/* 表单控件自带边框样式，另行取消焦点环避免双重描边 */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+.input-focus:focus {
+  outline: none;
+}
+
+/* 占位符颜色需显式设 opacity: 1，否则 Firefox 默认弱化到不可读 */
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
+}
+
+/* 文本选区底色，用 accent 低透明度混色以兼容亮暗两套主题 */
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  color: var(--color-heading);
+}
+
+/*
+ * 用户明确要求减少动效时，把所有动画/过渡压到接近瞬时并关闭平滑滚动
+ * @warning 使用 !important 是为了压过组件内联的工具类过渡，勿在此规则上再叠加特化选择器
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 全站细滚动条（Webkit 系），Firefox 侧由具体容器用 scrollbar-width 控制 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-stroke-strong);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* 链接默认无下划线，正文内链接由 typography.css 的 article-content 单独加装饰线 */
+a {
+  text-decoration: none;
+}
+
+/* 图片不超出容器并消除基线缝隙带来的多余底部空白 */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* 交互控件基线重置层：按钮与表单控件去原生外观，统一继承文档字体与颜色 */
+@layer base {
+  /* 按钮完全去原生外观并继承文本，视觉全交给 Button 组件的类 */
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: inherit;
+  }
+
+  /* 表单控件默认使用浏览器专属字体/颜色，这里强制继承文档设定 */
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+
+  /*
+   * 取消原生控件外观（iOS Safari 会据此套用系统样式），并统一字号行高
+   * appearance: none 后需保留 border-style 以便 Tailwind border-* 生效
+   */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="url"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="date"],
+  textarea,
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    border-style: solid;
+    font-size: var(--type-sm);
+    line-height: 1.5;
+  }
+
+  /* 禁用态统一弱化；text-fill-color 用于修正 iOS 上禁用输入框文字变灰的问题 */
+  input:disabled,
+  textarea:disabled,
+  select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    -webkit-text-fill-color: currentColor;
+  }
+
+  textarea {
+    font-family: inherit;
+  }
+
+  select {
+    background-color: var(--color-page);
+  }
+}
+
+/* 图标层：统一 SVG 尺寸跟随字号 */
+@layer base {
+  /* SVG 图标默认跟随字号缩放并轻微下沉，与 lucide 图标的文字基线对齐 */
+  svg {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    vertical-align: -0.125em;
+  }
+}

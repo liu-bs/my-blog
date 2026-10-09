@@ -1,0 +1,99 @@
+/*
+ * @file animations.css
+ * @description 全站 @keyframes 定义与少量 Tailwind @utility 动画工具类。
+ * 各动画的实际时长/缓动/循环参数由 tokens.css 的 --animate-* 变量组装，组件侧只写
+ * animate-fade-in、animate-pop-in 这类工具类名。
+ * 使用限制：这里只定义关键帧，不写选择器级样式；prefers-reduced-motion 的降级已在
+ * base.css 全局压制动画时长，新增动画无需重复处理无障碍。
+ */
+
+/* 纯透明度淡入，用于页面/区块进场（animate-fade-in） */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 淡入 + 轻微放大，用于 Modal 面板进场（animate-pop-in） */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* pop-in 的逆过程，用于 Modal 退场（animate-pop-out），与退场延时共同决定 DOM 保留时长 */
+@keyframes pop-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+/* 水平抖动，用于表单提交失败时的错误 Alert 提示 */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+/* 匀速整圈旋转，用于 Spinner 加载指示器（animate-spin） */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 透明度与缩放的往复呼吸，用于首页 hero 状态圆点（animate-breathing） */
+@keyframes breathing {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 骨架屏闪烁，中点降到半透明（animate-pulse） */
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 导航链接路由跳转中的等待态闪烁，由 components.css 的 .nav-pending 消费 */
+@keyframes nav-pending {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* shake 关键帧的 Tailwind 工具类，供 className="shake" 直接触发一次性抖动 */
+@utility shake {
+  animation: shake 0.35s ease-in-out;
+}

@@ -1,0 +1,248 @@
+/*
+ * @file typography.css
+ * @description Markdown 渲染正文的排版规则，以 Tailwind @utility article-content 的形式提供，
+ * 容器加类后内部标签（标题/段落/列表/引用/代码/图片/表格）自动获得样式，无需服务端渲染时逐个写 class。
+ * 业务场景：文章详情页正文（src/app/posts/[id]/page.tsx 的 #article-content）与写作页 MarkdownPane
+ * 预览区；代码 token 配色类 .tok-* 供自研高亮渲染器输出。
+ * 使用限制：所有规则都嵌在 @utility 内，只在元素带 article-content 类时生效；尺寸与配色一律引用
+ * tokens.css 变量，改动会同时影响亮暗两套主题。
+ */
+
+/* 正文容器：统一字号、行高与字体，并作为下文所有后代选择器的作用域 */
+@utility article-content {
+  color: var(--color-body);
+  font-size: var(--type-base);
+  line-height: var(--leading-loose);
+  font-family: var(--font-sans);
+
+  /* 相邻块元素自动产生段间距，等价于「除首个子元素外都带上边距」 */
+  & > * + * {
+    margin-top: var(--space-5);
+  }
+
+  /*
+   * 标题公共样式：scroll-margin-top 为吸顶导航让出 6rem，
+   * 保证目录锚点跳转后标题不被 navbar 遮挡
+   */
+  & h2,
+  & h3,
+  & h4 {
+    color: var(--color-heading);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: var(--leading-snug);
+    margin-top: var(--space-8);
+    scroll-margin-top: 6rem;
+    text-wrap: balance;
+  }
+
+  /* 二级标题：最大字号并带下边框，作为章节分隔 */
+  & h2 {
+    font-size: var(--type-xl);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--color-stroke);
+  }
+
+  & h3 {
+    font-size: var(--type-lg);
+  }
+
+  & h4 {
+    font-size: var(--type-md);
+  }
+
+  /* 正文链接：颜色过渡 + 下方装饰线由 ::after 伪元素实现缩放动画 */
+  & a {
+    color: var(--color-link);
+    text-decoration: none;
+    position: relative;
+    transition: color var(--duration-fast) var(--ease-smooth);
+  }
+
+  /* 链接装饰线初始压到 30% 宽并靠左，hover 时展开为满宽、加深不透明度 */
+  & a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0.3);
+    transform-origin: left;
+    opacity: 0.4;
+    transition:
+      transform var(--duration-fast) var(--ease-smooth),
+      opacity var(--duration-fast) var(--ease-smooth);
+  }
+
+  & a:hover {
+    color: var(--color-accent);
+  }
+  & a:hover::after {
+    transform: scaleX(1);
+    opacity: 0.8;
+  }
+
+  /* 加粗文本提色到标题色，保证在正文灰度中仍具可读对比 */
+  & strong,
+  & b {
+    color: var(--color-heading);
+    font-weight: 600;
+  }
+
+  & em,
+  & i {
+    font-style: italic;
+    color: var(--color-heading);
+  }
+
+  & ul,
+  & ol {
+    padding-left: 1.5rem;
+    color: var(--color-body);
+  }
+
+  & ul {
+    list-style-type: disc;
+  }
+  & ol {
+    list-style-type: decimal;
+  }
+
+  /* 列表项之间加微量间距，松于段落内行距但不过分 */
+  & li + li {
+    margin-top: 0.55rem;
+  }
+
+  /* 项目符号弱化，避免与正文抢视觉焦点 */
+  & li::marker {
+    color: var(--color-muted);
+  }
+
+  /* 引用块：左侧竖线 + 右侧圆角底色，斜体强调转述语气 */
+  & blockquote {
+    border-left: 1px solid var(--color-stroke-strong);
+    padding: var(--space-4) 0 var(--space-4) var(--space-6);
+    color: var(--color-body);
+    font-style: italic;
+    font-size: var(--type-base);
+    background: var(--color-surface);
+    border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+  }
+
+  /* 行内代码：等宽字体 + 浅底描边胶囊 */
+  & code {
+    background: var(--color-surface);
+    color: var(--color-link);
+    padding: 0.18em 0.45em;
+    border-radius: var(--radius-xs);
+    font-size: var(--type-sm);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    border: 1px solid var(--color-stroke);
+  }
+
+  /* 代码块容器：横向滚动并收窄滚动条，长行不撑破正文宽度 */
+  & pre {
+    background: var(--color-surface);
+    border: 1px solid var(--color-stroke);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-stroke) transparent;
+  }
+
+  /* 代码块内的 code 撤掉行内胶囊样式，避免双层背景 */
+  & pre code {
+    background: transparent;
+    padding: 0;
+    color: var(--color-body);
+    font-size: var(--type-sm);
+    line-height: var(--leading-loose);
+    border: none;
+    font-weight: 400;
+  }
+
+  /* 正文插图：居中、等比缩放并加中等阴影使其浮于页面底色 */
+  & img {
+    border-radius: var(--radius-xl);
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* 分隔线：用顶边框模拟 1px 细线，上下留足呼吸空间 */
+  & hr {
+    border: 0;
+    border-top: 1px solid var(--color-stroke);
+    margin: var(--space-8) 0;
+  }
+
+  /*
+   * 表格：border-collapse: separate 才能裁圆角（collapse 会忽略 border-radius），
+   * overflow: hidden 负责切掉超出圆角的单元格底色
+   */
+  & table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: var(--type-sm);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1px solid var(--color-stroke);
+  }
+
+  & th,
+  & td {
+    padding: var(--space-3) var(--space-4);
+    text-align: left;
+    border-bottom: 1px solid var(--color-stroke);
+  }
+
+  & th {
+    background: var(--color-surface);
+    color: var(--color-heading);
+    font-weight: 600;
+  }
+
+  /* 末行去掉底边线，避免与表格外框叠成双线 */
+  & tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+/*
+ * 以下 .tok-* 为代码 token 配色，对应 markdown 高亮器输出的 class，
+ * 颜色引用 tokens.css 的 --color-syntax-* 系列以随主题切换
+ */
+
+/* 注释：弱化色 + 斜体 */
+.tok-comment {
+  color: var(--color-syntax-comment);
+  font-style: italic;
+}
+
+/* 关键字：加粗以突出语言结构 */
+.tok-key {
+  color: var(--color-syntax-keyword);
+  font-weight: 600;
+}
+
+/* 函数名/调用 */
+.tok-fn {
+  color: var(--color-syntax-fn);
+}
+
+/* 类型名 */
+.tok-type {
+  color: var(--color-syntax-type);
+}
+
+/* 标点与运算符 */
+.tok-punct {
+  color: var(--color-syntax-punct);
+}

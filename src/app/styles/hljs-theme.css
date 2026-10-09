@@ -1,0 +1,25 @@
+/*
+ * @file hljs-theme.css
+ * @description highlight.js 代码高亮配色的主题切换入口：亮色用 github.css，暗色用 github-dark.css，
+ * 并把代码块底色改为透明以复用外层 pre 的 --color-surface。
+ * 业务场景：仅由文章详情页 src/app/posts/[id]/page.tsx 与写作页 src/app/(dashboard)/write/page.tsx
+ * 按需 import，不进 globals.css，避免全站加载高亮主题体积。
+ * 使用限制：选择器依赖 .article-content 这一约定类名（typography.css 同名 @utility），
+ * 正文容器改类名会同时使高亮失效；本文件只覆盖底色，token 颜色由 hljs 主题自身决定。
+ */
+
+/* 亮色模式默认高亮主题 */
+@import "highlight.js/styles/github.css";
+
+/* 暗色主题下的高亮覆盖（.dark 由 ThemeToggle 挂在 <html> 上） */
+.dark {
+  /* 暗色模式高亮主题（嵌套 @import 依赖构建期 CSS 处理，浏览器原生 @import 仅顶层生效） */
+  @import "highlight.js/styles/github-dark.css";
+
+  /* 去掉 hljs 自带的代码块背景与内边距，让 pre 的 --color-surface 与圆角接管外观 */
+  & .article-content pre code.hljs,
+  & .article-content code.hljs {
+    background: transparent;
+    padding: 0;
+  }
+}

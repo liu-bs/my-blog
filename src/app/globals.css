@@ -1,0 +1,31 @@
+/*
+ * @file globals.css
+ * @description 全站唯一样式入口，由 src/app/layout.tsx 引入。职责仅为「装配」：加载 Tailwind、
+ * 注册 dark 变体、按顺序引入 5 个样式分片（tokens → base → animations → typography → components）。
+ * 使用限制：不要在本文写业务规则，新增样式请落到对应分片；分片顺序决定级联优先级，
+ * tokens 必须最先（提供变量），components 最后（可覆盖前面各层）。
+ */
+
+/* Tailwind v4 主入口，替代旧版 directives 配置 */
+@import "tailwindcss";
+
+/*
+ * 把 dark: 变体绑定到 .dark 类（而非默认的 prefers-color-scheme），
+ * 与 ThemeToggle 写入 <html> 的类名以及 tokens.css 的 .dark 变量覆盖保持一致
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 设计令牌：灰阶与色相基色、语义色、间距/字号/圆角/阴影/层级等 CSS 变量 */
+@import "./styles/tokens.css";
+
+/* 元素级重置与全局默认（body、表单控件、滚动条、选中态、无障碍降级） */
+@import "./styles/base.css";
+
+/* @keyframes 动画定义及配套的 Tailwind 工具类 */
+@import "./styles/animations.css";
+
+/* Markdown 渲染区 article-content 的排版规则与代码 token 配色 */
+@import "./styles/typography.css";
+
+/* 组件级样式：卡片、按钮、导航、模态框等跨页面复用的视觉块 */
+@import "./styles/components.css";
