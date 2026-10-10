@@ -1,8 +1,3 @@
-/**
- * @file ProfileTabs.tsx
- * @description 个人主页内容标签页：在「已发布文章 / 草稿 / 收藏」三栏间切换，分别渲染对应文章卡列表与空状态
- * @usage 客户端组件；支持键盘方向键切换 tab（useTablistKeyboard）；本地记录已删除/已取消收藏的 ID 以即时从视图剔除
- */
 "use client";
 
 import { useState } from "react";
@@ -17,51 +12,36 @@ import { DeletePostButton } from "@/components/blog/DeletePostButton";
 import { postEditPath, postPath } from "@shared";
 import type { Post } from "@shared";
 
-/** 个人主页标签页标识 */
 type Tab = "articles" | "drafts" | "favorites";
 
-/** 标签顺序，供键盘左右切换按此序列移动焦点 */
 const TAB_ORDER: readonly Tab[] = ["articles", "drafts", "favorites"];
 
-/** ProfileTabs 组件入参 */
 interface ProfileTabsProps {
-  /** 已发布文章列表 */
+
   published: Post[];
 
-  /** 收藏文章列表 */
   favorites: Post[];
 
-  /** 草稿文章列表 */
   drafts: Post[];
 }
 
-/**
- * 个人主页内容标签页
- * @param props {@link ProfileTabsProps}
- * @returns 带 tablist 与三块 tabpanel 的切换视图
- */
 export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) {
-  /** 当前激活的标签页 */
+
   const [tab, setTab] = useState<Tab>("articles");
 
-  /** tablist 键盘导航事件处理器（方向键切换 tab） */
   const tabKeyNav = useTablistKeyboard(TAB_ORDER, setTab);
 
-  /** 已在本地移除的收藏文章 ID（取消收藏成功后追加） */
   const [removedIds, setRemovedIds] = useState<string[]>([]);
 
-  /** 已在本地移除的草稿 ID（删除草稿成功后追加） */
   const [removedDraftIds, setRemovedDraftIds] = useState<string[]>([]);
 
-  /** 过滤掉本地已移除项后的收藏列表 */
   const favoriteList = favorites.filter((p) => !removedIds.includes(p.id));
 
-  /** 过滤掉本地已移除项后的草稿列表 */
   const draftList = drafts.filter((p) => !removedDraftIds.includes(p.id));
 
   return (
     <div className="min-w-0">
-      {/* 标签切换栏（tablist）：已发布 / 草稿 / 收藏 */}
+
       <div className="segmented animate-fade-in" role="tablist" onKeyDown={tabKeyNav}>
         <button
           type="button"
@@ -104,7 +84,6 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
         </button>
       </div>
 
-      {/* 「已发布」面板：空态引导撰写，否则渲染带评论数的文章卡 */}
       {tab === "articles" && (
         <div
           className="mt-10"
@@ -145,7 +124,6 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
         </div>
       )}
 
-      {/* 「草稿」面板：空态引导撰写，否则渲染可继续编辑/删除的草稿卡 */}
       {tab === "drafts" && (
         <div
           className="mt-10"
@@ -194,7 +172,6 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
         </div>
       )}
 
-      {/* 「收藏」面板：空态引导浏览，否则渲染可取消收藏的文章卡 */}
       {tab === "favorites" && (
         <div
           className="mt-10"

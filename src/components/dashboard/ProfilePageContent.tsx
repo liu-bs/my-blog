@@ -1,8 +1,3 @@
-/**
- * @file ProfilePageContent.tsx
- * @description 个人主页内容区：左侧用户资料卡（头像、昵称、认证标识、简介、标签、位置/网站/加入时间/角色、社交链接、统计、操作按钮）+ 右侧 ProfileTabs
- * @usage 服务端组件（无交互状态）；社交链接支持填用户名或完整 URL，自动补全协议前缀；文案取自 messages.profile
- */
 import { MapPin, Globe, Calendar, Users, Check, PenLine, UserPen } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -12,10 +7,6 @@ import { messages } from "@/texts";
 import type { Post, User } from "@shared";
 import { ProfileTabs } from "./ProfileTabs";
 
-/**
- * Twitter/X 品牌图标（内联 SVG，避免额外图标依赖）
- * @returns 16x16 的 Twitter 图标节点
- */
 function TwitterIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="16" height="16">
@@ -24,10 +15,6 @@ function TwitterIcon() {
   );
 }
 
-/**
- * GitHub 品牌图标（内联 SVG）
- * @returns 16x16 的 GitHub 图标节点
- */
 function GithubIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="16" height="16">
@@ -36,10 +23,6 @@ function GithubIcon() {
   );
 }
 
-/**
- * LinkedIn 品牌图标（内联 SVG）
- * @returns 16x16 的 LinkedIn 图标节点
- */
 function LinkedinIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" width="16" height="16">
@@ -48,82 +31,64 @@ function LinkedinIcon() {
   );
 }
 
-/** 资料卡元信息行图标统一样式类 */
 const META_ICON = "size-3.5 text-faint";
 
-/**
- * 个人主页内容区
- * @param props.user 用户资料
- * @param props.published 已发布文章列表
- * @param props.favorites 收藏文章列表
- * @param props.drafts 草稿列表
- * @returns 左资料卡 + 右标签页的双列布局
- */
 export function ProfilePageContent({
   user,
   published,
   favorites,
   drafts,
 }: {
-  /** 用户资料 */
+
   user: User;
 
-  /** 已发布文章列表 */
   published: Post[];
 
-  /** 收藏文章列表 */
   favorites: Post[];
 
-  /** 草稿列表 */
   drafts: Post[];
 }) {
-  /** 由姓名首字母拼出的头像占位字符 */
+
   const userInitials = getInitials(user.firstName, user.lastName);
 
-  /** 拼接后的完整显示名 */
   const userName = joinName(user.firstName, user.lastName);
 
-  /** 统计网格数据项（文章/获赞/浏览） */
   const stats = [
     { label: messages.profile.statsArticles, value: formatCount(user.stats?.articles ?? 0) },
     { label: messages.profile.statsLikes, value: formatCount(user.stats?.likes ?? 0) },
     { label: messages.profile.statsViews, value: formatCount(user.stats?.views ?? 0) },
   ];
 
-  /** Twitter 链接：已是 URL 直接用，否则按用户名拼接站点前缀 */
   const socialTwitter = user.social?.twitter
     ? user.social.twitter.startsWith("http")
       ? user.social.twitter
       : `https://twitter.com/${user.social.twitter.replace("@", "")}`
     : undefined;
 
-  /** GitHub 链接（同上规则） */
   const socialGithub = user.social?.github
     ? user.social.github.startsWith("http")
       ? user.social.github
       : `https://github.com/${user.social.github}`
     : undefined;
 
-  /** LinkedIn 链接（同上规则） */
   const socialLinkedin = user.social?.linkedin
     ? user.social.linkedin.startsWith("http")
       ? user.social.linkedin
       : `https://linkedin.com/in/${user.social.linkedin}`
     : undefined;
 
-  /** 是否配置了任意社交链接，决定是否渲染社交图标区 */
   const hasSocial = !!(socialTwitter || socialGithub || socialLinkedin);
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr] lg:gap-12">
-      {/* 左侧粘性用户资料卡 */}
+
       <aside className="animate-fade-in">
         <div className="sticky-below-nav max-lg:static">
           <section className="overflow-hidden card shadow-(--shadow-sm)">
-            {/* 封面色带 */}
+
             <div className="h-24 w-full profile-cover-band" />
             <div className="px-6 pb-7">
-              {/* 头像（重叠于色带下方） */}
+
               <div className="-mt-5">
                 <Avatar
                   size="lg"
@@ -134,7 +99,6 @@ export function ProfilePageContent({
                 />
               </div>
 
-              {/* 昵称 + 认证标识 + 用户名 */}
               <div className="mt-5">
                 <div className="row-sm flex-wrap">
                   <h1 className="m-0 text-(length:--type-md) leading-tight font-bold tracking-[-0.02em] text-heading">
@@ -155,12 +119,10 @@ export function ProfilePageContent({
                 <p className="m-0 mt-1 meta-text">@{user.username}</p>
               </div>
 
-              {/* 个人简介（无则展示占位文案） */}
               <p className="mt-4 text-(length:--type-xs) leading-relaxed text-body">
                 {user.bio || messages.profile.noBio}
               </p>
 
-              {/* 用户标签组 */}
               {user.tags?.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-2">
                   {user.tags.map((tag) => (
@@ -171,7 +133,6 @@ export function ProfilePageContent({
                 </div>
               )}
 
-              {/* 位置/网站/加入时间/角色等元信息，缺失项不渲染 */}
               <div className="mt-5 space-y-2 text-(length:--type-2xs) leading-normal text-body">
                 {user.location && (
                   <span className="row-sm">
@@ -206,7 +167,6 @@ export function ProfilePageContent({
                 </span>
               </div>
 
-              {/* 社交链接图标区（仅在配置了社交链接时渲染） */}
               {hasSocial && (
                 <div className="mt-5 row-sm">
                   {socialTwitter && (
@@ -245,12 +205,10 @@ export function ProfilePageContent({
                 </div>
               )}
 
-              {/* 统计网格 */}
               <div className="mt-6 border-t border-stroke pt-6">
                 <StatsGrid items={stats} />
               </div>
 
-              {/* 操作按钮：撰写文章 / 编辑资料 */}
               <div className="mt-6 row-md">
                 <Button href="/write" size="md" className="flex-1">
                   <PenLine size={16} strokeWidth={2.5} />
@@ -266,7 +224,6 @@ export function ProfilePageContent({
         </div>
       </aside>
 
-      {/* 右侧文章/草稿/收藏标签页 */}
       <ProfileTabs published={published} favorites={favorites} drafts={drafts} />
     </div>
   );

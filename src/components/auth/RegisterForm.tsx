@@ -1,9 +1,3 @@
-/**
- * @file RegisterForm.tsx
- * @description 注册表单：四个字段（名/用户名/邮箱/密码）带实时逐字段校验（输入即校验、清空即重置），
- * 密码附带强度指示与明文切换；提交经 useActionState 调用 Server Action registerAction，
- * 本地 zod 全量校验失败或接口报错（409 账号重复）时回显字段级/表单级错误，成功后跳转 /login。
- */
 "use client";
 
 import { useActionState, useState } from "react";
@@ -32,24 +26,17 @@ import { registerAction } from "@server/auth/auth.controller";
 import { registerSchema } from "@/shared/validation/auth";
 import type { FieldId, FieldState } from "@shared";
 
-/** 字段初始状态：未输入、未触碰、未校验 */
 const initialField: FieldState = { value: "", touched: false, valid: null, error: null };
 
-/**
- * 注册表单的 useActionState 状态
- */
 interface RegisterState {
-  /** 表单级错误信息 */
+
   error: string | null;
 }
 
-/** 表单初始状态：无错误 */
 const initialState: RegisterState = { error: null };
 
-/** 字段渲染/错误聚焦顺序 */
 const fieldOrder: readonly FieldId[] = ["firstName", "username", "email", "password"];
 
-/** 各字段对应的 zod 校验子 schema，用于输入时逐字段校验 */
 const fieldSchemas = {
   firstName: registerSchema.shape.firstName,
   username: registerSchema.shape.username,
@@ -57,13 +44,9 @@ const fieldSchemas = {
   password: registerSchema.shape.password,
 };
 
-/**
- * 注册表单
- */
 export function RegisterForm() {
   const router = useRouter();
 
-  // 四个受控字段的状态集合，初始均为空白
   const [fields, setFields] = useState<Record<FieldId, FieldState>>({
     firstName: { ...initialField },
     username: { ...initialField },
@@ -71,10 +54,8 @@ export function RegisterForm() {
     password: { ...initialField },
   });
 
-  /** 密码是否明文显示 */
   const [showPassword, setShowPassword] = useState(false);
 
-  /** 各字段校验失败时的提示文案 */
   const fieldMessage: Record<FieldId, string> = {
     firstName: messages.auth.errNameLength,
     username: messages.auth.errUsername,
@@ -82,11 +63,6 @@ export function RegisterForm() {
     password: messages.auth.errPassword,
   };
 
-  /**
-   * 输入时更新字段：空值重置为初始态；非空则即时用对应子 schema 校验并记录 valid/error
-   * @param id 字段标识
-   * @param value 输入值
-   */
   const updateField = (id: FieldId, value: string) => {
     setFields((prev) => {
       const next = { ...prev };
@@ -100,10 +76,6 @@ export function RegisterForm() {
     });
   };
 
-  /**
-   * 将提交失败返回的字段错误批量写入各字段状态（不覆盖未返回错误的字段）
-   * @param errors 字段ID到错误文案的映射
-   */
   const applyFieldErrors = (errors: FieldErrors<FieldId>) => {
     setFields((prev) => {
       const next = { ...prev };
@@ -116,7 +88,6 @@ export function RegisterForm() {
     });
   };
 
-  /** 注册失败错误回显规则：409 映射为表单级"账号已存在"，其余走兜底文案 */
   const registerErrorRules: ErrorFeedbackOptions<FieldId> = {
     fields: fieldOrder,
     fallback: messages.feedback.session.registerFailed,
@@ -125,10 +96,6 @@ export function RegisterForm() {
     },
   };
 
-  /**
-   * 表单提交 action：trim 各输入 → registerSchema 全量校验（失败回写字段错误并聚焦首个）→
-   * 调用 registerAction（lastName 固定传空串）→ 成功 toast 并 replace 到 /login
-   */
   const [formState, formAction] = useActionState<RegisterState, FormData>(
     async (_prev, formData) => {
       const firstName = (formData.get("firstName") as string)?.trim() ?? "";
@@ -170,11 +137,6 @@ export function RegisterForm() {
     initialState,
   );
 
-  /**
-   * 渲染字段右侧校验状态图标：仅校验失败时显示红色 X
-   * @param id 字段标识
-   * @returns 状态图标元素或 null
-   */
   const renderStatusIcon = (id: FieldId) => {
     const f = fields[id];
     if (f.valid === false) {
@@ -185,20 +147,18 @@ export function RegisterForm() {
 
   return (
     <div className="auth-card">
-      {/* 标题区：注册标题 + 副标题 */}
+
       <div className="mb-10">
         <h1 className="auth-title">{messages.auth.registerTitle}</h1>
         <p className="auth-subtitle">{messages.auth.registerSubtitle}</p>
       </div>
 
-      {/* 表单级错误提示 */}
       {formState.error && (
         <Alert variant="error" className="mb-4">
           {formState.error}
         </Alert>
       )}
 
-      {/* 注册表单：名 / 用户名 / 邮箱 / 密码（强度条 + 明文切换）+ 提交按钮 */}
       <form action={formAction} noValidate className="auth-form-stack">
         <FormField
           label={messages.auth.firstName}
@@ -275,14 +235,12 @@ export function RegisterForm() {
             error={fields.password.valid === false}
           />
 
-          {/* 密码强度指示条 */}
           <PasswordStrength password={fields.password.value} />
         </FormField>
 
         <SubmitButton className="mt-2 w-full">{messages.auth.registerSubmit}</SubmitButton>
       </form>
 
-      {/* 登录入口链接 */}
       <div className="auth-switch">
         {messages.auth.hasAccount}
         <Link href="/login" className="auth-switch-link">

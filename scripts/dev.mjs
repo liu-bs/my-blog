@@ -46,14 +46,10 @@ function pidsOnPort(port) {
   }
 }
 
-// Next 16 dev 会在 .next/dev/lock 写入当前 dev server 信息（同项目目录锁，与端口无关），
-// 不杀掉它，新的 next dev 会直接报 "Another next dev server is already running" 退出。
 function sleepSync(ms) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
-// taskkill / SIGKILL 返回不代表进程已退出；Windows 上句柄晚一拍释放，
-// 不等就删 .next 会撞上 ENOTEMPTY。轮询等进程消失（最多 5s）。
 function waitForPidExit(pid, timeoutMs = 5000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -116,9 +112,7 @@ killProjectDevServer();
 
 if (!isStart) {
   const abs = path.join(root, ".next");
-  // Windows 上刚写完的 .next 文件会被 Defender/索引服务短暂握住，rmSync 会间歇性
-  // ENOTEMPTY；死循环重试会反复全量遍历巨大的 .next，这里给 6s 总预算，超了就放行
-  //（Next 启动后自愈，已实测无碍）。
+
   const budgetMs = 6000;
   const startMs = Date.now();
   for (;;) {

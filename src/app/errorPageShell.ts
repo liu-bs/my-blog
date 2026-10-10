@@ -1,11 +1,3 @@
-/**
- * @file errorPageShell.ts
- * @description 错误/404 兜底页的共享样式常量集合。当根布局（layout.tsx）本身损坏时，
- * global-error.tsx / global-not-found.tsx 无法依赖 Tailwind 与全局 CSS，
- * 由此文件提供自包含的 CSS 变量（明暗双主题）、主题初始化脚本和内联样式对象。
- */
-
-/** 错误页自带样式表：定义明暗两套 CSS 颜色变量与基础 body 样式（不加载 Tailwind） */
 export const ERROR_PAGE_CSS = `
   :root {
     --color-page: oklch(0.982 0 0);          /* = --background */
@@ -40,10 +32,8 @@ export const ERROR_PAGE_CSS = `
   }
 `;
 
-/** 主题初始化脚本（内联 <script> 用）：读 localStorage 判定暗色主题，异常时静默降级为亮色 */
 export const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem("theme");var d=t==="dark"||(t!=="light"&&window.matchMedia("(prefers-color-scheme: dark)").matches);if(d)document.documentElement.classList.add("dark")}catch(e){}`;
 
-/** 错误页外层容器样式：全屏垂直水平居中排版 */
 export const errorShellStyle = {
   fontFamily: "var(--font-sans)",
   padding: "2rem",
@@ -55,7 +45,6 @@ export const errorShellStyle = {
   textAlign: "center",
 } as const;
 
-/** 错误页标题样式：响应式字号（clamp 38~48px），紧字距 */
 export const errorTitleStyle = {
   color: "var(--color-heading)",
   fontSize: "clamp(38px, 8vw, 48px)",
@@ -65,7 +54,6 @@ export const errorTitleStyle = {
   letterSpacing: "-0.02em",
 } as const;
 
-/** 错误页描述文本样式：弱化色、限宽 400px 保证可读行宽 */
 export const errorDescStyle = {
   color: "var(--color-muted)",
   fontSize: "16px",

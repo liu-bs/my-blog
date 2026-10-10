@@ -1,12 +1,3 @@
-/**
- * @file markdown.ts
- * @description Markdown/HTML 公共处理工具：净化白名单标签、纯文本提取（摘要/RSS/SEO）、
- * 阅读时长估算、highlight.js 高亮与 marked 渲染器单例。
- * 消费方：server/blog/markdown.service.ts（sanitize 配置）、blog.service（摘要截取）、
- * app/rss 与 posts/[id]（标题描述清洗）、dashboard/write/MarkdownPane（编辑器预览渲染）。
- */
-
-/** sanitize-html 允许保留的标签白名单，markdown.service.ts 净化渲染结果时使用 */
 export const ALLOWED_TAGS = [
   "p",
   "br",
@@ -65,11 +56,6 @@ export const ALLOWED_TAGS = [
   "input",
 ] as const;
 
-/**
- * 去除 HTML 标签并将连续空白压缩为单个空格（用于摘要/RSS 描述展示）
- * @param s HTML 字符串
- * @returns 纯文本；入参为空时返回空串
- */
 export function stripHtml(s: string): string {
   return (s || "")
     .replace(/<[^\>]*>/g, "")
@@ -77,12 +63,6 @@ export function stripHtml(s: string): string {
     .trim();
 }
 
-/**
- * 移除 Markdown 语法标记，得到纯文本（标题清洗、摘要自动截取前的预处理）
- * @param s Markdown 源文本
- * @returns 去掉代码块、行内样式、链接、标题、列表、引用等标记后的文本；入参为空时返回空串
- * @warning 纯正则近似实现，嵌套语法等复杂场景不保证完全准确，用于展示层可接受
- */
 export function stripMarkdown(s: string): string {
   if (!s) return "";
   return s
@@ -115,11 +95,6 @@ export function stripMarkdown(s: string): string {
     .trim();
 }
 
-/**
- * 估算文章阅读时长
- * @param content HTML 或 Markdown 正文
- * @returns 预计阅读分钟数，至少 1；中文按约 400 字/分钟、英文按约 200 词/分钟，取两者较大值
- */
 export function estimateReadingTime(content: string): number {
   const text = stripHtml(content);
   if (!text) return 1;
@@ -137,7 +112,6 @@ export function estimateReadingTime(content: string): number {
   return Math.max(1, Math.ceil(minutes));
 }
 
-/** highlight.js 语言主名到别名列表的映射，registerHighlightLanguages 按此注册 */
 const HIGHLIGHT_ALIASES: Record<string, string[]> = {
   javascript: ["js"],
   typescript: ["ts"],
@@ -155,16 +129,8 @@ const HIGHLIGHT_ALIASES: Record<string, string[]> = {
   shell: ["shell-session", "console"],
 };
 
-/** marked 解析选项：启用 GFM 扩展语法、换行符转 <br> */
 export const MARKED_OPTIONS = { gfm: true, breaks: true } as const;
 
-/**
- * 对单段代码做语法高亮
- * @param hljs highlight.js 实例（以最小接口注入，避免本模块硬依赖）
- * @param code 代码原文
- * @param lang 围栏代码块声明的语言，可为空
- * @returns 高亮后的 HTML；语言未知或高亮失败时回退自动识别，再失败则原样返回
- */
 export function highlightCode(
   hljs: {
     getLanguage(name: string): unknown;
@@ -187,12 +153,6 @@ export function highlightCode(
   }
 }
 
-/**
- * 将语言模块批量注册到 highlight.js（含别名，如 ts -> typescript）
- * @param hljs highlight.js 实例
- * @param modules 语言主名到动态导入模块的映射，缺失的语言直接跳过
- * @returns 无
- */
 export function registerHighlightLanguages<M>(
   hljs: { registerLanguage(name: string, module: M): unknown },
   modules: Record<string, M>,
@@ -205,16 +165,10 @@ export function registerHighlightLanguages<M>(
   }
 }
 
-/** Markdown 渲染函数：输入源文本，返回渲染后的 HTML */
 type MarkdownRenderer = (content: string) => Promise<string>;
 
-/** 渲染器初始化 Promise 缓存，保证 marked/hljs 只动态加载并配置一次 */
 let markdownRendererPromise: Promise<MarkdownRenderer> | null = null;
 
-/**
- * 获取配置好代码高亮的 Markdown 渲染器（懒加载单例）
- * @returns 渲染函数 Promise；首次调用时动态 import marked 与 highlight.js 及常用语言包
- */
 export function getMarkdownRenderer(): Promise<MarkdownRenderer> {
   if (markdownRendererPromise) return markdownRendererPromise;
   markdownRendererPromise = (async () => {

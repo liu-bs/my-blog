@@ -1,121 +1,67 @@
-/*
- * @file tokens.css
- * @description 全站设计令牌，三层结构：:root / .dark 定义「原始色与强度系数」，@theme 把它们组合成
- * Tailwind v4 可直接生成工具类的语义变量（bg-page、text-heading、border-stroke 等）。
- * 业务场景：base/typography/components 三个分片以及所有组件的 Tailwind 类名都引用这里的变量。
- * 使用限制：组件不得写死颜色/间距字面量，需在 @theme 里先加语义变量；新增亮暗差异只改
- * :root 与 .dark 两处，不要在三方覆盖。@theme 的变量名会直接决定可用工具类（--color-x 生成 *-x）。
- */
-
 :root {
-  /*
-   * 灰阶标尺：编号表示「相对对比强度」而非绝对明度——0 是最底表面色、900 是最高对比前景色，
-   * 因此 .dark 中整套数值语义反转而组件代码无需改动
-   */
 
-  /** 卡片/浮层底色（亮色下为纯白） */
   --color-0: #ffffff;
 
-  /** 页面最底层背景，对应 --color-page */
   --color-50: #fafafa;
 
-  /** 面板/次级背景，对应 --color-surface */
   --color-100: #efeff1;
 
-  /** 默认描边色，对应 --color-stroke */
   --color-200: #e4e4e7;
 
-  /** 强调描边/滚动条，对应 --color-stroke-strong */
   --color-300: #bcbcc4;
 
-  /** 最弱前景（占位、次要说明），对应 --color-faint */
   --color-400: #6b6b74;
 
-  /** 弱化前景（计数、时间戳），对应 --color-muted */
   --color-500: #5e5e68;
 
-  /** 正文默认色，对应 --color-body */
   --color-600: #4b4b54;
 
-  /** 链接色，对应 --color-link */
   --color-700: #3f3f46;
 
-  /** 标题色，对应 --color-heading */
   --color-800: #1f1f23;
 
-  /** 最高对比强调色（主按钮底、焦点环），对应 --color-accent */
   --color-900: #09090b;
 
-  /*
-   * 四个色相各一对 tint/base：tint 用于与 surface 混出柔和底色，base 用作前景/描边。
-   * 拆成两个变量是为了让混色比例（14% 状态底色 / 18% 标签底色）能独立控制。
-   */
-
-  /** 蓝（信息态）浅调，供 info 底色混色 */
   --color-ink-tint: #90a1ba;
 
-  /** 蓝（信息态）主色，供文字/描边 */
   --color-ink-base: #3d5d8a;
 
-  /** 橙（警示态）浅调 */
   --color-ember-tint: #d7aa7e;
 
-  /** 橙（警示态）主色 */
   --color-ember-base: #8f5a26;
 
-  /** 红（错误态）浅调 */
   --color-crimson-tint: #ce8888;
 
-  /** 红（错误态）主色 */
   --color-crimson-base: #a33930;
 
-  /** 绿（成功态）浅调 */
   --color-slate-tint: #789385;
 
-  /** 绿（成功态）主色 */
   --color-slate-base: #356549;
 
-  /* 阴影不透明度系数：暗色下底色接近纯黑，需要大幅提高才看得出层次 */
-
-  /** 最小/小阴影不透明度 */
   --shadow-opacity-sm: 0.05;
 
-  /** 中阴影不透明度 */
   --shadow-opacity-md: 0.07;
 
-  /** 大阴影不透明度 */
   --shadow-opacity-lg: 0.09;
 
-  /** 卡片外圈 1px 补光描边色，亮色下不可见故透明 */
   --color-ring-contrast: transparent;
 
-  /* 叠加层（hover/press 底色）强度，供 color-mix 使用 */
-
-  /** 静态浅叠加 */
   --overlay-soft: 6%;
 
-  /** hover 叠加 */
   --overlay-hover: 8%;
 
-  /** 按下叠加 */
   --overlay-press: 14%;
 
-  /** 骨架屏填充色 */
   --fill-skeleton: #d6d6db;
 
-  /** 封面图上的暗化遮罩强度，保证叠加白字可读 */
   --overlay-scrim: 12%;
 
-  /** 分段控件选中项底色 */
   --fill-segment-on: var(--color-50);
 
-  /* 告知浏览器当前是亮色方案，驱动表单控件与滚动条的原生配色 */
   color-scheme: light;
 }
 
-/* 暗色主题变量覆盖：由 ThemeToggle 在 <html> 上切换 .dark 类生效，组件无需感知 */
 .dark {
-  /* 暗色下整条灰阶与色相都重新取值，编号语义（0 最底、900 最高对比）保持不变 */
 
   --color-0: #17171c;
 
@@ -155,14 +101,12 @@
 
   --color-slate-base: #67b090;
 
-  /* 暗色背景需数倍不透明度才能呈现同等视觉深度 */
   --shadow-opacity-sm: 0.36;
 
   --shadow-opacity-md: 0.42;
 
   --shadow-opacity-lg: 0.52;
 
-  /* 暗色下用极淡白描边替代透明，给浮层一条可辨识的外圈 */
   --color-ring-contrast: rgb(255 255 255 / 0.04);
 
   --overlay-soft: 12%;
@@ -173,77 +117,48 @@
 
   --fill-skeleton: #2e2e35;
 
-  /* 选中项需比未选中更亮，改取较深的 200 级 */
   --fill-segment-on: var(--color-200);
 
   color-scheme: dark;
 }
 
-/*
- * 语义层令牌：注册进 Tailwind v4 主题后自动产出工具类
- * （--color-page → bg-page/text-page，--space-4 → p-4/gap-4，--animate-* → animate-fade-in 等），
- * 组件只允许引用这一层，不得直接使用上面的原始色号。
- */
 @theme {
-  /* —— 表面与文字 —— */
 
-  /** 页面底色 */
   --color-page: var(--color-50);
 
-  /** 面板/次级容器底色 */
   --color-surface: var(--color-100);
 
-  /** 常规描边 */
   --color-stroke: var(--color-200);
 
-  /** 强调描边（分隔线、滚动条） */
   --color-stroke-strong: var(--color-300);
 
-  /** 标题文字 */
   --color-heading: var(--color-800);
 
-  /** 正文文字 */
   --color-body: var(--color-600);
 
-  /** 次要说明文字 */
   --color-muted: var(--color-500);
 
-  /** 最弱文字（占位、禁用） */
   --color-faint: var(--color-400);
 
-  /** 强对比强调色（主按钮底、焦点环） */
   --color-accent: var(--color-900);
-
-  /* —— 按钮交互底色：由 heading 色按叠加强度混出，两套主题共用同一公式 —— */
 
   --color-btn-hover-bg: color-mix(in srgb, var(--color-heading) var(--overlay-hover), transparent);
 
   --color-btn-active-bg: color-mix(in srgb, var(--color-heading) var(--overlay-press), transparent);
 
-  /* —— 链接 —— */
-
   --color-link: var(--color-700);
 
   --color-link-hover: var(--color-800);
 
-  /* —— 卡片与骨架 —— */
-
-  /** 卡片底色（亮色纯白，暗色抬亮一档） */
   --color-card-bg: var(--color-0);
 
-  /** 卡片描边 */
   --color-card-border: var(--color-200);
 
-  /** 骨架屏填充 */
   --color-skeleton: var(--fill-skeleton);
 
-  /** 吸顶导航底色（页面色降到 90% 透明度，配合 backdrop-blur） */
   --color-nav-surface: color-mix(in srgb, var(--color-page) 90%, transparent);
 
-  /** 小标签/胶囊底色 */
   --color-chip-bg: color-mix(in srgb, var(--color-heading) 10%, var(--color-surface));
-
-  /* —— 代码高亮 token 色，供 typography.css 的 .tok-* 引用 —— */
 
   --color-syntax-comment: var(--color-400);
 
@@ -254,8 +169,6 @@
   --color-syntax-fn: var(--color-700);
 
   --color-syntax-type: var(--color-500);
-
-  /* —— 状态色（Alert/Badge 用语）：底色 = tint 与 100 面 14% 混色，前景 = base —— */
 
   --color-state-info-bg: color-mix(in srgb, var(--color-ink-tint) 14%, var(--color-100));
 
@@ -273,15 +186,11 @@
 
   --color-state-error: var(--color-crimson-base);
 
-  /* —— 首页 hero 代码窗口的仿 macOS 窗口按钮 —— */
-
   --color-mac-close: var(--color-crimson-base);
 
   --color-mac-minimize: var(--color-ember-base);
 
   --color-mac-maximize: var(--color-slate-base);
-
-  /* —— 分类标签配色：底色混色比例 18%，比状态色更饱和 —— */
 
   --color-tag-ink-bg: color-mix(in srgb, var(--color-ink-tint) 18%, var(--color-100));
 
@@ -298,8 +207,6 @@
   --color-tag-slate-bg: color-mix(in srgb, var(--color-slate-tint) 18%, var(--color-100));
 
   --color-tag-slate: var(--color-slate-base);
-
-  /* —— 间距标尺（px 值，生成 p-4、gap-5 等工具类）—— */
 
   --space-1: 4px;
 
@@ -318,8 +225,6 @@
   --space-8: 40px;
 
   --space-10: 64px;
-
-  /* —— 字号标尺：sm 为 body 基准，3xs 用于计数徽标，3xl 用于首页主标题 —— */
 
   --type-3xs: 10px;
 
@@ -341,8 +246,6 @@
 
   --type-3xl: 48px;
 
-  /* —— 行高倍率 —— */
-
   --leading-none: 1;
 
   --leading-tight: 1.25;
@@ -355,8 +258,6 @@
 
   --leading-loose: 1.7;
 
-  /* —— 圆角：full 用 1000px 而非 50%，保证非正方形元素也呈胶囊形 —— */
-
   --radius-xs: 4px;
 
   --radius-md: 8px;
@@ -368,8 +269,6 @@
   --radius-2xl: 16px;
 
   --radius-full: 1000px;
-
-  /* —— 阴影：不透明度取上文的 --shadow-opacity-*，暗色下自动加深 —— */
 
   --shadow-xs: 0 1px 2px rgb(0 0 0 / var(--shadow-opacity-sm));
 
@@ -384,10 +283,7 @@
     0 12px 32px rgb(0 0 0 / var(--shadow-opacity-lg)),
     0 4px 12px rgb(0 0 0 / var(--shadow-opacity-md));
 
-  /** 浮层面板：大阴影再叠一圈 ring-contrast 描边，暗色下用于分离边界 */
   --shadow-panel: var(--shadow-lg), 0 0 0 1px var(--color-ring-contrast);
-
-  /* —— 字体栈：sans 含 Noto Sans SC，serif 含宋体族，用于中文环境降级 —— */
 
   --font-serif: Georgia, "Songti SC", "Noto Serif SC", ui-serif, serif;
 
@@ -395,61 +291,41 @@
 
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  /* —— 动效参数：ease-smooth 为快出慢停曲线，动画时长由下面的 --animate-* 组合 —— */
-
   --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
 
   --duration-fast: 150ms;
 
   --duration-slow: 300ms;
 
-  /** 区块进场淡入，both 保留 from 态避免首帧闪烁 */
   --animate-fade-in: fade-in 0.3s var(--ease-smooth) both;
 
-  /** hero 状态圆点呼吸，无限循环 */
   --animate-breathing: breathing 4.5s ease-in-out infinite;
 
-  /** Modal 面板进场 */
   --animate-pop-in: pop-in 0.2s var(--ease-smooth) both;
 
-  /** Modal 面板退场，需与 components.css 的 200ms DOM 保留时长一致 */
   --animate-pop-out: pop-out 0.2s var(--ease-smooth) both;
 
-  /** Spinner 匀速旋转，linear 不可用 ease 否则呈跳动 */
   --animate-spin: spin 0.6s linear infinite;
 
-  /** 骨架屏脉冲 */
   --animate-pulse: skeleton-pulse 2s var(--ease-smooth) infinite;
-
-  /* —— 布局常量：吸顶导航高度与其毛玻璃模糊半径 —— */
 
   --nav-h: 64px;
 
   --nav-blur: 12px;
 
-  /* —— 层级阶梯：按用途分档预留 10 的间隔，避免组件间随手写 z-index 打架 —— */
-
-  /** 装饰性元素，永远沉底 */
   --z-decor: 0;
 
-  /** 常规内容抬升（卡片 hover 等） */
   --z-content: 10;
 
-  /** 浮起组件（下拉、悬浮按钮） */
   --z-raised: 20;
 
-  /** 吸顶/侧边固定栏 */
   --z-sticky: 40;
 
-  /** 全屏遮罩层 */
   --z-overlay: 60;
 
-  /** Modal 对话框 */
   --z-modal: 70;
 
-  /** toast 通知，需盖住 Modal */
   --z-toast: 80;
 
-  /** 跳转主内容链接，必须高于一切才能被 Tab 聚焦看到 */
   --z-skip: 90;
 }

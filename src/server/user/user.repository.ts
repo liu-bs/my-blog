@@ -1,121 +1,79 @@
 import "server-only";
 
-/**
- * @file 用户域数据仓库层
- * @description 只负责 User 表及点赞/收藏关联表（UserPostLike/UserPostFavorite）的 Prisma 读写，
- * 并把扁平列（socialTwitter、statsArticles 等）映射回 shared User 的嵌套结构。
- * 认证业务在 auth.service、文章交互业务在 blog.service，本层不含业务判断；
- * 涉及关联表的写操作（createUser/updateUser/toggleUserAssociation）均自带或接收事务。
- */
 import type { User, UserStats } from "@shared";
 import { Prisma, type PrismaClient } from "@prisma/client";
 import { getPrisma } from "@server/common/db";
 
-/** 事务客户端类型：可传全局 PrismaClient 或 $transaction 回调内的 tx */
 type Tx = PrismaClient | Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0];
 
-/**
- * User 表扁平行结构（可选含点赞/收藏关联行，用于 withAssociations 查询）
- */
 type PrismaUser = {
-  /** 用户唯一ID */
+
   id: string;
 
-  /** 登录邮箱（唯一） */
   email: string;
 
-  /** 名 */
   firstName: string;
 
-  /** 姓 */
   lastName: string;
 
-  /** 用户名（唯一，展示兜底） */
   username: string;
 
-  /** 头像 URL，空串表示未设置 */
   avatar: string;
 
-  /** 个人主页封面图 URL */
   coverImage: string;
 
-  /** 个人简介 */
   bio: string;
 
-  /** 所在地 */
   location: string;
 
-  /** 个人网站 */
   website: string;
 
-  /** 加入时间 */
   joined: Date;
 
-  /** 角色（如 Writer） */
   role: string;
 
-  /** 公司 */
   company: string;
 
-  /** 是否认证用户 */
   verified: boolean;
 
-  /** 是否被禁用（禁用即拒绝登录与鉴权） */
   disabled: boolean;
 
-  /** 用户标签数组 */
   tags: string[];
 
-  /** 社交链接：Twitter */
   socialTwitter: string;
 
-  /** 社交链接：GitHub */
   socialGithub: string;
 
-  /** 社交链接：LinkedIn */
   socialLinkedin: string;
 
-  /** 统计：已发布文章数 */
   statsArticles: number;
 
-  /** 统计：文章累计被点赞数 */
   statsLikes: number;
 
-  /** 统计：文章累计浏览量 */
   statsViews: number;
 
-  /** bcrypt 密码哈希，可为 null（历史/第三方账号），绝不下发前端 */
   password: string | null;
 
-  /** token 版本号：与 JWT 内版本不一致即失效，用于登出/改密强制下线 */
   tokenVersion: number;
 
-  /** 主题偏好（light/dark/system），未设置为 null */
   appearanceTheme: string | null;
 
-  /** 字号偏好（small/medium/large），未设置为 null */
   appearanceFontSize: string | null;
 
-  /** 创建时间 */
   createdAt: Date;
 
-  /** 最后更新时间 */
   updatedAt: Date;
 
-  /** 关联：该用户点过赞的文章行（仅 withAssociations 查询时存在） */
   likedBy?: { postId: string }[];
 
-  /** 关联：该用户收藏过的文章行（仅 withAssociations 查询时存在） */
   favoritedBy?: { postId: string }[];
 };
 
-/** 关联查询的 include 配置：只取 postId，避免拉整行文章 */
 const userInclude = {
   likedBy: { select: { postId: true } },
   favoritedBy: { select: { postId: true } },
 } as const;
 
-/** 扁平行 → shared User：还原 social/stats/appearance 嵌套结构，Date 转 ISO，关联表转 postId 数组 */
 function mapToUser(p: PrismaUser): User {
   return {
     id: p.id,
@@ -160,7 +118,6 @@ function mapToUser(p: PrismaUser): User {
   };
 }
 
-/** shared User → Prisma 扁平创建数据：嵌套字段拍平，缺省值统一兜底（注意 likedArticles 等关联由调用方单独处理） */
 function mapToPrismaData(user: User) {
   return {
     id: user.id,
@@ -194,12 +151,6 @@ function mapToPrismaData(user: User) {
   };
 }
 
-/**
- * 按 ID 查询用户
- * @param id 用户 ID
- * @param opts withAssociations=true 时附带点赞/收藏的 postId 列表（收藏页/状态判断用）
- * @returns 完整 User（含 password 哈希，调用方负责脱敏）；不存在时 undefined
- */
 export async function findUserById(
   id: string,
   opts?: { withAssociations?: boolean },
@@ -211,12 +162,6 @@ export async function findUserById(
   return row ? mapToUser(row as unknown as PrismaUser) : undefined;
 }
 
-/**
- * 按邮箱查询用户（登录入口用；邮箱已在 validator 归一为小写）
- * @param email 邮箱
- * @param opts withAssociations 同 findUserById
- * @returns 完整 User；不存在时 undefined
- */
 export async function findUserByEmail(
   email: string,
   opts?: { withAssociations?: boolean },
@@ -228,12 +173,6 @@ export async function findUserByEmail(
   return row ? mapToUser(row as unknown as PrismaUser) : undefined;
 }
 
-/**
- * 注册查重：邮箱或用户名任一命中即视为已占用
- * @param email 邮箱（已小写归一）
- * @param username 用户名
- * @returns 是否存在冲突记录
- */
 export async function existsByEmailOrUsername(email: string, username: string): Promise<boolean> {
   const count = await getPrisma().user.count({
     where: { OR: [{ email }, { username }] },
@@ -241,11 +180,6 @@ export async function existsByEmailOrUsername(email: string, username: string): 
   return count > 0;
 }
 
-/**
- * 判断是否为 Prisma 唯一约束冲突（P2002），供 service 层转成 409 而非 500
- * @param err 未知异常
- * @returns 是否唯一键冲突
- */
 export function isUniqueConstraintError(err: unknown): boolean {
   return (
     typeof err === "object" &&
@@ -255,12 +189,6 @@ export function isUniqueConstraintError(err: unknown): boolean {
   );
 }
 
-/**
- * 创建用户及其点赞/收藏关联（迁移/导入场景可携带已有互动数据）
- * @param user 完整 User
- * @returns 传入的 user 原样返回
- * @warning 主表与关联表在同一事务内写入；关联写入 skipDuplicates，重复互动静默跳过
- */
 export async function createUser(user: User): Promise<User> {
   const { likedArticles, favoritedArticles } = user;
 
@@ -284,13 +212,6 @@ export async function createUser(user: User): Promise<User> {
   return user;
 }
 
-/**
- * 更新用户（PATCH 语义：undefined 字段跳过；嵌套的 social/stats/appearance 逐子字段合并）
- * @param id 用户 ID
- * @param partial 需要更新的字段子集；likedArticles/favoritedArticles 传入即整表替换（先删后插）
- * @returns 更新后的完整 User；用户不存在（P2025）时 undefined
- * @warning 主表更新与关联表重建在同一事务内；updatedAt 缺省自动盖当前时间
- */
 export async function updateUser(id: string, partial: Partial<User>): Promise<User | undefined> {
   const data: Record<string, unknown> = {};
 
@@ -345,7 +266,6 @@ export async function updateUser(id: string, partial: Partial<User>): Promise<Us
       throw err;
     }
 
-    // 关联列表传入即整表替换：先清空旧关联再批量重建，保证与传入数组完全一致
     if (partial.likedArticles !== undefined) {
       await tx.userPostLike.deleteMany({ where: { userId: id } });
       if (partial.likedArticles.length > 0) {
@@ -366,7 +286,6 @@ export async function updateUser(id: string, partial: Partial<User>): Promise<Us
       }
     }
 
-    // 关联表被改动或无可更新列时，需重查一次拿到最新关联数据再映射
     if (
       !updatedRow ||
       partial.likedArticles !== undefined ||
@@ -383,10 +302,6 @@ export async function updateUser(id: string, partial: Partial<User>): Promise<Us
   });
 }
 
-/**
- * 递增 tokenVersion：登出/改密后使该用户此前签发的所有 JWT 立即失效（服务端强制下线手段）
- * @param id 用户 ID
- */
 export async function bumpTokenVersion(id: string): Promise<void> {
   await getPrisma().user.updateMany({
     where: { id },
@@ -394,13 +309,6 @@ export async function bumpTokenVersion(id: string): Promise<void> {
   });
 }
 
-/**
- * 原子增减用户统计（articles/likes/views，映射到 statsArticles 等扁平列）
- * @param id 用户 ID
- * @param field 统计字段名（UserStats 的键）
- * @param delta 增量，可为负数
- * @param tx 可选事务客户端；与文章计数联动时必传
- */
 export async function incrementUserStats(
   id: string,
   field: keyof UserStats,
@@ -419,15 +327,6 @@ export async function incrementUserStats(
   });
 }
 
-/**
- * 切换用户与文章的点赞/收藏关联（存在则删、不存在则插，原子判定）
- * @param id 用户 ID
- * @param field 关联类型：likedArticles 对应 UserPostLike 表，favoritedArticles 对应 UserPostFavorite 表
- * @param postId 文章 ID
- * @param tx 可选事务客户端；与文章计数联动时必传
- * @returns 切换前是否已存在关联（true=本次是取消）
- * @warning 走原生 SQL 以单语句完成"删除或插入"；并发下 ON CONFLICT 兜底后补一次删除，保证切换语义
- */
 export async function toggleUserAssociation(
   id: string,
   field: "likedArticles" | "favoritedArticles",
@@ -439,8 +338,6 @@ export async function toggleUserAssociation(
     field === "likedArticles" ? Prisma.raw('"UserPostLike"') : Prisma.raw('"UserPostFavorite"');
   const key = Prisma.sql`"userId" = ${id} AND "postId" = ${postId}`;
 
-  // 三步走：先删（存在→取消）；删不到就插入（新增互动）；
-  // 插入也影响 0 行说明并发下刚被他人删插，兜底再删一次并判定为"取消"
   const deleted = await client.$executeRaw`DELETE FROM ${table} WHERE ${key}`;
   if (deleted > 0) return true;
 
@@ -453,12 +350,6 @@ export async function toggleUserAssociation(
   return true;
 }
 
-/**
- * 查询用户对单篇文章的点赞/收藏状态（两次主键点查，命中联合唯一索引）
- * @param id 用户 ID
- * @param postId 文章 ID
- * @returns { liked, favorited } 布尔状态
- */
 export async function findUserPostState(
   id: string,
   postId: string,

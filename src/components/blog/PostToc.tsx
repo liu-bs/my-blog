@@ -1,9 +1,3 @@
-/**
- * @file PostToc.tsx
- * @description 文章目录侧栏（桌面端）：从正文 DOM 提取 h2/h3 生成目录，MutationObserver 监听正文
- * 变化重新提取；滚动时同步"当前章节"高亮与阅读进度百分比；点击目录项平滑滚动定位。
- * 依赖正文容器 id={articleId} 且标题位于 .article-content 内。
- */
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -11,27 +5,16 @@ import { messages } from "@/texts";
 import type { PostTocProps, TocItem } from "@shared";
 import { useRafScroll } from "@/hooks/useRafScroll";
 
-/**
- * 文章目录侧栏
- * @param articleId 正文容器元素 id，用于定位 h2/h3 标题
- */
 export function PostToc({ articleId }: PostTocProps) {
-  /** 目录条目列表（h2/h3 提取结果） */
+
   const [tocItems, setTocItems] = useState<TocItem[]>([]);
 
-  /** 当前激活（阅读位置所在）的标题 id */
   const [activeId, setActiveId] = useState<string>("");
 
-  /** 阅读进度，0~1 */
   const [progress, setProgress] = useState(0);
 
-  /** 点击目录后的 IntersectionObserver 抑制计时器，避免滚动动画期间高亮抖动 */
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /**
-   * 从正文 DOM 提取 h2/h3 生成目录条目；无 id 的标题自动补 heading-{idx}，
-   * 首个条目在尚无激活项时设为默认高亮
-   */
   const extractHeadings = useCallback(() => {
     const article = document.getElementById(articleId);
 
@@ -47,10 +30,6 @@ export function PostToc({ articleId }: PostTocProps) {
     setActiveId((prev) => prev || items[0]?.id || "");
   }, [articleId]);
 
-  /**
-   * 首次提取目录，并用 MutationObserver 监听正文子树变化（如 Markdown 异步渲染）
-   * 触发重新提取
-   */
   useEffect(() => {
     extractHeadings();
 
@@ -61,16 +40,10 @@ export function PostToc({ articleId }: PostTocProps) {
     return () => observer.disconnect();
   }, [articleId, extractHeadings]);
 
-  // 基于 rAF 节流滚动，计算阅读进度（滚动距离/可滚动总高度，上限 1）
   useRafScroll((_scrollY, docHeight) => {
     setProgress(docHeight > 0 ? Math.min(_scrollY / docHeight, 1) : 0);
   });
 
-  /**
-   * 用 IntersectionObserver 监测标题进入视口以同步高亮；
-   * rootMargin 上收 80px 避开导航栏、下收 70% 让"当前章节"判定更贴近阅读位置。
-   * 点击目录后的 800ms 窗口内（scrollTimer 存在）暂停自动高亮。
-   */
   useEffect(() => {
     if (tocItems.length === 0) return;
     const headings = tocItems
@@ -93,11 +66,6 @@ export function PostToc({ articleId }: PostTocProps) {
     return () => observer.disconnect();
   }, [tocItems]);
 
-  /**
-   * 点击目录项：立即高亮并平滑滚动到目标标题，同时开启 800ms 抑制窗口
-   * 防止滚动动画过程中自动高亮覆盖用户选择
-   * @param headingId 目标标题元素 id
-   */
   const scrollToHeading = useCallback((headingId: string) => {
     const el = document.getElementById(headingId);
     if (!el) return;
@@ -113,20 +81,18 @@ export function PostToc({ articleId }: PostTocProps) {
     });
   }, []);
 
-  /** 卸载时清理抑制计时器 */
   useEffect(() => {
     return () => {
       if (scrollTimer.current) clearTimeout(scrollTimer.current);
     };
   }, []);
 
-  /** 当前激活条目序号，用于底部 "n / total" 指示 */
   const activeIndex = tocItems.findIndex((h) => h.id === activeId);
 
   return (
     <aside className="hidden shrink-0 lg:block" aria-label={messages.post.tocLabel}>
       <div className="sticky-below-nav animate-fade-in">
-        {/* 阅读进度条：百分比文案 + 进度填充 */}
+
         <div className="mb-5">
           <div className="mb-2 flex items-center justify-between meta-text">
             <span>{messages.post.readingProgress}</span>
@@ -143,14 +109,13 @@ export function PostToc({ articleId }: PostTocProps) {
 
         {tocItems.length > 0 && (
           <>
-            {/* 目录标题 + 条目总数角标 */}
+
             <div className="mb-4 flex items-center gap-2 filter-heading">
               <span className="inline-block h-3 w-0.5 rounded-full bg-current opacity-50" />
               {messages.post.toc}
               <span className="ml-1 chip-sm tracking-normal normal-case">{tocItems.length}</span>
             </div>
 
-            {/* 目录导航列表：h3 缩进小字，激活项高亮左边框 */}
             <nav
               className="flex flex-col gap-1 border-l border-stroke"
               aria-label={messages.post.tocNav}
@@ -176,7 +141,6 @@ export function PostToc({ articleId }: PostTocProps) {
               })}
             </nav>
 
-            {/* 当前章节位置指示 */}
             {activeIndex >= 0 && (
               <div className="mt-4 meta-text">
                 {activeIndex + 1} / {tocItems.length}
