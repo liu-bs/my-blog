@@ -1,10 +1,8 @@
 import "server-only";
 
-import type { User, UserStats } from "@shared";
-import { Prisma, type PrismaClient } from "@prisma/client";
-import { getPrisma } from "@server/common/db";
-
-type Tx = PrismaClient | Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0];
+import type { User, UserPostAssociation, UserPostState, UserStatField } from "@shared";
+import { Prisma } from "@prisma/client";
+import { getPrisma, isRecordMissingError, type DbClient } from "@server/common/db";
 
 type PrismaUser = {
 
@@ -98,7 +96,7 @@ function mapToUser(p: PrismaUser): User {
       linkedin: p.socialLinkedin,
     },
     stats: {
-      articles: p.statsArticles,
+      posts: p.statsArticles,
       likes: p.statsLikes,
       views: p.statsViews,
     },
@@ -111,8 +109,8 @@ function mapToUser(p: PrismaUser): User {
             fontSize: p.appearanceFontSize as "small" | "medium" | "large",
           }
         : undefined,
-    likedArticles: p.likedBy?.map((l) => l.postId) ?? [],
-    favoritedArticles: p.favoritedBy?.map((f) => f.postId) ?? [],
+    likedPosts: p.likedBy?.map((l) => l.postId) ?? [],
+    favoritedPosts: p.favoritedBy?.map((f) => f.postId) ?? [],
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
   };
@@ -139,7 +137,7 @@ function mapToPrismaData(user: User) {
     socialTwitter: user.social?.twitter ?? "",
     socialGithub: user.social?.github ?? "",
     socialLinkedin: user.social?.linkedin ?? "",
-    statsArticles: user.stats?.articles ?? 0,
+    statsArticles: user.stats?.posts ?? 0,
     statsLikes: user.stats?.likes ?? 0,
     statsViews: user.stats?.views ?? 0,
     password: user.password ?? null,
@@ -151,59 +149,40 @@ function mapToPrismaData(user: User) {
   };
 }
 
-export async function findUserById(
-  id: string,
-  opts?: { withAssociations?: boolean },
-): Promise<User | undefined> {
-  const row = await getPrisma().user.findUnique({
-    where: { id },
-    ...(opts?.withAssociations ? { include: userInclude } : {}),
-  });
+export async function findUserById(id: string): Promise<User | undefined> {
+  const row = await getPrisma().user.findUnique({ where: { id } });
   return row ? mapToUser(row as unknown as PrismaUser) : undefined;
 }
 
-export async function findUserByEmail(
-  email: string,
-  opts?: { withAssociations?: boolean },
-): Promise<User | undefined> {
-  const row = await getPrisma().user.findUnique({
-    where: { email },
-    ...(opts?.withAssociations ? { include: userInclude } : {}),
-  });
+export async function findUserByEmail(email: string): Promise<User | undefined> {
+  const row = await getPrisma().user.findUnique({ where: { email } });
   return row ? mapToUser(row as unknown as PrismaUser) : undefined;
 }
 
-export async function existsByEmailOrUsername(email: string, username: string): Promise<boolean> {
-  const count = await getPrisma().user.count({
-    where: { OR: [{ email }, { username }] },
-  });
-  return count > 0;
+export async function findUserWithPostAssociations(id: string): Promise<User | undefined> {
+  const row = await getPrisma().user.findUnique({ where: { id }, include: userInclude });
+  return row ? mapToUser(row as unknown as PrismaUser) : undefined;
 }
 
-export function isUniqueConstraintError(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    (err as { code?: unknown }).code === "P2002"
-  );
+export async function countUsersByEmailOrUsername(email: string, username: string): Promise<number> {
+  return getPrisma().user.count({ where: { OR: [{ email }, { username }] } });
 }
 
-export async function createUser(user: User): Promise<User> {
-  const { likedArticles, favoritedArticles } = user;
+export async function createUserRecord(user: User): Promise<User> {
+  const { likedPosts, favoritedPosts } = user;
 
   await getPrisma().$transaction(async (tx) => {
     await tx.user.create({ data: mapToPrismaData({ ...user }) });
 
-    if (likedArticles && likedArticles.length > 0) {
+    if (likedPosts && likedPosts.length > 0) {
       await tx.userPostLike.createMany({
-        data: likedArticles.map((postId) => ({ userId: user.id, postId })),
+        data: likedPosts.map((postId) => ({ userId: user.id, postId })),
         skipDuplicates: true,
       });
     }
-    if (favoritedArticles && favoritedArticles.length > 0) {
+    if (favoritedPosts && favoritedPosts.length > 0) {
       await tx.userPostFavorite.createMany({
-        data: favoritedArticles.map((postId) => ({ userId: user.id, postId })),
+        data: favoritedPosts.map((postId) => ({ userId: user.id, postId })),
         skipDuplicates: true,
       });
     }
@@ -212,7 +191,7 @@ export async function createUser(user: User): Promise<User> {
   return user;
 }
 
-export async function updateUser(id: string, partial: Partial<User>): Promise<User | undefined> {
+export async function updateUserRecord(id: string, partial: Partial<User>): Promise<User | undefined> {
   const data: Record<string, unknown> = {};
 
   if (partial.firstName !== undefined) data.firstName = partial.firstName;
@@ -240,7 +219,7 @@ export async function updateUser(id: string, partial: Partial<User>): Promise<Us
   }
 
   if (partial.stats) {
-    if (partial.stats.articles !== undefined) data.statsArticles = partial.stats.articles;
+    if (partial.stats.posts !== undefined) data.statsArticles = partial.stats.posts;
     if (partial.stats.likes !== undefined) data.statsLikes = partial.stats.likes;
     if (partial.stats.views !== undefined) data.statsViews = partial.stats.views;
   }
@@ -262,25 +241,25 @@ export async function updateUser(id: string, partial: Partial<User>): Promise<Us
         })) as unknown as PrismaUser;
       }
     } catch (err: unknown) {
-      if (err instanceof Error && "code" in err && err.code === "P2025") return undefined;
+      if (isRecordMissingError(err)) return undefined;
       throw err;
     }
 
-    if (partial.likedArticles !== undefined) {
+    if (partial.likedPosts !== undefined) {
       await tx.userPostLike.deleteMany({ where: { userId: id } });
-      if (partial.likedArticles.length > 0) {
+      if (partial.likedPosts.length > 0) {
         await tx.userPostLike.createMany({
-          data: partial.likedArticles.map((postId) => ({ userId: id, postId })),
+          data: partial.likedPosts.map((postId) => ({ userId: id, postId })),
           skipDuplicates: true,
         });
       }
     }
 
-    if (partial.favoritedArticles !== undefined) {
+    if (partial.favoritedPosts !== undefined) {
       await tx.userPostFavorite.deleteMany({ where: { userId: id } });
-      if (partial.favoritedArticles.length > 0) {
+      if (partial.favoritedPosts.length > 0) {
         await tx.userPostFavorite.createMany({
-          data: partial.favoritedArticles.map((postId) => ({ userId: id, postId })),
+          data: partial.favoritedPosts.map((postId) => ({ userId: id, postId })),
           skipDuplicates: true,
         });
       }
@@ -288,8 +267,8 @@ export async function updateUser(id: string, partial: Partial<User>): Promise<Us
 
     if (
       !updatedRow ||
-      partial.likedArticles !== undefined ||
-      partial.favoritedArticles !== undefined
+      partial.likedPosts !== undefined ||
+      partial.favoritedPosts !== undefined
     ) {
       const row = await tx.user.findUnique({
         where: { id },
@@ -302,21 +281,21 @@ export async function updateUser(id: string, partial: Partial<User>): Promise<Us
   });
 }
 
-export async function bumpTokenVersion(id: string): Promise<void> {
+export async function incrementTokenVersion(id: string): Promise<void> {
   await getPrisma().user.updateMany({
     where: { id },
     data: { tokenVersion: { increment: 1 } },
   });
 }
 
-export async function incrementUserStats(
+export async function incrementUserStatColumn(
   id: string,
-  field: keyof UserStats,
+  field: UserStatField,
   delta: number,
-  tx?: Tx,
+  tx?: DbClient,
 ): Promise<void> {
-  const fieldMap: Record<keyof UserStats, string> = {
-    articles: "statsArticles",
+  const fieldMap: Record<UserStatField, string> = {
+    posts: "statsArticles",
     likes: "statsLikes",
     views: "statsViews",
   };
@@ -327,15 +306,15 @@ export async function incrementUserStats(
   });
 }
 
-export async function toggleUserAssociation(
+export async function toggleUserPostAssociationRecord(
   id: string,
-  field: "likedArticles" | "favoritedArticles",
+  association: UserPostAssociation,
   postId: string,
-  tx?: Tx,
+  tx?: DbClient,
 ): Promise<boolean> {
   const client = tx ?? getPrisma();
   const table =
-    field === "likedArticles" ? Prisma.raw('"UserPostLike"') : Prisma.raw('"UserPostFavorite"');
+    association === "likedPosts" ? Prisma.raw('"UserPostLike"') : Prisma.raw('"UserPostFavorite"');
   const key = Prisma.sql`"userId" = ${id} AND "postId" = ${postId}`;
 
   const deleted = await client.$executeRaw`DELETE FROM ${table} WHERE ${key}`;
@@ -353,7 +332,7 @@ export async function toggleUserAssociation(
 export async function findUserPostState(
   id: string,
   postId: string,
-): Promise<{ liked: boolean; favorited: boolean }> {
+): Promise<UserPostState> {
   const client = getPrisma();
   const key = { userId_postId: { userId: id, postId } } as const;
   const [like, favorite] = await Promise.all([

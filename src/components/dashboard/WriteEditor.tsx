@@ -4,8 +4,8 @@ import { Container } from "@/components/ui/Container";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, Pencil, Check, Send } from "lucide-react";
-import { formatTemplate, messages } from "@/texts";
-import { entityName } from "@/lib/message";
+import { formatTemplate, texts } from "@/texts";
+import { entityLabel } from "@/lib/error-message";
 import { notify } from "@/lib/toast";
 import {
   focusFirstInvalid,
@@ -13,17 +13,17 @@ import {
   validateForm,
   type ErrorFeedbackOptions,
   type FieldErrors,
-} from "@/lib/formFeedback";
+} from "@/lib/form-feedback";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
-import { PageHeader } from "@/components/layouts/PageHeader";
+import { PageHeader } from "@/components/shell/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useCreatePost, useUpdatePost } from "@/hooks/usePosts";
 import { estimateReadingTime } from "@shared/markdown";
 import { CATEGORY_VALUES } from "@/lib/category";
 import { hasInAppHistory } from "@/lib/url";
-import { postCreateSchema } from "@/shared/validation/blog";
+import { postCreateSchema } from "@/shared/validation/post";
 import { postEditPath, postPath } from "@shared";
 import type { PostData, PostFormField } from "@shared";
 import {
@@ -33,7 +33,7 @@ import {
   persistDraft,
   readDraft,
   type FormSnapshot,
-} from "@/lib/writeDraft";
+} from "@/lib/write-draft";
 import { MarkdownPane, type ViewMode } from "@/components/dashboard/write/MarkdownPane";
 import { PostMetaFields } from "@/components/dashboard/write/PostMetaFields";
 import { CoverField, isCoverUrlAllowed } from "@/components/dashboard/write/CoverField";
@@ -46,12 +46,10 @@ export function WriteEditor({
   editId,
   initialPost,
 }: {
-
   editId: string | null;
 
   initialPost: PostData | null;
 }) {
-
   const router = useRouter();
 
   const isEditMode = !!editId;
@@ -118,7 +116,7 @@ export function WriteEditor({
     prefilledForId.current = editId;
     if (!hasNotifiedRestore.current) {
       hasNotifiedRestore.current = true;
-      notify.info(messages.feedback.post.draftRestored);
+      notify.info(texts.feedback.post.draftRestored);
     }
   }, [draftKey, editId]);
 
@@ -192,11 +190,11 @@ export function WriteEditor({
       <Container className="page-section">
         <EmptyState
           icon={<Pencil size={20} strokeWidth={2.5} />}
-          title={messages.write.loadErrorTitle}
-          description={messages.write.loadErrorDesc}
+          title={texts.write.loadErrorTitle}
+          description={texts.write.loadErrorDesc}
           action={
             <Button href="/profile" variant="ghost">
-              {messages.write.backToMyPosts}
+              {texts.write.backToMyPosts}
             </Button>
           }
         />
@@ -206,9 +204,9 @@ export function WriteEditor({
 
   const saveErrorRules: ErrorFeedbackOptions<PostFormField> = {
     fields: ["title", "content", "category", "summary", "coverImage"],
-    fallback: formatTemplate(messages.feedback.update.failed, { entity: entityName("post") }),
+    fallback: formatTemplate(texts.feedback.update.failed, { entity: entityLabel("post") }),
     byStatus: {
-      401: { toast: messages.feedback.common.notLoggedIn },
+      401: { toast: texts.feedback.common.notLoggedIn },
     },
   };
 
@@ -222,10 +220,10 @@ export function WriteEditor({
       postCreateSchema,
       { title, content, category, summary, coverImage, isDraft: asDraft },
       {
-        messages: {
-          title: messages.write.titleRequired,
-          content: messages.write.contentRequired,
-          coverImage: messages.write.coverInvalid,
+        fieldTexts: {
+          title: texts.write.titleRequired,
+          content: texts.write.contentRequired,
+          coverImage: texts.write.coverInvalid,
         },
         knownFields: ["title", "content", "category", "summary", "coverImage"],
       },
@@ -233,7 +231,7 @@ export function WriteEditor({
 
     const errors: FieldErrors<PostFormField> = isCoverUrlAllowed(coverImage)
       ? invalid.fields
-      : { ...invalid.fields, coverImage: messages.write.coverInvalid };
+      : { ...invalid.fields, coverImage: texts.write.coverInvalid };
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -258,14 +256,14 @@ export function WriteEditor({
       setBaseline({ title, category, tags, content, coverImage, summary });
 
       if (asDraft) {
-        notify.success(messages.feedback.post[isEditMode ? "draftUpdated" : "draftSaved"]);
+        notify.success(texts.feedback.post[isEditMode ? "draftUpdated" : "draftSaved"]);
 
         if (!isEditMode && data?.post?.id) {
           router.replace(postEditPath(data.post.id));
         }
       } else {
         if (isEditMode) notify.updated("post");
-        else notify.success(messages.feedback.post.published);
+        else notify.success(texts.feedback.post.published);
 
         const target = data?.post?.id ? postPath(data.post.id) : "/posts";
 
@@ -303,11 +301,10 @@ export function WriteEditor({
 
   return (
     <Container className="page-section">
-
       <PageHeader
         title={
           <h1 className="page-title max-md:page-title-mobile">
-            {isEditMode ? messages.write.editTitle : messages.write.createTitle}
+            {isEditMode ? texts.write.editTitle : texts.write.createTitle}
           </h1>
         }
         actions={
@@ -316,7 +313,7 @@ export function WriteEditor({
               type="button"
               onClick={() => setViewMode("edit")}
               className={`segmented-item ${viewMode !== "preview" ? "segmented-item-on" : ""}`}
-              aria-label={messages.write.viewEdit}
+              aria-label={texts.write.viewEdit}
             >
               <Pencil size={12} strokeWidth={2.5} />
             </button>
@@ -324,7 +321,7 @@ export function WriteEditor({
               type="button"
               onClick={() => setViewMode("preview")}
               className={`segmented-item ${viewMode === "preview" ? "segmented-item-on" : ""}`}
-              aria-label={messages.write.viewPreview}
+              aria-label={texts.write.viewPreview}
             >
               <Eye size={12} strokeWidth={2.5} />
             </button>
@@ -334,14 +331,13 @@ export function WriteEditor({
 
       <form id="write-form" onSubmit={handleSave} noValidate>
         <div className="animate-fade-in form-stack">
-
           <div>
             <Input
               id="title"
               name="title"
               type="text"
-              aria-label={messages.write.titlePlaceholder}
-              placeholder={messages.write.titlePlaceholder}
+              aria-label={texts.write.titlePlaceholder}
+              placeholder={texts.write.titlePlaceholder}
               aria-describedby={fieldErrors.title ? "title-error" : undefined}
               value={title}
               onChange={(e) => {
@@ -400,7 +396,7 @@ export function WriteEditor({
           <div className="mt-8 row-md flex-wrap justify-between border-t border-stroke pt-6">
             <span className="text-(length:--type-xs) leading-normal text-muted">
               {content.length > 0
-                ? formatTemplate(messages.write.charCount, {
+                ? formatTemplate(texts.write.charCount, {
                     count: content.length,
                     minutes: estimateReadingTime(content),
                   })
@@ -408,7 +404,7 @@ export function WriteEditor({
             </span>
             <div className="row-sm max-md:ml-auto">
               <Button variant="ghost" type="button" onClick={handleBack}>
-                {messages.common.back}
+                {texts.common.back}
               </Button>
 
               {(!isEditMode || editingPost?.isDraft) && (
@@ -423,7 +419,7 @@ export function WriteEditor({
                   ) : (
                     <Check data-icon="inline-start" size={16} strokeWidth={2.5} />
                   )}
-                  {isEditMode ? messages.write.updateDraft : messages.write.saveDraft}
+                  {isEditMode ? texts.write.updateDraft : texts.write.saveDraft}
                 </Button>
               )}
 
@@ -437,9 +433,9 @@ export function WriteEditor({
                 )}
                 {isEditMode
                   ? editingPost?.isDraft
-                    ? messages.write.publishPost
-                    : messages.write.updatePost
-                  : messages.write.publishPost}
+                    ? texts.write.publishPost
+                    : texts.write.updatePost
+                  : texts.write.publishPost}
               </Button>
             </div>
           </div>

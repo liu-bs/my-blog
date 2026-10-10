@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import { MarkdownToolbar } from "@/components/dashboard/write/MarkdownToolbar";
 import { getMarkdownRenderer } from "@shared/markdown";
 
@@ -15,7 +15,6 @@ export function MarkdownPane({
   error,
   viewMode,
 }: {
-
   content: string;
 
   onContentChange: (value: string) => void;
@@ -24,7 +23,6 @@ export function MarkdownPane({
 
   viewMode: ViewMode;
 }) {
-
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
   const contentRefMobile = useRef<HTMLTextAreaElement>(null);
@@ -90,31 +88,29 @@ export function MarkdownPane({
     if (!e.metaKey && !e.ctrlKey) return;
     if (e.key === "b") {
       e.preventDefault();
-      insertMarkdown("**", "**", messages.write.phBold);
+      insertMarkdown("**", "**", texts.write.phBold);
     } else if (e.key === "i") {
       e.preventDefault();
-      insertMarkdown("*", "*", messages.write.phItalic);
+      insertMarkdown("*", "*", texts.write.phItalic);
     } else if (e.key === "k") {
       e.preventDefault();
-      insertMarkdown("[", "](https://)", messages.write.phLink);
+      insertMarkdown("[", "](https://)", texts.write.phLink);
     }
   };
 
-  const emptyPreviewHtml = `<span class="text-muted">${messages.write.noContent}</span>`;
+  const emptyPreviewHtml = `<span class="text-muted">${texts.write.noContent}</span>`;
 
   const sharedTextareaProps = {
     name: "content",
-    "aria-label": messages.write.contentPlaceholder,
-    placeholder: messages.write.contentPlaceholder,
+    "aria-label": texts.write.contentPlaceholder,
+    placeholder: texts.write.contentPlaceholder,
     onKeyDown: handleKeyDown,
     value: content,
   };
 
   return (
     <>
-
       <div className="hidden grid-cols-2 gap-4 lg:grid">
-
         <div className="input-focus-within flex flex-col rounded-xl border border-stroke-strong bg-card-bg">
           <div className="border-b border-stroke px-3 py-2">
             <MarkdownToolbar onInsert={insertMarkdown} />
@@ -132,7 +128,7 @@ export function MarkdownPane({
 
         <div className="min-h-[60vh] overflow-y-auto rounded-xl border border-stroke-strong bg-card-bg p-6">
           <div
-            className="article-content text-(length:--type-base) leading-loose"
+            className="post-content text-(length:--type-base) leading-loose"
             dangerouslySetInnerHTML={{ __html: previewHtml || emptyPreviewHtml }}
           />
         </div>
@@ -141,7 +137,7 @@ export function MarkdownPane({
       <div className="lg:hidden">
         {viewMode === "preview" ? (
           <div
-            className="article-content min-h-[60vh] rounded-xl border border-stroke-strong bg-card-bg p-6 text-(length:--type-base) leading-loose"
+            className="post-content min-h-[60vh] rounded-xl border border-stroke-strong bg-card-bg p-6 text-(length:--type-base) leading-loose"
             dangerouslySetInnerHTML={{ __html: previewHtml || emptyPreviewHtml }}
           />
         ) : (

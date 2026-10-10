@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface MutationCallbacks<TData> {
-
   onSuccess?: (data: TData) => void;
 
   onError?: (err: Error) => void;
@@ -22,7 +21,6 @@ function isRetryableError(err: unknown): boolean {
 
   const status = (err as { status?: number }).status;
   if (typeof status === "number") {
-
     return status === 408 || status === 429 || status === 0;
   }
 
@@ -37,7 +35,6 @@ function isRetryableError(err: unknown): boolean {
 }
 
 interface AsyncAction<TVars, TData> {
-
   mutate: (vars: TVars, callbacks?: MutationCallbacks<TData>) => Promise<TData | undefined>;
 
   isPending: boolean;
@@ -60,7 +57,6 @@ export function useAsyncAction<TVars, TData>(
 
   const mutate = useCallback(
     async (vars: TVars, callbacks?: MutationCallbacks<TData>) => {
-
       if (mutatingRef.current) return undefined;
       mutatingRef.current = true;
       setIsPending(true);

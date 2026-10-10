@@ -3,7 +3,6 @@
 import { useEffect, useRef, type RefObject } from "react";
 
 interface DismissableOptions {
-
   lockScroll?: boolean;
 }
 
@@ -13,7 +12,6 @@ export function useDismissable(
   refs: RefObject<HTMLElement | null>[],
   options?: DismissableOptions,
 ) {
-
   const savedRefs = useRef(refs);
 
   const savedOnClose = useRef(onClose);

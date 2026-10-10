@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { notify } from "@/lib/toast";
-import { unwrap } from "@/lib/apiRequest";
+import { unwrap } from "@/lib/api-request";
 import {
   createCommentAction,
   updateCommentAction,
   deleteCommentAction,
 } from "@server/comment/comment.controller";
-import { api } from "@/lib/apiRequest";
+import { api } from "@/lib/api-request";
 import { COMMENT_PAGE_SIZE } from "@/config/site";
 import type {
   Comment,
@@ -102,7 +102,6 @@ export function useComments(
       });
       loadedRef.current = offset + result.comments.length;
     } catch (err) {
-
       if (genRef.current === gen) notify.error(err);
     } finally {
       setIsLoadingMore(false);
@@ -143,7 +142,6 @@ export function useComments(
   }, []);
 
   return {
-
     data,
 
     isLoading,

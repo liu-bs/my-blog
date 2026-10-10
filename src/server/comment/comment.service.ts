@@ -1,45 +1,56 @@
 import "server-only";
 
-import type { Comment } from "@shared";
 import { randomUUID } from "node:crypto";
-import { Prisma } from "@prisma/client";
-import { ForbiddenError, NotFoundError, ValidationError } from "@server/common/errors";
+
 import sanitizeHtml from "sanitize-html";
-import type { CreateCommentDto, ListCommentsOptions } from "@shared";
-import { findUserById } from "@server/user/user.repository";
-import { runInTransaction } from "@server/common/db";
-import { joinName } from "@shared/format";
-import { assertPostReadable, assertPostCommentable } from "@server/blog/blog.service";
-import { incrementPostField } from "@server/blog/blog.repository";
+
+import type { Comment, CommentsListData, CreateCommentDto } from "@shared";
 import {
-  findCommentsByPostId,
+  assertPostCommentable,
+  assertPostReadable,
+  incrementPostCounter,
+} from "@server/post/post.service";
+import { getUserById, getUserDisplayName } from "@server/user/user.service";
+import { isForeignKeyViolation, isRecordMissingError, runInTransaction } from "@server/common/db";
+import { ForbiddenError, NotFoundError, ValidationError } from "@server/common/errors";
+import { PAGE_LIMITS } from "@server/common/policy";
+import {
   countComments,
   createCommentRecord,
   deleteCommentRecord,
   findCommentById,
-  findCommentForDelete,
+  findCommentOwnership,
+  listCommentsByPostId,
   updateCommentRecord,
-  updateCommentsAuthor,
 } from "./comment.repository";
 
-const DEFAULT_PAGE_SIZE = 10;
+export { updateCommentsAuthorProfile } from "./comment.repository";
 
-const MAX_PAGE_SIZE = 50;
+export interface ListCommentsOptions {
+  postId: string;
+
+  viewerId?: string;
+
+  limit?: number;
+
+  offset?: number;
+}
 
 function sanitizeCommentContent(content: string): string {
   return sanitizeHtml(content, { allowedTags: [], allowedAttributes: {} }).trim();
 }
 
-export async function listComments(
-  options: ListCommentsOptions,
-): Promise<{ comments: Comment[]; total: number; hasMore: boolean }> {
-  await assertPostReadable(options.postId, options.user?.id);
+export async function listComments(options: ListCommentsOptions): Promise<CommentsListData> {
+  await assertPostReadable(options.postId, options.viewerId);
 
-  const take = Math.min(MAX_PAGE_SIZE, Math.max(1, options.limit ?? DEFAULT_PAGE_SIZE));
+  const take = Math.min(
+    PAGE_LIMITS.commentListMaxLimit,
+    Math.max(1, options.limit ?? PAGE_LIMITS.commentListDefaultLimit),
+  );
   const skip = Math.max(0, options.offset ?? 0);
 
   const [rows, total] = await Promise.all([
-    findCommentsByPostId(options.postId, { take: take + 1, skip }),
+    listCommentsByPostId(options.postId, { take: take + 1, skip }),
     countComments(options.postId),
   ]);
 
@@ -52,18 +63,15 @@ export async function createComment(
 ): Promise<Comment> {
   await assertPostCommentable(dto.postId);
 
-  const user = await findUserById(dto.userId);
-  if (!user) {
-    throw new NotFoundError("User not found");
-  }
+  const user = await getUserById(dto.userId);
+  if (!user) throw new NotFoundError("User not found");
 
   const now = new Date().toISOString();
   const comment: Comment = {
     id: randomUUID(),
     postId: dto.postId,
     userId: dto.userId,
-
-    userName: joinName(user.firstName, user.lastName) || user.username,
+    userName: getUserDisplayName(user),
     userAvatar: user.avatar || undefined,
     content: sanitizeCommentContent(dto.content),
     createdAt: now,
@@ -73,13 +81,10 @@ export async function createComment(
   try {
     await runInTransaction(async (tx) => {
       await createCommentRecord(comment, tx);
-      await incrementPostField(dto.postId, "commentsCount", 1, tx);
+      await incrementPostCounter(dto.postId, "commentsCount", 1, tx);
     });
   } catch (err) {
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      (err.code === "P2025" || err.code === "P2003")
-    ) {
+    if (isRecordMissingError(err) || isForeignKeyViolation(err)) {
       throw new NotFoundError("Post not found");
     }
     throw err;
@@ -93,24 +98,20 @@ export async function updateComment(
   content: string,
   currentUserId: string,
 ): Promise<Comment> {
-  const row = await findCommentById(id);
-  if (!row) {
-    throw new NotFoundError("Comment not found");
-  }
-  if (row.userId !== currentUserId) {
+  const comment = await findCommentById(id);
+  if (!comment) throw new NotFoundError("Comment not found");
+  if (comment.userId !== currentUserId) {
     throw new ForbiddenError("Not authorized to edit this comment");
   }
 
   const trimmed = sanitizeCommentContent(content);
-  if (trimmed.length === 0) {
-    throw new ValidationError("Comment content cannot be empty");
-  }
+  if (trimmed.length === 0) throw new ValidationError("Comment content cannot be empty");
 
-  const now = new Date().toISOString();
-  const updated = await updateCommentRecord(id, { content: trimmed, updatedAt: now });
-  if (!updated) {
-    throw new NotFoundError("Comment not found");
-  }
+  const updated = await updateCommentRecord(id, {
+    content: trimmed,
+    updatedAt: new Date().toISOString(),
+  });
+  if (!updated) throw new NotFoundError("Comment not found");
   return updated;
 }
 
@@ -118,13 +119,11 @@ export async function deleteComment(
   id: string,
   currentUserId: string,
 ): Promise<{ postId: string }> {
-  const row = await findCommentForDelete(id);
-  if (!row) {
-    throw new NotFoundError("Comment not found");
-  }
+  const ownership = await findCommentOwnership(id);
+  if (!ownership) throw new NotFoundError("Comment not found");
 
-  const isCommentAuthor = row.userId === currentUserId;
-  const isPostAuthor = row.postAuthorId === currentUserId;
+  const isCommentAuthor = ownership.userId === currentUserId;
+  const isPostAuthor = ownership.postAuthorId === currentUserId;
   if (!isCommentAuthor && !isPostAuthor) {
     throw new ForbiddenError("Not authorized to delete this comment");
   }
@@ -132,22 +131,12 @@ export async function deleteComment(
   try {
     await runInTransaction(async (tx) => {
       await deleteCommentRecord(id, tx);
-      await incrementPostField(row.postId, "commentsCount", -1, tx);
+      await incrementPostCounter(ownership.postId, "commentsCount", -1, tx);
     });
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
-      return { postId: row.postId };
-    }
+    if (isRecordMissingError(err)) return { postId: ownership.postId };
     throw err;
   }
 
-  return { postId: row.postId };
-}
-
-export async function syncCommentAuthorProfile(
-  userId: string,
-  userName: string,
-  userAvatar: string | null,
-): Promise<number> {
-  return updateCommentsAuthor(userId, userName, userAvatar);
+  return { postId: ownership.postId };
 }

@@ -837,7 +837,7 @@ select:disabled {
   background: rgb(0 0 0 / var(--overlay-scrim));
 }
 
-@utility pwd-toggle {
+@utility password-toggle {
   @apply cursor-pointer p-1 text-faint transition-colors duration-[var(--duration-fast)] ease-smooth hover:text-body;
 }
 

@@ -5,7 +5,6 @@ import { getPrisma } from "@server/common/db";
 
 export async function GET() {
   try {
-
     await getPrisma().$queryRaw`SELECT 1`;
   } catch (err) {
     logger.error("Health check failed", {

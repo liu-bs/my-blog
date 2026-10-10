@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 export function useUnsavedGuard(isDirty: boolean): {
-
   confirmOpen: boolean;
 
   setConfirmOpen: (open: boolean) => void;
@@ -14,7 +13,6 @@ export function useUnsavedGuard(isDirty: boolean): {
 
   const guard = (proceed: () => void) => {
     if (isDirty) {
-
       setConfirmOpen(true);
       return;
     }

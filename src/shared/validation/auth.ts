@@ -19,7 +19,6 @@ function trimmed(field: string, min: number, minMsg: string, max: number) {
 }
 
 export const registerSchema = z.object({
-
   email: z.email("邮箱格式不正确"),
 
   password: passwordSchema,
@@ -34,7 +33,6 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-
   email: z.pipe(
     z.pipe(
       z.unknown(),
@@ -47,7 +45,6 @@ export const loginSchema = z.object({
 });
 
 export const changePasswordFieldsSchema = z.object({
-
   currentPassword: z.string().check(z.minLength(1, "当前密码不能为空")),
 
   newPassword: passwordSchema,
@@ -62,7 +59,6 @@ export const changePasswordSchema = changePasswordFieldsSchema.check(
 );
 
 export const updateProfileSchema = z.object({
-
   firstName: z.optional(z.string().check(z.maxLength(50, "名不能超过50个字符"))),
 
   lastName: z.optional(z.string().check(z.maxLength(50, "姓不能超过50个字符"))),

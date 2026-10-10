@@ -1,5 +1,5 @@
 import type { z } from "zod/mini";
-import type { ValidationErrorDetail, ValidationRule } from "../types/ui";
+import type { ValidationErrorDetail, ValidationRule } from "../types/validation";
 
 export const IMAGE_URL_INVALID_MESSAGE = "请填写以 https 开头的图片链接，或以 / 开头的站内路径";
 

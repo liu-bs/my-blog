@@ -1,13 +1,12 @@
 "use client";
 
 import { useCurrentUser } from "./useCurrentUser";
-import { usePostState, type PostStateValue } from "@/components/blog/PostStateProvider";
+import { usePostState, type PostStateValue } from "@/components/post/PostStateProvider";
 import { useRequireAuth } from "./useRequireAuth";
 import { postPath } from "@shared";
 import type { User } from "@shared";
 
 interface PostPageAuthContext extends PostStateValue {
-
   user: User | null;
 
   requireAuth: (action: () => void) => void;

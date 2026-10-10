@@ -21,7 +21,7 @@ const baseClass =
 export function Button({
   variant = "primary",
   size = "md",
-  loading,
+  isLoading,
   className = "",
   children,
   ref,
@@ -36,13 +36,12 @@ export function Button({
         href={href}
         className={cls}
         ref={ref as React.Ref<HTMLAnchorElement>}
-        aria-busy={loading}
-        aria-disabled={loading}
-        onClick={loading ? (e) => e.preventDefault() : undefined}
+        aria-busy={isLoading}
+        aria-disabled={isLoading}
+        onClick={isLoading ? (e) => e.preventDefault() : undefined}
         {...anchorProps}
       >
-
-        {loading && <Spinner size="sm" aria-hidden="true" />}
+        {isLoading && <Spinner size="sm" aria-hidden="true" />}
         {children}
       </Link>
     );
@@ -52,13 +51,12 @@ export function Button({
   return (
     <button
       className={cls}
-      disabled={loading || (props as ButtonAsButton).disabled}
-      aria-busy={loading}
+      disabled={isLoading || (props as ButtonAsButton).disabled}
+      aria-busy={isLoading}
       ref={ref as React.Ref<HTMLButtonElement>}
       {...buttonProps}
     >
-
-      {loading && <Spinner size="sm" aria-hidden="true" />}
+      {isLoading && <Spinner size="sm" aria-hidden="true" />}
       {children}
     </button>
   );

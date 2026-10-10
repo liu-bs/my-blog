@@ -4,33 +4,35 @@ import type { NextResponse } from "next/server";
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 import type { User } from "@shared";
-import { tokenService } from "./token.service";
 import { AUTH_TOKEN_COOKIE, AUTH_STATUS_COOKIE } from "@shared";
 import { env } from "@server/common/config/env";
+import { signToken } from "@server/common/token";
 
 function cookieOptions(overrides: { httpOnly: boolean; maxAge?: number }) {
   return {
     secure: env.isProd,
     sameSite: "lax" as const,
-    path: "/",
+    path: "/" as const,
     maxAge: env.COOKIE_MAX_AGE,
     ...overrides,
   };
 }
 
-export function setAuthCookies(res: NextResponse, user: User): void {
-  const token = tokenService.generate({ id: user.id, tokenVersion: user.tokenVersion ?? 0 });
-  res.cookies.set(AUTH_TOKEN_COOKIE, token, cookieOptions({ httpOnly: true }));
-  res.cookies.set(AUTH_STATUS_COOKIE, "1", cookieOptions({ httpOnly: false }));
+function issueToken(user: User): string {
+  return signToken({ id: user.id, tokenVersion: user.tokenVersion ?? 0 });
 }
 
-export function setAuthCookiesToJar(jar: ReadonlyRequestCookies, user: User): void {
-  const token = tokenService.generate({ id: user.id, tokenVersion: user.tokenVersion ?? 0 });
-  jar.set(AUTH_TOKEN_COOKIE, token, cookieOptions({ httpOnly: true }));
-  jar.set(AUTH_STATUS_COOKIE, "1", cookieOptions({ httpOnly: false }));
+export function setAuthCookiesOnResponse(response: NextResponse, user: User): void {
+  response.cookies.set(AUTH_TOKEN_COOKIE, issueToken(user), cookieOptions({ httpOnly: true }));
+  response.cookies.set(AUTH_STATUS_COOKIE, "1", cookieOptions({ httpOnly: false }));
 }
 
-export function clearAuthCookiesFromJar(jar: ReadonlyRequestCookies): void {
-  jar.set(AUTH_TOKEN_COOKIE, "", cookieOptions({ httpOnly: true, maxAge: 0 }));
-  jar.set(AUTH_STATUS_COOKIE, "", cookieOptions({ httpOnly: false, maxAge: 0 }));
+export function setAuthCookiesOnStore(cookieStore: ReadonlyRequestCookies, user: User): void {
+  cookieStore.set(AUTH_TOKEN_COOKIE, issueToken(user), cookieOptions({ httpOnly: true }));
+  cookieStore.set(AUTH_STATUS_COOKIE, "1", cookieOptions({ httpOnly: false }));
+}
+
+export function clearAuthCookiesOnStore(cookieStore: ReadonlyRequestCookies): void {
+  cookieStore.set(AUTH_TOKEN_COOKIE, "", cookieOptions({ httpOnly: true, maxAge: 0 }));
+  cookieStore.set(AUTH_STATUS_COOKIE, "", cookieOptions({ httpOnly: false, maxAge: 0 }));
 }

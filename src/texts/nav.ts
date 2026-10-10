@@ -1,5 +1,4 @@
 const nav = {
-
   brand: "慢半拍",
 
   home: "主页",

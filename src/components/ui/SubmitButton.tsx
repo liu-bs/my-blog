@@ -5,7 +5,6 @@ import { Button } from "./Button";
 import type { ButtonVariant, ButtonSize } from "@shared";
 
 interface SubmitButtonProps {
-
   children: React.ReactNode;
 
   className?: string;
@@ -21,12 +20,11 @@ export function SubmitButton({
   variant = "primary",
   size = "md",
 }: SubmitButtonProps) {
-
   const { pending } = useFormStatus();
   return (
     <Button
       type="submit"
-      loading={pending}
+      isLoading={pending}
       disabled={pending}
       variant={variant}
       size={size}

@@ -35,7 +35,6 @@ export function SettingsSkeleton() {
   return (
     <Container className="page-section">
       <div aria-hidden="true">
-
         <header className="page-header">
           <div>
             <span className="block page-title max-md:page-title-mobile">
@@ -62,7 +61,6 @@ export function SettingsSkeleton() {
         </div>
 
         <div className="form-stack">
-
           <div className="flex items-center gap-8">
             <span className={`${BAR} h-10 w-10 shrink-0 rounded-full`} />
             <div className="min-w-0 flex-1">

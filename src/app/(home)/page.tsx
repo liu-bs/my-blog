@@ -1,42 +1,43 @@
 import { Search } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
-import { ArticleCard } from "@/components/blog/ArticleCard";
+import { PostCard } from "@/components/post/PostCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PinnedBadge } from "@/components/ui/PinnedBadge";
-import { WriteCta } from "@/components/blog/WriteCta";
-import { formatTemplate, messages } from "@/texts";
-import { listPostsServer, withDbRetry } from "@server/blog/blog.cache";
+import { StartWritingButton } from "@/components/post/StartWritingButton";
+import { formatTemplate, texts } from "@/texts";
+import { withDbRetry } from "@server/common/db";
+import { listPostsCached } from "@server/post/post.cache";
 import { postPath } from "@shared";
 import { HOME_PAGE_SIZE } from "@/config/site";
 import { pageAlternates } from "@/lib/seo";
 
 export function generateMetadata() {
   return {
-    title: `${messages.home.heroTitle.replace("\n", "")} · ${messages.meta.siteTitle}`,
-    description: messages.home.heroLead,
+    title: `${texts.home.heroTitle.replace("\n", "")} · ${texts.meta.siteTitle}`,
+    description: texts.home.heroLead,
     alternates: pageAlternates("/"),
   };
 }
 
 export default async function HomePage() {
 
-  const postsData = await withDbRetry(() =>
-    listPostsServer({ page: 1, limit: HOME_PAGE_SIZE }),
+  const postsResult = await withDbRetry(() =>
+    listPostsCached({ page: 1, limit: HOME_PAGE_SIZE }),
   ).catch(() => null);
 
-  const latestPosts = postsData?.posts ?? [];
+  const latestPosts = postsResult?.posts ?? [];
 
-  const postsLoadError = postsData === null;
+  const postsLoadError = postsResult === null;
 
-  const hasMore = (postsData?.total ?? 0) > latestPosts.length;
+  const hasMore = (postsResult?.total ?? 0) > latestPosts.length;
 
   const hasPosts = latestPosts.length > 0;
 
   return (
     <>
 
-      <section className="hero-section" aria-label={messages.home.heroSection}>
+      <section className="hero-section" aria-label={texts.home.heroSection}>
         <Container>
           <div className="grid grid-cols-1 items-center gap-(--space-10) max-lg:gap-10 lg:grid-cols-[1fr_480px]">
 
@@ -48,25 +49,25 @@ export default async function HomePage() {
                   aria-hidden="true"
                 />
                 <span className="text-(length:--type-xs) font-medium tracking-[0.02em] text-muted">
-                  {messages.home.heroKicker}
+                  {texts.home.heroKicker}
                 </span>
               </div>
 
               <h1 className="m-0 mb-8 animate-fade-in [animation-delay:120ms]">
                 <span className="hero-headline whitespace-pre-line text-heading">
-                  {messages.home.heroTitle}
+                  {texts.home.heroTitle}
                 </span>
               </h1>
 
               <p className="m-0 mb-10 animate-fade-in hero-lead text-body [animation-delay:240ms]">
-                {messages.home.heroLead}
+                {texts.home.heroLead}
               </p>
 
               <div className="flex animate-fade-in flex-wrap items-center gap-5 border-t border-stroke pt-8 [animation-delay:360ms]">
                 <Button href="/posts" size="lg">
-                  {messages.home.browsePosts}
+                  {texts.home.browsePosts}
                 </Button>
-                <WriteCta />
+                <StartWritingButton />
               </div>
             </div>
 
@@ -103,18 +104,18 @@ export default async function HomePage() {
       </section>
 
       {postsLoadError ? (
-        <section className="animate-fade-in page-section" aria-label={messages.home.latestSection}>
+        <section className="animate-fade-in page-section" aria-label={texts.home.latestSection}>
           <Container>
             <div className="page-header">
-              <h2 className="section-title">{messages.home.latestTitle}</h2>
+              <h2 className="section-title">{texts.home.latestTitle}</h2>
             </div>
 
             <EmptyState
               icon={<Search size={20} strokeWidth={2.5} />}
-              title={messages.home.loadErrorTitle}
-              description={messages.home.loadErrorDesc}
+              title={texts.home.loadErrorTitle}
+              description={texts.home.loadErrorDesc}
               action={
-                <Button onClick={() => window.location.reload()}>{messages.common.refresh}</Button>
+                <Button onClick={() => window.location.reload()}>{texts.common.refresh}</Button>
               }
             />
           </Container>
@@ -123,34 +124,34 @@ export default async function HomePage() {
         hasPosts && (
           <section
             className="animate-fade-in page-section"
-            aria-label={messages.home.latestSection}
+            aria-label={texts.home.latestSection}
           >
             <Container>
 
               <div className="page-header flex items-end justify-between gap-4">
                 <div>
-                  <h2 className="section-title">{messages.home.latestTitle}</h2>
+                  <h2 className="section-title">{texts.home.latestTitle}</h2>
                   <p className="mt-2 text-(length:--type-xs) leading-normal text-muted">
-                    {messages.home.latestSubtitle}
+                    {texts.home.latestSubtitle}
                   </p>
                 </div>
                 <Button href="/posts" variant="ghost" size="sm">
                   {hasMore
-                    ? formatTemplate(messages.home.viewAllCount, { count: postsData?.total ?? "" })
-                    : messages.home.viewAll}
+                    ? formatTemplate(texts.home.viewAllCount, { count: postsResult?.total ?? "" })
+                    : texts.home.viewAll}
                 </Button>
               </div>
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {latestPosts.map((p, i) => (
-                  <ArticleCard
-                    key={p.id}
-                    post={p}
-                    href={postPath(p.id)}
-                    tags={p.tags}
-                    badge={p.pinned ? <PinnedBadge /> : undefined}
+                {latestPosts.map((post, index) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    href={postPath(post.id)}
+                    tags={post.tags}
+                    badge={post.pinned ? <PinnedBadge /> : undefined}
                     variant="vertical"
-                    priority={i < 3}
+                    priority={index < 3}
                   />
                 ))}
               </div>

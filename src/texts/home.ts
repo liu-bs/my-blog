@@ -1,5 +1,4 @@
 const home = {
-
   heroSection: "首页主视觉",
 
   heroKicker: "一本生活手记",

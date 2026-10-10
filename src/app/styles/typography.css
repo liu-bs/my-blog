@@ -1,4 +1,4 @@
-@utility article-content {
+@utility post-content {
   color: var(--color-body);
   font-size: var(--type-base);
   line-height: var(--leading-loose);

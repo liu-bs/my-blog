@@ -1,32 +1,28 @@
 import { Container } from "@/components/ui/Container";
 import type { Metadata } from "next";
 import { Search, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { ArticleCard } from "@/components/blog/ArticleCard";
+import { PostCard } from "@/components/post/PostCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { PinnedBadge } from "@/components/ui/PinnedBadge";
-import { PageHeader } from "@/components/layouts/PageHeader";
-import {
-  listPostsServer,
-  getCategoriesServer,
-  getTagsServer,
-  withDbRetry,
-} from "@server/blog/blog.cache";
+import { PageHeader } from "@/components/shell/PageHeader";
+import { withDbRetry } from "@server/common/db";
+import { listPostsCached, listCategoriesCached, listTagsCached } from "@server/post/post.cache";
 import { PAGE_SIZE } from "@/config/site";
 import { ALL_CATEGORY } from "@/lib/category";
-import { formatTemplate, messages } from "@/texts";
+import { formatTemplate, texts } from "@/texts";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { pageAlternates } from "@/lib/seo";
-import { PostSidebar } from "@/components/blog/PostSidebar";
-import { PostsSearchInput } from "@/components/blog/PostsSearchInput";
-import { buildPostsUrl } from "@/lib/buildPostsUrl";
+import { PostSidebar } from "@/components/post/PostSidebar";
+import { PostSearchInput } from "@/components/post/PostSearchInput";
+import { buildPostsUrl } from "@/lib/build-posts-url";
 import { postPath } from "@shared";
 
 export function generateMetadata(): Metadata {
   return {
-    title: `${messages.posts.title} · ${messages.meta.siteTitle}`,
-    description: messages.posts.subtitle,
+    title: `${texts.postList.title} · ${texts.meta.siteTitle}`,
+    description: texts.postList.subtitle,
 
     alternates: pageAlternates("/posts"),
   };
@@ -37,45 +33,45 @@ export default async function PostsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const sp = await searchParams;
+  const params = await searchParams;
 
-  const category = typeof sp.category === "string" ? sp.category : undefined;
+  const category = typeof params.category === "string" ? params.category : undefined;
 
-  const tag = typeof sp.tag === "string" ? sp.tag : undefined;
+  const tag = typeof params.tag === "string" ? params.tag : undefined;
 
-  const page = Number(sp.page) || 1;
+  const page = Number(params.page) || 1;
 
-  const q = typeof sp.q === "string" ? sp.q : undefined;
+  const rawSearch = typeof params.q === "string" ? params.q : undefined;
 
-  const query = q?.trim() || undefined;
+  const searchTerm = rawSearch?.trim() || undefined;
 
   const baseParams: Record<string, string | undefined> = {
     category,
     tag,
-    q,
+    q: rawSearch,
     page: page > 1 ? String(page) : undefined,
   };
 
-  const [postsResult, categoriesData, tagsData] = await Promise.all([
+  const [postsResult, categoriesResult, tagsResult] = await Promise.all([
     withDbRetry(() =>
-      listPostsServer({
+      listPostsCached({
         category: category !== ALL_CATEGORY ? category : undefined,
         tag: tag ?? undefined,
 
-        q: query,
+        q: searchTerm,
         page,
         limit: PAGE_SIZE,
       }),
     ).catch(() => null),
-    getCategoriesServer().catch(() => ({ categories: [] })),
-    getTagsServer().catch(() => ({ tags: [] })),
+    listCategoriesCached().catch(() => ({ categories: [] })),
+    listTagsCached().catch(() => ({ tags: [] })),
   ]);
 
   const postsLoadError = postsResult === null;
 
-  const categories = [ALL_CATEGORY, ...(categoriesData?.categories ?? [])];
+  const categories = [ALL_CATEGORY, ...(categoriesResult?.categories ?? [])];
 
-  const tags = tagsData?.tags ?? [];
+  const tags = tagsResult?.tags ?? [];
 
   const currentCategory = category ?? ALL_CATEGORY;
 
@@ -88,8 +84,8 @@ export default async function PostsPage({
     postsResult.totalPages > 0
   ) {
     const correctedParams = new URLSearchParams();
-    for (const [k, v] of Object.entries(baseParams)) {
-      if (v && k !== "page") correctedParams.set(k, v);
+    for (const [key, value] of Object.entries(baseParams)) {
+      if (value && key !== "page") correctedParams.set(key, value);
     }
     correctedParams.set("page", String(postsResult.totalPages));
     redirect(`/posts?${correctedParams.toString()}`);
@@ -105,14 +101,14 @@ export default async function PostsPage({
 
   const currentPage = Math.min(Math.max(1, rawPage), totalPages);
 
-  const hasFilters = !!(query || category || tag);
+  const hasFilters = !!(searchTerm || category || tag);
 
   const activeFilters: { key: string; label: string; href: string }[] = [];
 
-  if (query) {
+  if (searchTerm) {
     activeFilters.push({
       key: "q",
-      label: query,
+      label: searchTerm,
       href: buildPostsUrl(baseParams, { q: null }),
     });
   }
@@ -141,37 +137,35 @@ export default async function PostsPage({
 
   return (
     <Container className="page-section">
-
-      <PageHeader title={messages.posts.title} subtitle={messages.posts.subtitle} />
+      <PageHeader title={texts.postList.title} subtitle={texts.postList.subtitle} />
 
       <PostSidebar
         categories={categories}
         tags={tags}
         currentCategory={currentCategory}
         currentTag={currentTag}
-        zeroResults={posts.length === 0}
+        isEmpty={posts.length === 0}
       >
-
         <div className="mb-6 page-actions animate-fade-in">
           <p className="text-(length:--type-xs) leading-normal font-medium text-body">
             {totalPages > 1
-              ? formatTemplate(messages.posts.totalWithPage, {
+              ? formatTemplate(texts.postList.totalWithPage, {
                   count: total,
                   current: currentPage,
                   total: totalPages,
                 })
-              : formatTemplate(messages.posts.totalOnly, { count: total })}
+              : formatTemplate(texts.postList.totalOnly, { count: total })}
           </p>
           <div className="row-md flex-wrap">
-            <PostsSearchInput initialValue={q ?? ""} />
+            <PostSearchInput initialValue={rawSearch ?? ""} />
 
             {activeFilters.length > 0 && (
-              <div className="row-md flex-wrap" role="group" aria-label={messages.posts.filter}>
+              <div className="row-md flex-wrap" role="group" aria-label={texts.postList.filter}>
                 {activeFilters.map((f) => (
                   <Link
                     key={f.key}
                     href={f.href}
-                    aria-label={formatTemplate(messages.posts.removeFilterAria, { name: f.label })}
+                    aria-label={formatTemplate(texts.postList.removeFilterAria, { name: f.label })}
                     className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-(length:--type-2xs) leading-normal font-medium text-page shadow-(--shadow-sm) transition-[filter] duration-[var(--duration-fast)] ease-smooth hover:brightness-105"
                   >
                     {f.label}
@@ -184,7 +178,7 @@ export default async function PostsPage({
                     href="/posts"
                     className="text-(length:--type-2xs) leading-normal text-muted underline decoration-stroke underline-offset-4 transition-colors duration-[var(--duration-fast)] ease-smooth hover:text-heading"
                   >
-                    {messages.posts.clearFilters}
+                    {texts.postList.clearFilters}
                   </Link>
                 )}
               </div>
@@ -196,11 +190,11 @@ export default async function PostsPage({
           <div className="animate-fade-in">
             <EmptyState
               icon={<Search size={20} strokeWidth={2.5} />}
-              title={messages.posts.loadErrorTitle}
-              description={messages.posts.loadErrorDesc}
+              title={texts.postList.loadErrorTitle}
+              description={texts.postList.loadErrorDesc}
               action={
                 <Button href="/posts" variant="ghost">
-                  {messages.common.refresh}
+                  {texts.common.refresh}
                 </Button>
               }
             />
@@ -209,12 +203,12 @@ export default async function PostsPage({
           <div className="animate-fade-in">
             <EmptyState
               icon={<Search size={20} strokeWidth={2.5} />}
-              title={messages.posts.noResultsTitle}
-              description={messages.posts.noResultsDesc}
+              title={texts.postList.noResultsTitle}
+              description={texts.postList.noResultsDesc}
               action={
                 hasFilters ? (
                   <Button href="/posts" variant="ghost">
-                    {messages.posts.clearFilters}
+                    {texts.postList.clearFilters}
                   </Button>
                 ) : undefined
               }
@@ -222,15 +216,14 @@ export default async function PostsPage({
           </div>
         ) : (
           <div className="card-list animate-fade-in">
-
-            {posts.map((p, i) => (
-              <ArticleCard
-                key={p.id}
-                post={p}
-                href={postPath(p.id)}
-                tags={p.tags}
-                badge={p.pinned ? <PinnedBadge /> : undefined}
-                priority={i < 2}
+            {posts.map((post, index) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                href={postPath(post.id)}
+                tags={post.tags}
+                badge={post.pinned ? <PinnedBadge /> : undefined}
+                priority={index < 2}
               />
             ))}
           </div>
@@ -239,12 +232,12 @@ export default async function PostsPage({
         {totalPages > 1 && (
           <nav
             className="mt-12 flex items-center justify-center gap-2"
-            aria-label={messages.posts.pagination}
+            aria-label={texts.postList.pagination}
           >
             {currentPage === 1 ? (
               <span
                 className="pointer-events-none page-btn w-9 opacity-40"
-                aria-label={messages.posts.prevPage}
+                aria-label={texts.postList.prevPage}
               >
                 <ChevronLeft size={16} />
               </span>
@@ -254,7 +247,7 @@ export default async function PostsPage({
                   page: String(Math.max(1, currentPage - 1)),
                 })}
                 className="page-btn w-9"
-                aria-label={messages.posts.prevPage}
+                aria-label={texts.postList.prevPage}
               >
                 <ChevronLeft size={16} />
               </Link>
@@ -264,7 +257,7 @@ export default async function PostsPage({
                 key={n}
                 href={buildPostsUrl(baseParams, { page: String(n) })}
                 aria-current={n === currentPage ? "page" : undefined}
-                aria-label={formatTemplate(messages.posts.pageN, { n })}
+                aria-label={formatTemplate(texts.postList.pageN, { n })}
                 className={`page-btn min-w-9 px-2.5 text-(length:--type-xs) ${
                   n === currentPage ? "page-btn-active" : ""
                 }`}
@@ -275,7 +268,7 @@ export default async function PostsPage({
             {currentPage === totalPages ? (
               <span
                 className="pointer-events-none page-btn w-9 opacity-40"
-                aria-label={messages.posts.nextPage}
+                aria-label={texts.postList.nextPage}
               >
                 <ChevronRight size={16} />
               </span>
@@ -285,7 +278,7 @@ export default async function PostsPage({
                   page: String(Math.min(totalPages, currentPage + 1)),
                 })}
                 className="page-btn w-9"
-                aria-label={messages.posts.nextPage}
+                aria-label={texts.postList.nextPage}
               >
                 <ChevronRight size={16} />
               </Link>

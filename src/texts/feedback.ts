@@ -1,7 +1,5 @@
 const feedback = {
-
   common: {
-
     actionFailed: "操作失败，请稍后重试",
 
     unknownError: "系统异常，请稍后重试",
@@ -24,28 +22,24 @@ const feedback = {
   },
 
   create: {
-
     success: "已新增{entity}",
 
     failed: "{entity}新增失败，请稍后重试",
   },
 
   update: {
-
     success: "已更新{entity}",
 
     failed: "{entity}更新失败，请稍后重试",
   },
 
   delete: {
-
     success: "已删除{entity}",
 
     failed: "{entity}删除失败，请稍后重试",
   },
 
   toggle: {
-
     likeOn: "已点赞",
 
     likeOff: "已取消点赞",
@@ -56,7 +50,6 @@ const feedback = {
   },
 
   session: {
-
     loggedIn: "登录成功",
 
     loginFailed: "登录失败，请稍后重试",
@@ -73,7 +66,6 @@ const feedback = {
   },
 
   post: {
-
     draftSaved: "草稿已保存",
 
     draftUpdated: "草稿已更新",
@@ -84,7 +76,6 @@ const feedback = {
   },
 
   form: {
-
     requiredInput: "请输入{field}",
 
     tooShort: "{field}至少 {min} 个字符",
@@ -101,7 +92,6 @@ const feedback = {
   },
 
   entity: {
-
     post: "文章",
 
     comment: "评论",
@@ -110,7 +100,6 @@ const feedback = {
   },
 
   field: {
-
     title: "标题",
 
     content: "正文",

@@ -4,8 +4,8 @@
 
   @import "highlight.js/styles/github-dark.css";
 
-  & .article-content pre code.hljs,
-  & .article-content code.hljs {
+  & .post-content pre code.hljs,
+  & .post-content code.hljs {
     background: transparent;
     padding: 0;
   }

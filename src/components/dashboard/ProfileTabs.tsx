@@ -2,59 +2,56 @@
 
 import { useState } from "react";
 import { MessageCircle, PenLine, FileText, Bookmark, NotebookPen } from "lucide-react";
-import { formatTemplate, messages } from "@/texts";
-import { useTablistKeyboard } from "@/hooks/useTablistKeyboard";
-import { ArticleCard } from "@/components/blog/ArticleCard";
+import { formatTemplate, texts } from "@/texts";
+import { useTabListKeyboard } from "@/hooks/useTabListKeyboard";
+import { PostCard } from "@/components/post/PostCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { RemoveFavoriteButton } from "./RemoveFavoriteButton";
-import { DeletePostButton } from "@/components/blog/DeletePostButton";
+import { DeletePostButton } from "@/components/post/DeletePostButton";
 import { postEditPath, postPath } from "@shared";
 import type { Post } from "@shared";
 
-type Tab = "articles" | "drafts" | "favorites";
+type Tab = "posts" | "drafts" | "favorites";
 
-const TAB_ORDER: readonly Tab[] = ["articles", "drafts", "favorites"];
+const TAB_ORDER: readonly Tab[] = ["posts", "drafts", "favorites"];
 
 interface ProfileTabsProps {
-
-  published: Post[];
+  publishedPosts: Post[];
 
   favorites: Post[];
 
   drafts: Post[];
 }
 
-export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) {
+export function ProfileTabs({ publishedPosts, favorites, drafts }: ProfileTabsProps) {
+  const [tab, setTab] = useState<Tab>("posts");
 
-  const [tab, setTab] = useState<Tab>("articles");
-
-  const tabKeyNav = useTablistKeyboard(TAB_ORDER, setTab);
+  const tabKeyNav = useTabListKeyboard(TAB_ORDER, setTab);
 
   const [removedIds, setRemovedIds] = useState<string[]>([]);
 
   const [removedDraftIds, setRemovedDraftIds] = useState<string[]>([]);
 
-  const favoriteList = favorites.filter((p) => !removedIds.includes(p.id));
+  const favoriteList = favorites.filter((post) => !removedIds.includes(post.id));
 
-  const draftList = drafts.filter((p) => !removedDraftIds.includes(p.id));
+  const draftList = drafts.filter((post) => !removedDraftIds.includes(post.id));
 
   return (
     <div className="min-w-0">
-
       <div className="segmented animate-fade-in" role="tablist" onKeyDown={tabKeyNav}>
         <button
           type="button"
-          id="profile-tab-articles"
-          data-tab="articles"
+          id="profile-tab-posts"
+          data-tab="posts"
           role="tab"
-          aria-selected={tab === "articles"}
-          aria-controls="profile-panel-articles"
-          tabIndex={tab === "articles" ? 0 : -1}
-          onClick={() => setTab("articles")}
-          className={`segmented-item ${tab === "articles" ? "segmented-item-on" : ""}`}
+          aria-selected={tab === "posts"}
+          aria-controls="profile-panel-posts"
+          tabIndex={tab === "posts" ? 0 : -1}
+          onClick={() => setTab("posts")}
+          className={`segmented-item ${tab === "posts" ? "segmented-item-on" : ""}`}
         >
-          {formatTemplate(messages.profile.articlesTab, { count: published.length })}
+          {formatTemplate(texts.profile.postsTab, { count: publishedPosts.length })}
         </button>
         <button
           type="button"
@@ -67,7 +64,7 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
           onClick={() => setTab("drafts")}
           className={`segmented-item ${tab === "drafts" ? "segmented-item-on" : ""}`}
         >
-          {formatTemplate(messages.profile.draftsTab, { count: draftList.length })}
+          {formatTemplate(texts.profile.draftsTab, { count: draftList.length })}
         </button>
         <button
           type="button"
@@ -80,33 +77,33 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
           onClick={() => setTab("favorites")}
           className={`segmented-item ${tab === "favorites" ? "segmented-item-on" : ""}`}
         >
-          {formatTemplate(messages.profile.favoritesTab, { count: favoriteList.length })}
+          {formatTemplate(texts.profile.favoritesTab, { count: favoriteList.length })}
         </button>
       </div>
 
-      {tab === "articles" && (
+      {tab === "posts" && (
         <div
           className="mt-10"
           role="tabpanel"
-          id="profile-panel-articles"
-          aria-labelledby="profile-tab-articles"
+          id="profile-panel-posts"
+          aria-labelledby="profile-tab-posts"
         >
-          {published.length === 0 ? (
+          {publishedPosts.length === 0 ? (
             <EmptyState
               icon={<FileText size={20} strokeWidth={2.5} />}
-              title={messages.profile.noArticlesTitle}
-              description={messages.profile.noArticlesDesc}
+              title={texts.profile.noPostsTitle}
+              description={texts.profile.noPostsDesc}
               action={
                 <Button href="/write">
                   <PenLine size={16} strokeWidth={2.5} />
-                  {messages.profile.writeArticle}
+                  {texts.profile.writePost}
                 </Button>
               }
             />
           ) : (
             <div className="card-list">
-              {published.map((post) => (
-                <ArticleCard
+              {publishedPosts.map((post) => (
+                <PostCard
                   key={post.id}
                   post={post}
                   href={postPath(post.id)}
@@ -134,19 +131,19 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
           {draftList.length === 0 ? (
             <EmptyState
               icon={<NotebookPen size={20} strokeWidth={2.5} />}
-              title={messages.profile.noDraftsTitle}
-              description={messages.profile.noDraftsDesc}
+              title={texts.profile.noDraftsTitle}
+              description={texts.profile.noDraftsDesc}
               action={
                 <Button href="/write">
                   <PenLine size={16} strokeWidth={2.5} />
-                  {messages.profile.writeArticle}
+                  {texts.profile.writePost}
                 </Button>
               }
             />
           ) : (
             <div className="card-list">
               {draftList.map((post) => (
-                <ArticleCard
+                <PostCard
                   key={post.id}
                   post={post}
 
@@ -154,10 +151,10 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
                   badge={
                     <span className="chip-sm">
                       <NotebookPen size={10} strokeWidth={2.5} />
-                      {messages.profile.draftBadge}
+                      {texts.profile.draftBadge}
                     </span>
                   }
-                  readMoreLabel={messages.profile.continueEditing}
+                  readMoreLabel={texts.profile.continueEditing}
                   actions={
                     <DeletePostButton
                       postId={post.id}
@@ -182,18 +179,18 @@ export function ProfileTabs({ published, favorites, drafts }: ProfileTabsProps) 
           {favoriteList.length === 0 ? (
             <EmptyState
               icon={<Bookmark size={20} strokeWidth={2.5} />}
-              title={messages.profile.noFavoritesTitle}
-              description={messages.profile.noFavoritesDesc}
+              title={texts.profile.noFavoritesTitle}
+              description={texts.profile.noFavoritesDesc}
               action={
                 <Button href="/posts" variant="ghost">
-                  {messages.profile.browsePosts}
+                  {texts.profile.browsePosts}
                 </Button>
               }
             />
           ) : (
             <div className="card-list">
               {favoriteList.map((post) => (
-                <ArticleCard
+                <PostCard
                   key={post.id}
                   post={post}
                   href={postPath(post.id)}

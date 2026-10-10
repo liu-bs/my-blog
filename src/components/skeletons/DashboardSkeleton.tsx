@@ -5,7 +5,6 @@ export function DashboardSkeleton() {
   return (
     <Container className="page-section">
       <div aria-hidden="true">
-
         <header className="page-header">
           <div>
             <span className="block page-title max-md:page-title-mobile">

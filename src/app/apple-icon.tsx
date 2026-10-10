@@ -15,7 +15,6 @@ export default function AppleIcon() {
         borderRadius: 40,
       }}
     >
-
       <svg
         width={104}
         height={104}

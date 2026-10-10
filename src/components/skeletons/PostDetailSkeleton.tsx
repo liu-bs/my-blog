@@ -13,13 +13,10 @@ export function PostDetailSkeleton() {
         className="grid grid-cols-1 gap-10 pb-12 max-lg:gap-0 max-lg:pb-8 lg:grid-cols-[1fr_220px]"
         aria-hidden="true"
       >
-
         <article>
-
           <span className={`${BAR} mb-6 block h-4 w-20 rounded-xs`} />
 
           <header className="mb-10">
-
             <div className="mb-5 row-sm">
               <span className={`${BAR} h-6 w-20 rounded-full`} />
             </div>
@@ -54,7 +51,6 @@ export function PostDetailSkeleton() {
           <div className={`${BAR} mb-10 aspect-21/9 w-full rounded-2xl max-md:aspect-16/9`} />
 
           <div className="space-y-8">
-
             {PARAGRAPHS.map((lines, i) => (
               <div key={i} className="space-y-3">
                 {lines.map((width, j) => (
@@ -92,7 +88,6 @@ export function PostDetailSkeleton() {
 
         <aside className="max-lg:hidden">
           <div className="sticky-below-nav space-y-3">
-
             <span className={`${BAR} block h-3 w-16 rounded-xs`} />
 
             <div className="space-y-2.5 border-l border-stroke pl-4">

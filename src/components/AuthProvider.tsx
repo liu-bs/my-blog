@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { User } from "@shared";
 import { getMeAction } from "@server/auth/auth.controller";
-import { clearAuthStatus, hasAuthStatus, wasLogoutSignaled } from "@/lib/authStatus";
+import { clearAuthStatus, hasAuthStatus, wasLogoutSignaled } from "@/lib/auth-status";
 
 const USER_CACHE_KEY = "auth_user_cache";
 
@@ -36,10 +36,9 @@ function writeCachedUser(user: User | null): void {
 }
 
 interface AuthContextValue {
-
   user: User | null;
 
-  loading: boolean;
+  isLoading: boolean;
 
   refreshMe: () => Promise<void>;
 
@@ -51,10 +50,9 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-
   const [user, setUser] = useState<User | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   const applyUser = useCallback((next: User | null) => {
     setUser(next);
@@ -74,19 +72,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (process.env.NODE_ENV !== "production")
         console.error("[AuthProvider] refreshMe failed", err);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   }, [applyUser]);
 
   useEffect(() => {
     if (!hasAuthStatus()) {
       applyUser(null);
-      setLoading(false);
+      setIsLoading(false);
     } else {
       const cached = readCachedUser();
       if (cached) {
         setUser(cached);
-        setLoading(false);
+        setIsLoading(false);
       }
       refreshMe();
     }
@@ -110,15 +108,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, refreshMe, setMe, patchMe }),
-    [user, loading, refreshMe, setMe, patchMe],
+    () => ({ user, isLoading, refreshMe, setMe, patchMe }),
+    [user, isLoading, refreshMe, setMe, patchMe],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth 必须在 AuthProvider 内使用");
-  return ctx;
+  const authValue = useContext(AuthContext);
+  if (!authValue) throw new Error("useAuth must be used inside AuthProvider");
+  return authValue;
 }

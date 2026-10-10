@@ -9,7 +9,6 @@ export function Input({
   ref,
   ...props
 }: InputProps & { ref?: React.Ref<HTMLInputElement> }) {
-
   const hasAffix = Boolean(leftIcon || rightElement);
 
   const inputClass = [
@@ -29,9 +28,7 @@ export function Input({
   }
 
   return (
-
     <div className="input-icon-wrap">
-
       {leftIcon && <span className="input-icon">{leftIcon}</span>}
 
       <input ref={ref} className={inputClass} {...inputProps} />

@@ -1,4 +1,4 @@
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import type { ReactNode } from "react";
 import type { FormFieldProps } from "@shared";
 
@@ -26,7 +26,6 @@ export function FormField({
   className = "",
   children,
 }: FormFieldProps) {
-
   const childId = findControlId(children);
 
   if (!childId && label && process.env.NODE_ENV !== "production") {
@@ -34,9 +33,7 @@ export function FormField({
   }
 
   return (
-
     <div className={`flex flex-col gap-2 ${className}`}>
-
       <label
         htmlFor={childId}
         className="text-(length:--type-xs) leading-normal font-medium tracking-[-0.005em] text-heading"
@@ -44,7 +41,7 @@ export function FormField({
         {label}
 
         {required && (
-          <span className="ml-1 text-state-error" aria-label={messages.common.required}>
+          <span className="ml-1 text-state-error" aria-label={texts.common.required}>
             *
           </span>
         )}

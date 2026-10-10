@@ -11,7 +11,6 @@ const sizeMap: Record<AvatarSize, { container: string; text: string; px: number 
 };
 
 export function Avatar({ initials, size = "md", src, alt, className = "" }: AvatarProps) {
-
   if (src) {
     const { container, px } = sizeMap[size];
     return (

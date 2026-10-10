@@ -3,7 +3,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { StatsGrid } from "@/components/ui/StatsGrid";
 import { getInitials, joinName, formatCount, formatDate } from "@shared/format";
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import type { Post, User } from "@shared";
 import { ProfileTabs } from "./ProfileTabs";
 
@@ -35,28 +35,26 @@ const META_ICON = "size-3.5 text-faint";
 
 export function ProfilePageContent({
   user,
-  published,
+  publishedPosts,
   favorites,
   drafts,
 }: {
-
   user: User;
 
-  published: Post[];
+  publishedPosts: Post[];
 
   favorites: Post[];
 
   drafts: Post[];
 }) {
-
   const userInitials = getInitials(user.firstName, user.lastName);
 
   const userName = joinName(user.firstName, user.lastName);
 
   const stats = [
-    { label: messages.profile.statsArticles, value: formatCount(user.stats?.articles ?? 0) },
-    { label: messages.profile.statsLikes, value: formatCount(user.stats?.likes ?? 0) },
-    { label: messages.profile.statsViews, value: formatCount(user.stats?.views ?? 0) },
+    { label: texts.profile.statsPosts, value: formatCount(user.stats.posts) },
+    { label: texts.profile.statsLikes, value: formatCount(user.stats.likes) },
+    { label: texts.profile.statsViews, value: formatCount(user.stats.views) },
   ];
 
   const socialTwitter = user.social?.twitter
@@ -81,14 +79,11 @@ export function ProfilePageContent({
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr] lg:gap-12">
-
       <aside className="animate-fade-in">
         <div className="sticky-below-nav max-lg:static">
           <section className="overflow-hidden card shadow-(--shadow-sm)">
-
             <div className="h-24 w-full profile-cover-band" />
             <div className="px-6 pb-7">
-
               <div className="-mt-5">
                 <Avatar
                   size="lg"
@@ -108,8 +103,8 @@ export function ProfilePageContent({
                   {user.verified && (
                     <span
                       role="img"
-                      aria-label={messages.profile.verified}
-                      title={messages.profile.verified}
+                      aria-label={texts.profile.verified}
+                      title={texts.profile.verified}
                       className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-accent text-page"
                     >
                       <Check size={10} strokeWidth={2.5} />
@@ -120,7 +115,7 @@ export function ProfilePageContent({
               </div>
 
               <p className="mt-4 text-(length:--type-xs) leading-relaxed text-body">
-                {user.bio || messages.profile.noBio}
+                {user.bio || texts.profile.noBio}
               </p>
 
               {user.tags?.length > 0 && (
@@ -162,7 +157,7 @@ export function ProfilePageContent({
                 <span className="row-sm">
                   <Users className={META_ICON} strokeWidth={2.5} />
 
-                  {user.role === "Writer" ? messages.profile.roleWriter : user.role}
+                  {user.role === "Writer" ? texts.profile.roleWriter : user.role}
                   {user.company ? ` · ${user.company}` : ""}
                 </span>
               </div>
@@ -212,11 +207,11 @@ export function ProfilePageContent({
               <div className="mt-6 row-md">
                 <Button href="/write" size="md" className="flex-1">
                   <PenLine size={16} strokeWidth={2.5} />
-                  {messages.profile.writeArticle}
+                  {texts.profile.writePost}
                 </Button>
                 <Button href="/settings" variant="outline" size="md" className="flex-1">
                   <UserPen size={16} strokeWidth={2.5} />
-                  {messages.profile.editProfile}
+                  {texts.profile.editProfile}
                 </Button>
               </div>
             </div>
@@ -224,7 +219,7 @@ export function ProfilePageContent({
         </div>
       </aside>
 
-      <ProfileTabs published={published} favorites={favorites} drafts={drafts} />
+      <ProfileTabs publishedPosts={publishedPosts} favorites={favorites} drafts={drafts} />
     </div>
   );
 }

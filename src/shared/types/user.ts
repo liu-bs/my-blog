@@ -1,5 +1,4 @@
 export interface User {
-
   id: string;
 
   email: string;
@@ -40,15 +39,11 @@ export interface User {
 
   tokenVersion?: number;
 
-  appearance?: {
-    theme: "light" | "dark" | "system";
+  appearance?: UserAppearance;
 
-    fontSize: "small" | "medium" | "large";
-  };
+  likedPosts?: string[];
 
-  likedArticles?: string[];
-
-  favoritedArticles?: string[];
+  favoritedPosts?: string[];
 
   createdAt: string;
 
@@ -56,7 +51,6 @@ export interface User {
 }
 
 interface UserSocial {
-
   twitter: string;
 
   github: string;
@@ -64,69 +58,31 @@ interface UserSocial {
   linkedin: string;
 }
 
-export interface UserStats {
+interface UserAppearance {
+  theme: "light" | "dark" | "system";
 
-  articles: number;
+  fontSize: "small" | "medium" | "large";
+}
+
+export interface UserStats {
+  posts: number;
 
   likes: number;
 
   views: number;
 }
 
-export interface RegisterDto {
+export type UserStatField = keyof UserStats;
 
-  email: string;
+export type UserPostAssociation = "likedPosts" | "favoritedPosts";
 
-  password: string;
+export interface UserPostState {
+  liked: boolean;
 
-  firstName: string;
-
-  lastName: string;
-
-  username: string;
-}
-
-export interface LoginDto {
-
-  email: string;
-
-  password: string;
-}
-
-export interface ChangePasswordDto {
-
-  currentPassword: string;
-
-  newPassword: string;
-}
-
-export interface UpdateProfileDto {
-
-  firstName?: string;
-
-  lastName?: string;
-
-  avatar?: string;
-
-  bio?: string;
-
-  location?: string;
-
-  website?: string;
-}
-
-export interface AuthPayload {
-
-  id: string;
-
-  tokenVersion: number;
-
-  iat?: number;
-
-  exp?: number;
+  favorited: boolean;
 }
 
 export type SafeUser = Omit<
   User,
-  "password" | "tokenVersion" | "disabled" | "likedArticles" | "favoritedArticles"
+  "password" | "tokenVersion" | "disabled" | "likedPosts" | "favoritedPosts"
 >;

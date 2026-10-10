@@ -1,5 +1,4 @@
 const settings = {
-
   title: "账号设置",
 
   subtitle: "管理个人资料、密码与安全。",
@@ -24,25 +23,25 @@ const settings = {
 
   saveChanges: "保存修改",
 
-  currentPwd: "当前密码",
+  currentPassword: "当前密码",
 
-  newPwd: "新密码",
+  newPassword: "新密码",
 
-  newPwdHint: "至少 6 位",
+  newPasswordFieldHint: "至少 6 位",
 
-  confirmPwd: "确认新密码",
+  confirmPassword: "确认新密码",
 
-  updatePwd: "更新密码",
+  updatePassword: "更新密码",
 
-  pwdTooShort: "新密码至少 6 位",
+  newPasswordTooShort: "新密码至少 6 位",
 
-  pwdMismatch: "两次密码不一致",
+  passwordMismatch: "两次密码不一致",
 
-  pwdSame: "新密码不能与当前密码相同",
+  sameAsCurrentPassword: "新密码不能与当前密码相同",
 
-  pwdIncorrect: "当前密码不正确",
+  passwordIncorrect: "当前密码不正确",
 
-  pwdRequired: "请输入当前密码",
+  currentPasswordRequired: "请输入当前密码",
 
   websiteInvalid: "网站链接需以 http:// 或 https:// 开头",
 };

@@ -9,7 +9,6 @@ import type { SpinnerProps } from "@shared";
 
 export function Spinner({ size = "md", className = "" }: SpinnerProps) {
   return (
-
     <span
       className={`${sizeMap[size]} inline-block animate-spin rounded-full border-current border-r-transparent ${className}`}
       aria-hidden="true"

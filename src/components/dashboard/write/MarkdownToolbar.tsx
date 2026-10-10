@@ -1,13 +1,11 @@
 import { Bold, Italic, Heading, Link as LinkIcon, Code, Code2, List, Quote } from "lucide-react";
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 
 interface MarkdownToolbarProps {
-
   onInsert: (before: string, after?: string, placeholder?: string) => void;
 }
 
 interface ToolButton {
-
   icon: typeof Bold;
 
   labelKey:
@@ -47,9 +45,8 @@ const TOOLS: ToolButton[] = [
 export function MarkdownToolbar({ onInsert }: MarkdownToolbarProps) {
   return (
     <div className="flex flex-wrap gap-1.5">
-
       {TOOLS.map((tool) => {
-        const label = messages.write[tool.labelKey];
+        const label = texts.write[tool.labelKey];
 
         return (
           <button
@@ -61,7 +58,7 @@ export function MarkdownToolbar({ onInsert }: MarkdownToolbarProps) {
               onInsert(
                 tool.before,
                 tool.after,
-                tool.placeholderKey ? messages.write[tool.placeholderKey] : undefined,
+                tool.placeholderKey ? texts.write[tool.placeholderKey] : undefined,
               )
             }
             className="icon-btn-ghost"

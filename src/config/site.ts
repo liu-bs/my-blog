@@ -15,8 +15,6 @@ export const STATIC_PARAMS_LIMIT = 100;
 
 export const SITEMAP_LIMIT = 20000;
 
-export const REFRESH_RATE_LIMIT = 30;
-
 export const OPTIMIZED_IMAGE_HOSTS = ["images.pexels.com"];
 
 export const NAV_LINKS = [

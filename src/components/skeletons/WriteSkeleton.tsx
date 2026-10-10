@@ -30,7 +30,6 @@ function Toolbar() {
 function EditorPane() {
   return (
     <div className="input-focus-within flex flex-col rounded-xl border border-stroke-strong bg-card-bg">
-
       <div className="border-b border-stroke px-3 py-2">
         <Toolbar />
       </div>
@@ -47,8 +46,7 @@ function EditorPane() {
 function PreviewPane() {
   return (
     <div className="min-h-[60vh] overflow-y-auto rounded-xl border border-stroke-strong bg-card-bg p-6">
-
-      <div className="article-content space-y-3">
+      <div className="post-content space-y-3">
         {PREVIEW_LINES.map((width, i) => (
           <span key={i} className={`${BAR} block h-4 rounded-xs ${width}`} />
         ))}
@@ -68,7 +66,6 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-2">
-
       <span className="block text-(length:--type-xs) leading-normal font-medium tracking-[-0.005em] text-heading">
         <span className={LABEL_LINE}>
           <span className={`${BAR} block h-3.5 ${labelW} rounded-xs`} />
@@ -92,7 +89,6 @@ export function WriteSkeleton() {
   return (
     <Container className="page-section">
       <div aria-hidden="true">
-
         <header className="page-header page-actions">
           <span className="block page-title max-md:page-title-mobile">
             <span className={PAGE_TITLE_LINE}>
@@ -111,13 +107,11 @@ export function WriteSkeleton() {
         </header>
 
         <div className="form-stack">
-
           <div>
             <span className={`${BAR} block h-9 w-full rounded-md`} />
           </div>
 
           <div>
-
             <div className="hidden grid-cols-2 gap-4 lg:grid">
               <EditorPane />
               <PreviewPane />

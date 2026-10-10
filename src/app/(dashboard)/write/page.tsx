@@ -1,7 +1,7 @@
 import "@/app/styles/hljs-theme.css";
 import type { PostData } from "@shared";
-import { requireUserOrRedirect } from "@server/auth/auth.service";
-import { getPostServer } from "@server/blog/blog.cache";
+import { requireUserOrRedirect } from "@server/auth/auth.guard";
+import { getPostForViewer } from "@server/post/post.cache";
 import { WriteEditor } from "@/components/dashboard/WriteEditor";
 
 export default async function WritePage({
@@ -9,21 +9,19 @@ export default async function WritePage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-
   const user = await requireUserOrRedirect("/write");
 
-  const sp = await searchParams;
+  const query = await searchParams;
 
-  const editId = typeof sp.id === "string" ? sp.id : undefined;
+  const editId = typeof query.id === "string" ? query.id : undefined;
 
   let initialPost: PostData | null = null;
 
   if (editId) {
+    const editingPost = await getPostForViewer(editId).catch(() => null);
 
-    const data = await getPostServer(editId).catch(() => null);
-
-    if (data && data.post.authorId === user.id) {
-      initialPost = data;
+    if (editingPost && editingPost.post.authorId === user.id) {
+      initialPost = editingPost;
     }
   }
 

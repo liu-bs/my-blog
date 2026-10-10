@@ -1,5 +1,4 @@
 const errors = {
-
   errorTitle: "出错了",
 
   errorDesc: "页面加载失败，请稍后重试。",

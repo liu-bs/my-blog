@@ -1,9 +1,9 @@
-function getStrength(pwd: string): number {
-  if (!pwd) return 0;
+function getStrength(password: string): number {
+  if (!password) return 0;
   let score = 0;
-  if (pwd.length >= 6) score += 1;
-  if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score += 1;
-  if (/\d/.test(pwd) && /[^A-Za-z0-9]/.test(pwd)) score += 1;
+  if (password.length >= 6) score += 1;
+  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score += 1;
+  if (/\d/.test(password) && /[^A-Za-z0-9]/.test(password)) score += 1;
   return score;
 }
 
@@ -13,7 +13,7 @@ function strengthColor(score: number): string {
   return "var(--color-state-success)";
 }
 
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import type { PasswordStrengthProps } from "@shared";
 
 export function PasswordStrength({ password }: PasswordStrengthProps) {
@@ -40,7 +40,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
 
       <span className="mt-1 block text-(length:--type-2xs)" style={{ color: activeColor }}>
         {
-          messages.auth[
+          texts.auth[
             score <= 1 ? "strengthWeak" : score === 2 ? "strengthMedium" : "strengthStrong"
           ]
         }

@@ -1,17 +1,16 @@
-import { defineRoute, requireId } from "@server/common/http/route-handler";
+import { defineRoute } from "@server/common/http/route-handler";
+import { requireId } from "@server/common/action-result";
 import { sendSuccess } from "@server/common/http/api-response";
-import { isRateLimited, getClientIp } from "@server/common/rate-limit";
-import { incrementView } from "@server/blog/blog.service";
+import { getClientIp, isRateLimited } from "@server/common/rate-limit";
+import { RATE_LIMITS } from "@server/common/policy";
+import { recordPostView } from "@server/post/post.service";
 
 export const POST = defineRoute<{ id: string }>(async ({ request, params }) => {
-  const id = requireId(params);
+  const id = requireId(params.id, "Post not found");
 
-  const ip = getClientIp(request);
-
-  if (await isRateLimited(`view:${id}:${ip}`, 30, 5 * 60_000)) {
-    return sendSuccess(null, "已记录");
+  if (!(await isRateLimited(`view:${id}:${getClientIp(request)}`, RATE_LIMITS.postViewByIp))) {
+    await recordPostView(id);
   }
 
-  await incrementView(id);
-  return sendSuccess(null, "已记录");
+  return sendSuccess(null, "View recorded");
 });

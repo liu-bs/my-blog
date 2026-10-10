@@ -1,0 +1,369 @@
+import "server-only";
+
+import { Prisma } from "@prisma/client";
+import type { Post, PostCounterField, PostTagCount } from "@shared";
+import { getPrisma, type DbClient } from "@server/common/db";
+
+type PrismaPost = {
+  id: string;
+
+  title: string;
+
+  summary: string;
+
+  content: string;
+
+  category: string;
+
+  tags: string[];
+
+  createdAt: Date;
+
+  updatedAt: Date;
+
+  publishedAt: Date | null;
+
+  isDraft: boolean;
+
+  pinned: boolean;
+
+  coverImage: string | null;
+
+  authorId: string | null;
+
+  authorName: string | null;
+
+  views: number;
+
+  likes: number;
+
+  favorites: number;
+
+  commentsCount: number;
+};
+
+function iso(d: Date): string {
+  return d.toISOString();
+}
+
+function mapToPost(p: PrismaPost): Post {
+  return {
+    id: p.id,
+    title: p.title,
+    summary: p.summary,
+    content: p.content,
+    category: p.category,
+    tags: p.tags,
+    createdAt: iso(p.createdAt),
+    updatedAt: iso(p.updatedAt),
+    publishedAt: p.publishedAt ? iso(p.publishedAt) : undefined,
+    isDraft: p.isDraft,
+    pinned: p.pinned,
+    coverImage: p.coverImage ?? undefined,
+    authorId: p.authorId ?? undefined,
+    authorName: p.authorName ?? undefined,
+    views: p.views,
+    likes: p.likes,
+    favorites: p.favorites,
+    commentsCount: p.commentsCount,
+  };
+}
+
+const POST_LIST_SELECT = {
+  id: true,
+  title: true,
+  summary: true,
+  category: true,
+  tags: true,
+  createdAt: true,
+  updatedAt: true,
+  publishedAt: true,
+  isDraft: true,
+  pinned: true,
+  coverImage: true,
+  authorId: true,
+  authorName: true,
+  views: true,
+  likes: true,
+  favorites: true,
+  commentsCount: true,
+} as const;
+
+type PrismaPostList = Omit<PrismaPost, "content">;
+
+function mapToListPost(p: PrismaPostList): Post {
+  return mapToPost({ ...p, content: "" });
+}
+
+interface PostQueryOptions {
+  isDraft?: boolean;
+
+  authorId?: string;
+
+  category?: string;
+
+  tag?: string;
+
+  q?: string;
+
+  ids?: string[];
+
+  orderBy?: { field: "publishedAt" | "createdAt" | "updatedAt"; direction: "asc" | "desc" };
+
+  pinnedFirst?: boolean;
+
+  skip?: number;
+
+  take?: number;
+}
+
+export async function findPostById(id: string): Promise<Post | null> {
+  const post = await getPrisma().post.findUnique({ where: { id } });
+  return post ? mapToPost(post) : null;
+}
+
+function buildPrismaWhere(where: PostQueryOptions): Prisma.PostWhereInput {
+  const prismaWhere: Prisma.PostWhereInput = {};
+  if (where.isDraft !== undefined) prismaWhere.isDraft = where.isDraft;
+  if (where.authorId) prismaWhere.authorId = where.authorId;
+  if (where.category) prismaWhere.category = where.category;
+  if (where.tag) prismaWhere.tags = { has: where.tag };
+  if (where.ids && where.ids.length > 0) prismaWhere.id = { in: where.ids };
+
+  if (where.q) {
+    prismaWhere.OR = [
+      { title: { contains: where.q, mode: "insensitive" } },
+      { content: { contains: where.q, mode: "insensitive" } },
+    ];
+  }
+  return prismaWhere;
+}
+
+export async function listPostsByQuery(where: PostQueryOptions): Promise<Post[]> {
+  const orderBy: Prisma.PostOrderByWithRelationInput[] = [];
+  if (where.pinnedFirst) orderBy.push({ pinned: "desc" });
+
+  const sortField = where.orderBy?.field ?? "publishedAt";
+  const sortDir = where.orderBy?.direction ?? "desc";
+
+  if (sortField === "publishedAt") orderBy.push({ publishedAt: { sort: sortDir, nulls: "last" } });
+  else if (sortField === "createdAt") orderBy.push({ createdAt: sortDir });
+  else orderBy.push({ updatedAt: sortDir });
+
+  const posts = await getPrisma().post.findMany({
+    where: buildPrismaWhere(where),
+    orderBy,
+    select: POST_LIST_SELECT,
+    ...(where.skip !== undefined && { skip: where.skip }),
+    ...(where.take !== undefined && { take: where.take }),
+  });
+  return posts.map(mapToListPost);
+}
+
+export async function countPosts(where: PostQueryOptions): Promise<number> {
+  return getPrisma().post.count({ where: buildPrismaWhere(where) });
+}
+
+export async function listDistinctCategories(): Promise<string[]> {
+  const rows = await getPrisma().post.findMany({
+    where: { isDraft: false },
+    select: { category: true },
+    distinct: ["category"],
+  });
+  return rows.map((r) => r.category).filter(Boolean);
+}
+
+export async function listTagCounts(): Promise<PostTagCount[]> {
+  const rows = await getPrisma().$queryRaw<{ tag: string; count: bigint }[]>`
+    SELECT tag, COUNT(*)::bigint as count
+    FROM (
+      SELECT unnest(tags) AS tag FROM "Post" WHERE "isDraft" = false
+    ) t
+    GROUP BY tag
+    ORDER BY tag
+  `;
+  return rows.map((r) => ({ name: r.tag, count: Number(r.count) }));
+}
+
+function postToCreateData(p: Post): Prisma.PostUncheckedCreateInput {
+  return {
+    id: p.id,
+    title: p.title,
+    summary: p.summary,
+    content: p.content,
+    category: p.category,
+    tags: p.tags,
+    createdAt: new Date(p.createdAt),
+    updatedAt: new Date(p.updatedAt),
+    publishedAt: p.publishedAt ? new Date(p.publishedAt) : null,
+    isDraft: p.isDraft,
+    pinned: p.pinned ?? false,
+    coverImage: p.coverImage ?? null,
+    authorId: p.authorId ?? null,
+    authorName: p.authorName ?? null,
+    views: p.views ?? 0,
+    likes: p.likes ?? 0,
+    favorites: p.favorites ?? 0,
+    commentsCount: p.commentsCount ?? 0,
+  };
+}
+
+export type PostUpdateData = Partial<{
+  title: string;
+
+  summary: string;
+
+  content: string;
+
+  category: string;
+
+  tags: string[];
+
+  createdAt: string;
+
+  updatedAt: string;
+
+  publishedAt: string | null;
+
+  isDraft: boolean;
+
+  pinned: boolean;
+
+  coverImage: string | null;
+
+  authorId: string | null;
+
+  authorName: string | null;
+
+  views: number;
+
+  likes: number;
+
+  favorites: number;
+
+  commentsCount: number;
+}>;
+
+function postToUpdateData(data: PostUpdateData): Prisma.PostUncheckedUpdateInput {
+  const result: Prisma.PostUncheckedUpdateInput = {};
+  if (data.title !== undefined) result.title = data.title;
+  if (data.summary !== undefined) result.summary = data.summary;
+  if (data.content !== undefined) result.content = data.content;
+  if (data.category !== undefined) result.category = data.category;
+  if (data.tags !== undefined) result.tags = data.tags;
+  if (data.createdAt !== undefined) result.createdAt = new Date(data.createdAt);
+  if (data.updatedAt !== undefined) result.updatedAt = new Date(data.updatedAt);
+  if (data.publishedAt !== undefined)
+    result.publishedAt = data.publishedAt ? new Date(data.publishedAt) : null;
+  if (data.isDraft !== undefined) result.isDraft = data.isDraft;
+  if (data.pinned !== undefined) result.pinned = data.pinned;
+  if (data.coverImage !== undefined) result.coverImage = data.coverImage ?? null;
+  if (data.authorId !== undefined) result.authorId = data.authorId ?? null;
+  if (data.authorName !== undefined) result.authorName = data.authorName ?? null;
+  if (data.views !== undefined) result.views = data.views;
+  if (data.likes !== undefined) result.likes = data.likes;
+  if (data.favorites !== undefined) result.favorites = data.favorites;
+  if (data.commentsCount !== undefined) result.commentsCount = data.commentsCount;
+  return result;
+}
+
+export async function createPostRecord(post: Post, tx?: DbClient): Promise<void> {
+  const client = tx ?? getPrisma();
+  await client.post.create({ data: postToCreateData(post) });
+}
+
+export async function updatePostRecord(
+  id: string,
+  data: PostUpdateData,
+  tx?: DbClient,
+): Promise<Post> {
+  const client = tx ?? getPrisma();
+  const updated = await client.post.update({
+    where: { id },
+    data: postToUpdateData(data),
+  });
+  return mapToPost(updated);
+}
+
+export async function deletePostRecord(id: string, tx?: DbClient): Promise<void> {
+  const client = tx ?? getPrisma();
+  await client.post.delete({ where: { id } });
+}
+
+export async function incrementPostCounter(
+  id: string,
+  field: PostCounterField,
+  delta: number,
+  tx?: DbClient,
+): Promise<number> {
+  const client = tx ?? getPrisma();
+  const updated = await client.post.update({
+    where: { id },
+    data: { [field]: { increment: delta } },
+    select: { views: true, likes: true, favorites: true, commentsCount: true },
+  });
+  return updated[field];
+}
+
+export async function findRenamedPostId(oldId: string): Promise<string | null> {
+  const map = await getPrisma().postIdMap.findUnique({ where: { oldId } });
+  return map?.newId ?? null;
+}
+
+export async function updatePostsAuthorName(userId: string, authorName: string): Promise<string[]> {
+  const updatedPosts = await getPrisma().post.updateManyAndReturn({
+    where: { authorId: userId },
+    data: { authorName },
+    select: { id: true },
+  });
+  return updatedPosts.map((post) => post.id);
+}
+
+export async function findNeighborPosts(
+  postId: string,
+  publishedAt: string | null,
+  createdAt: string,
+): Promise<{ prev: Post | null; next: Post | null }> {
+  const baseWhere = { isDraft: false, id: { not: postId } };
+  const sortKey = publishedAt ?? createdAt;
+
+  const [prevRow, nextRow] = await Promise.all([
+    getPrisma().post.findFirst({
+      where: {
+        ...baseWhere,
+        OR: [{ publishedAt: { lt: sortKey } }, { publishedAt: null, createdAt: { lt: createdAt } }],
+      },
+      orderBy: [{ publishedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
+      select: POST_LIST_SELECT,
+    }),
+    getPrisma().post.findFirst({
+      where: {
+        ...baseWhere,
+        OR: [{ publishedAt: { gt: sortKey } }, { publishedAt: null, createdAt: { gt: createdAt } }],
+      },
+      orderBy: [{ publishedAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
+      select: POST_LIST_SELECT,
+    }),
+  ]);
+
+  return {
+    prev: prevRow ? mapToListPost(prevRow) : null,
+    next: nextRow ? mapToListPost(nextRow) : null,
+  };
+}
+
+export interface PostStatus {
+  id: string;
+
+  isDraft: boolean;
+
+  authorId: string | null;
+}
+
+export async function findPostStatus(id: string): Promise<PostStatus | null> {
+  const post = await getPrisma().post.findUnique({
+    where: { id },
+    select: { id: true, isDraft: true, authorId: true },
+  });
+  return post ?? null;
+}

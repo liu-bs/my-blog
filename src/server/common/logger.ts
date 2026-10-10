@@ -3,7 +3,6 @@ import { env } from "@server/common/config/env";
 type LogLevel = "debug" | "info" | "warn" | "error";
 
 const LEVEL_PRIORITY: Record<LogLevel, number> = {
-
   debug: 0,
 
   info: 1,
@@ -34,7 +33,6 @@ function output(level: LogLevel, message: string, meta?: Record<string, unknown>
   };
 
   if (env.isProd) {
-
     console.error(JSON.stringify(payload));
     return;
   }
@@ -51,7 +49,6 @@ function output(level: LogLevel, message: string, meta?: Record<string, unknown>
 }
 
 export const logger = {
-
   debug: (message: string, meta?: Record<string, unknown>) => output("debug", message, meta),
 
   info: (message: string, meta?: Record<string, unknown>) => output("info", message, meta),

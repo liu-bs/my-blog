@@ -1,5 +1,4 @@
 const common = {
-
   close: "关闭",
 
   backToTop: "回到顶部",

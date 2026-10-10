@@ -1,6 +1,6 @@
 "use client";
 
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 
@@ -9,7 +9,6 @@ export function UnsavedChangesDialog({
   onOpenChange,
   onDiscard,
 }: {
-
   open: boolean;
 
   onOpenChange: (open: boolean) => void;
@@ -17,19 +16,18 @@ export function UnsavedChangesDialog({
   onDiscard: () => void;
 }) {
   return (
-    <Modal open={open} onClose={() => onOpenChange(false)} title={messages.write.leaveConfirmTitle}>
-
+    <Modal open={open} onClose={() => onOpenChange(false)} title={texts.write.leaveConfirmTitle}>
       <p className="text-(length:--type-sm) leading-normal text-body">
-        {messages.write.leaveConfirmDesc}
+        {texts.write.leaveConfirmDesc}
       </p>
 
       <div className="mt-8 flex justify-end gap-2">
         <Button variant="ghost" onClick={() => onOpenChange(false)}>
-          {messages.write.keepEditing}
+          {texts.write.keepEditing}
         </Button>
 
         <Button variant="danger" onClick={onDiscard}>
-          {messages.write.discardChanges}
+          {texts.write.discardChanges}
         </Button>
       </div>
     </Modal>

@@ -1,15 +1,13 @@
 import "server-only";
 import type { NextRequest, NextResponse } from "next/server";
 import { sendError } from "./api-response";
-import { requireAuth, tryAuth, type AuthDeps } from "@server/auth/auth.service";
+import { authenticate, tryAuthenticate } from "@server/auth/auth.guard";
 import type { AuthPayload } from "@shared";
-import { isRateLimited, getClientIp } from "@server/common/rate-limit";
-import { RateLimitError, NotFoundError } from "@server/common/errors";
-import { tokenService } from "@/server/auth/token.service";
-import { findUserById } from "@server/user/user.repository";
+import { getClientIp, isRateLimited } from "@server/common/rate-limit";
+import { DEFAULT_RATE_LIMIT_MESSAGE, type RateLimitPolicy } from "@server/common/policy";
+import { RateLimitError } from "@server/common/errors";
 
 interface RouteContext<P = Record<string, never>> {
-
   request: NextRequest;
 
   params: P;
@@ -17,20 +15,16 @@ interface RouteContext<P = Record<string, never>> {
   auth: AuthPayload | null;
 }
 
-interface RouteOptions {
+interface RateLimitRule {
+  key: string;
 
+  policy: RateLimitPolicy;
+}
+
+interface RouteOptions {
   auth?: "required" | "optional" | "none";
 
-  rateLimit?: {
-
-    key: string;
-
-    limit: number;
-
-    windowMs: number;
-
-    message?: string;
-  };
+  rateLimit?: RateLimitRule;
 }
 
 export function defineRoute<P = Record<string, never>>(
@@ -41,27 +35,15 @@ export function defineRoute<P = Record<string, never>>(
     try {
       let auth: AuthPayload | null = null;
       if (options?.auth === "required") {
-
-        const deps: AuthDeps = { tokenService, findUserById };
-        auth = await requireAuth(request, deps);
+        auth = await authenticate(request);
       } else if (options?.auth === "optional") {
-        const deps: AuthDeps = { tokenService, findUserById };
-        auth = await tryAuth(request, deps);
+        auth = await tryAuthenticate(request);
       }
 
       if (options?.rateLimit) {
         const ip = getClientIp(request);
-
-        if (
-          await isRateLimited(
-            `${options.rateLimit.key}:${ip}`,
-            options.rateLimit.limit,
-            options.rateLimit.windowMs,
-          )
-        ) {
-          throw new RateLimitError(
-            options.rateLimit.message ?? "Too many requests, please try again later",
-          );
+        if (await isRateLimited(`${options.rateLimit.key}:${ip}`, options.rateLimit.policy)) {
+          throw new RateLimitError(options.rateLimit.policy.message ?? DEFAULT_RATE_LIMIT_MESSAGE);
         }
       }
 
@@ -72,10 +54,4 @@ export function defineRoute<P = Record<string, never>>(
       return sendError(err);
     }
   };
-}
-
-export function requireId(params: { id?: string }, label = "Post not found"): string {
-  const id = params.id?.trim();
-  if (!id) throw new NotFoundError(label);
-  return id;
 }

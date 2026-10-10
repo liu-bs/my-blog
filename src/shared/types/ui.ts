@@ -4,12 +4,21 @@ import type {
   AnchorHTMLAttributes,
   InputHTMLAttributes,
 } from "react";
-import type { Post } from "./blog";
+import type { Post, PostTagCount } from "./post";
 import type { CommentsListData } from "./comment";
 import type { User } from "./user";
 
-interface ChildrenProps {
+export interface ProvidersProps {
+  children: ReactNode;
+}
 
+export interface ErrorBoundaryProps {
+  error: Error & { digest?: string };
+
+  retry: () => void;
+}
+
+interface ChildrenProps {
   children: ReactNode;
 
   className?: string;
@@ -18,7 +27,6 @@ interface ChildrenProps {
 export type AlertVariant = "success" | "warning" | "error" | "info";
 
 export interface AlertProps {
-
   variant: AlertVariant;
 
   icon?: ReactNode;
@@ -30,8 +38,7 @@ export interface AlertProps {
   className?: string;
 }
 
-export interface ArticleCardProps {
-
+export interface PostCardProps {
   post: Post;
 
   href?: string;
@@ -58,7 +65,6 @@ export interface ArticleCardProps {
 export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 export interface AvatarProps {
-
   initials: string;
 
   size?: AvatarSize;
@@ -73,12 +79,10 @@ export interface AvatarProps {
 export type ContainerProps = ChildrenProps;
 
 export interface CoverFallbackProps {
-
   className?: string;
 }
 
 export interface EmptyStateProps {
-
   icon: ReactNode;
 
   title: string;
@@ -91,7 +95,6 @@ export interface EmptyStateProps {
 }
 
 export interface FormFieldProps {
-
   label: string;
 
   hint?: string;
@@ -106,7 +109,6 @@ export interface FormFieldProps {
 }
 
 export interface ModalProps {
-
   open: boolean;
 
   onClose: () => void;
@@ -119,7 +121,6 @@ export interface ModalProps {
 }
 
 export interface PageHeaderProps {
-
   title: ReactNode;
 
   subtitle?: ReactNode;
@@ -130,26 +131,22 @@ export interface PageHeaderProps {
 }
 
 export interface PasswordStrengthProps {
-
   password: string;
 }
 
 export interface SpinnerProps {
-
   size?: "sm" | "md" | "lg";
 
   className?: string;
 }
 
 interface StatItem {
-
   label: ReactNode;
 
   value: ReactNode;
 }
 
 export interface StatsGridProps {
-
   items: StatItem[];
 
   className?: string;
@@ -158,7 +155,6 @@ export interface StatsGridProps {
 export type TagVariant = "ink" | "ember" | "crimson" | "slate";
 
 export interface TagProps {
-
   children: ReactNode;
 
   variant?: TagVariant;
@@ -169,20 +165,17 @@ export interface TagProps {
 }
 
 export interface PostIdProps {
-
   postId: string;
 }
 
-export interface PostsSearchInputProps {
-
+export interface PostSearchInputProps {
   initialValue: string;
 }
 
 export interface PostSidebarProps {
-
   categories: string[];
 
-  tags: { name: string; count: number }[];
+  tags: PostTagCount[];
 
   currentCategory: string;
 
@@ -190,16 +183,14 @@ export interface PostSidebarProps {
 
   children: ReactNode;
 
-  zeroResults?: boolean;
+  isEmpty?: boolean;
 }
 
 export interface PostActionsProps {
-
   user: User | null;
 }
 
 export interface CommentsSectionProps {
-
   postId: string;
 
   user: User | null;
@@ -210,8 +201,7 @@ export interface CommentsSectionProps {
 }
 
 export interface PostTocProps {
-
-  articleId: string;
+  contentId: string;
 }
 
 export type ButtonVariant = "primary" | "ghost" | "outline" | "danger";
@@ -219,12 +209,11 @@ export type ButtonVariant = "primary" | "ghost" | "outline" | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonBaseProps {
-
   variant?: ButtonVariant;
 
   size?: ButtonSize;
 
-  loading?: boolean;
+  isLoading?: boolean;
 }
 
 export type ButtonAsButton = ButtonBaseProps &
@@ -236,7 +225,6 @@ export type ButtonAsLink = ButtonBaseProps &
 export type ButtonProps = ButtonAsButton | ButtonAsLink;
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-
   leftIcon?: ReactNode;
 
   rightElement?: ReactNode;
@@ -244,30 +232,4 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: boolean;
 
   success?: boolean;
-}
-
-export interface ValidationErrorDetail {
-
-  path: string;
-
-  message: string;
-
-  code?: string;
-
-  rule?: ValidationRule;
-
-  params?: { min?: number; max?: number };
-}
-
-export type ValidationRule = "imageUrl" | "nonBlank" | "passwordMismatch";
-
-export interface RequestOptions extends Omit<RequestInit, "body" | "cache"> {
-
-  body?: unknown;
-
-  query?: Record<string, string | number | boolean | null | undefined>;
-
-  skipAuthRedirect?: boolean;
-
-  cache?: RequestCache;
 }

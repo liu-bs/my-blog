@@ -1,31 +1,34 @@
 import { Container } from "@/components/ui/Container";
-import { requireUserOrRedirect } from "@server/auth/auth.service";
+import { requireUserOrRedirect } from "@server/auth/auth.guard";
 import {
-  listPostsByAuthorServer,
-  listFavoritePostsServer,
-  listDraftsServer,
-} from "@server/blog/blog.cache";
+  listPostsByAuthor,
+  listFavoritedPostsForViewer,
+  listDraftsForViewer,
+} from "@server/post/post.cache";
 import { ProfilePageContent } from "@/components/dashboard/ProfilePageContent";
 
 export const instant = false;
 
 export default async function ProfilePage() {
-
   const user = await requireUserOrRedirect("/profile");
 
-  const [published, favoritesData, draftsData] = await Promise.all([
-    listPostsByAuthorServer(user.id).catch(() => []),
-    listFavoritePostsServer().catch(() => ({ posts: [] })),
-    listDraftsServer().catch(() => ({ posts: [] })),
+  const [publishedPosts, favoritesResult, draftsResult] = await Promise.all([
+    listPostsByAuthor(user.id).catch(() => []),
+    listFavoritedPostsForViewer().catch(() => ({ posts: [] })),
+    listDraftsForViewer().catch(() => ({ posts: [] })),
   ]);
 
-  const favorites = favoritesData.posts ?? [];
-  const drafts = draftsData.posts ?? [];
+  const favorites = favoritesResult.posts ?? [];
+  const drafts = draftsResult.posts ?? [];
 
   return (
     <Container className="page-section">
-
-      <ProfilePageContent user={user} published={published} favorites={favorites} drafts={drafts} />
+      <ProfilePageContent
+        user={user}
+        publishedPosts={publishedPosts}
+        favorites={favorites}
+        drafts={drafts}
+      />
     </Container>
   );
 }

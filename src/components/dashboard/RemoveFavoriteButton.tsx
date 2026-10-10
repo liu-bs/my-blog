@@ -1,19 +1,17 @@
 "use client";
 
 import { BookmarkX } from "lucide-react";
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToggleFavorite } from "@/hooks/usePosts";
 import type { PostIdProps } from "@shared";
 
 interface RemoveFavoriteButtonProps extends PostIdProps {
-
   onRemoved?: () => void;
 }
 
 export function RemoveFavoriteButton({ postId, onRemoved }: RemoveFavoriteButtonProps) {
-
   const toggleFavoriteMutation = useToggleFavorite();
 
   return (
@@ -25,7 +23,6 @@ export function RemoveFavoriteButton({ postId, onRemoved }: RemoveFavoriteButton
       onClick={() =>
         toggleFavoriteMutation.mutate(postId, {
           onSuccess: (data) => {
-
             if (data.favorited === false) onRemoved?.();
           },
         })
@@ -36,7 +33,7 @@ export function RemoveFavoriteButton({ postId, onRemoved }: RemoveFavoriteButton
       ) : (
         <BookmarkX data-icon="inline-start" size={14} strokeWidth={2.5} />
       )}
-      {messages.profile.removeFavorite}
+      {texts.profile.removeFavorite}
     </Button>
   );
 }

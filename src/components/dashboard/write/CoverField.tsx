@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
 import { isSafeImageUrl } from "@shared";
@@ -19,14 +19,12 @@ export function CoverField({
   onChange,
   error,
 }: {
-
   value: string;
 
   onChange: (value: string) => void;
 
   error?: string;
 }) {
-
   const [touched, setTouched] = useState(false);
 
   const [previewSrc, setPreviewSrc] = useState("");
@@ -50,16 +48,15 @@ export function CoverField({
     return () => clearTimeout(timer);
   }, [url, allowed]);
 
-  const shownError = error ?? (touched && !allowed ? messages.write.coverInvalid : undefined);
+  const shownError = error ?? (touched && !allowed ? texts.write.coverInvalid : undefined);
 
   return (
     <FormField
-      label={messages.write.coverLabel}
-      hint={previewFailed ? messages.write.coverPreviewFailed : messages.write.coverHint}
+      label={texts.write.coverLabel}
+      hint={previewFailed ? texts.write.coverPreviewFailed : texts.write.coverHint}
       error={shownError}
     >
       <div className="row-sm">
-
         <Input
           id="cover-image"
           name="coverImage"
@@ -86,7 +83,7 @@ export function CoverField({
           <div className="shrink-0 overflow-hidden rounded-md border border-stroke-strong">
             <Image
               src={previewSrc}
-              alt={messages.write.coverPreview}
+              alt={texts.write.coverPreview}
               width={40}
               height={40}
               unoptimized={!isOptimizableImageSrc(previewSrc)}

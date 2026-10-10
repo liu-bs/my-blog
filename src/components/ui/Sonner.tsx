@@ -7,7 +7,6 @@ export function Toaster(props: ToasterProps) {
   const { resolvedTheme } = useTheme();
 
   return (
-
     <Sonner
       theme={resolvedTheme === "dark" ? "dark" : "light"}
       position="bottom-right"

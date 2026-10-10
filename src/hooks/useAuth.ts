@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { useAuth } from "@/components/AuthProvider";
-import { clearAuthStatus } from "@/lib/authStatus";
+import { clearAuthStatus } from "@/lib/auth-status";
 import { logoutAction } from "@server/auth/auth.controller";
 
 export function useLogout() {
@@ -12,7 +12,6 @@ export function useLogout() {
     try {
       await logoutAction();
     } finally {
-
       clearAuthStatus();
       setMe(null);
     }

@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import type { ModalProps } from "@shared";
 import { useDismissable } from "@/hooks/useDismissable";
 
@@ -106,7 +106,7 @@ export function Modal({ open, onClose, title, children, maxWidth = "max-w-sm" }:
             >
               {title}
             </h3>
-            <button onClick={onClose} className="icon-btn-ghost" aria-label={messages.common.close}>
+            <button onClick={onClose} className="icon-btn-ghost" aria-label={texts.common.close}>
               <X size={18} strokeWidth={2.5} />
             </button>
           </div>

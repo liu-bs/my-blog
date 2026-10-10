@@ -1,21 +1,25 @@
 import "server-only";
 
 import { headers } from "next/headers";
-import type { ValidationErrorDetail, AuthPayload } from "@shared";
-import { isAppError, RateLimitError, UnauthorizedError } from "@server/common/errors";
+import type { ActionResult, ValidationErrorDetail } from "@shared";
+import { isAppError, NotFoundError, RateLimitError } from "@server/common/errors";
 import { logger } from "@server/common/logger";
 import { getClientIp, isRateLimited } from "@server/common/rate-limit";
-import { getAuthPayload } from "@server/auth/auth.service";
-
-export async function clientIp(): Promise<string> {
-  return getClientIp({ headers: await headers() });
-}
-
-import type { ActionResult } from "@shared";
+import { DEFAULT_RATE_LIMIT_MESSAGE, type RateLimitPolicy } from "@server/common/policy";
 
 export type { ActionResult };
 
 const INTERNAL_ERROR = "Internal server error";
+
+export function requireId(value: string | undefined, notFoundLabel: string): string {
+  const id = value?.trim();
+  if (!id) throw new NotFoundError(notFoundLabel);
+  return id;
+}
+
+export async function clientIp(): Promise<string> {
+  return getClientIp({ headers: await headers() });
+}
 
 export function toFailure(
   err: unknown,
@@ -39,32 +43,16 @@ export function toFailure(
   };
 }
 
-export async function runAction<T>(
-  label: string,
-  run: (ctx: { authPayload: () => Promise<AuthPayload | null> }) => Promise<ActionResult<T>>,
-): Promise<ActionResult<T>> {
+export async function runAction<T>(label: string, run: () => Promise<ActionResult<T>>): Promise<ActionResult<T>> {
   try {
-    return await run({ authPayload: getAuthPayload });
+    return await run();
   } catch (err) {
     return toFailure(err, label);
   }
 }
 
-export async function requireAuthPayload(
-  authPayload: () => Promise<AuthPayload | null>,
-): Promise<AuthPayload> {
-  const payload = await authPayload();
-  if (!payload) throw new UnauthorizedError();
-  return payload;
-}
-
-export async function ensureNotRateLimited(
-  key: string,
-  limit: number,
-  windowMs: number,
-  message: string,
-): Promise<void> {
-  if (await isRateLimited(key, limit, windowMs)) {
-    throw new RateLimitError(message);
+export async function ensureNotRateLimited(key: string, policy: RateLimitPolicy): Promise<void> {
+  if (await isRateLimited(key, policy)) {
+    throw new RateLimitError(policy.message ?? DEFAULT_RATE_LIMIT_MESSAGE);
   }
 }

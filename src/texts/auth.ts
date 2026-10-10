@@ -1,5 +1,4 @@
 const auth = {
-
   loginTitle: "欢迎回来",
 
   loginSubtitle: "登录后可以写作与评论。",
@@ -18,15 +17,15 @@ const auth = {
 
   usernamePlaceholder: "your_name",
 
-  usernameHint: "字母、数字、下划线 · 3-30 字符", 
+  usernameHint: "字母、数字、下划线 · 3-30 字符",
 
   email: "邮箱",
 
   password: "密码",
 
-  pwdPlaceholder: "输入密码",
+  passwordPlaceholder: "输入密码",
 
-  pwdPlaceholderMin: "至少 6 位",
+  passwordPlaceholderMin: "至少 6 位",
 
   passwordHint: "至少 6 位，建议混合大小写与符号",
 
@@ -44,9 +43,9 @@ const auth = {
 
   invalidEmail: "请输入有效邮箱",
 
-  emptyPwd: "请输入密码",
+  emptyPassword: "请输入密码",
 
-  emailOrPwdError: "邮箱或密码错误",
+  emailOrPasswordError: "邮箱或密码错误",
 
   accountDisabled: "账号已被禁用",
 

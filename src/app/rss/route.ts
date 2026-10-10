@@ -1,8 +1,9 @@
-import { listPostsServer, withDbRetry } from "@server/blog/blog.cache";
+import { withDbRetry } from "@server/common/db";
+import { listPostsCached } from "@server/post/post.cache";
 import { SITE_URL } from "@/config/site";
 import { stripHtml, stripMarkdown } from "@shared/markdown";
 import { postPath } from "@shared";
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 
 const FEED_LIMIT = 20;
 
@@ -13,11 +14,11 @@ function escapeXml(text: string): string {
 export async function GET(): Promise<Response> {
   const selfUrl = `${SITE_URL}/rss`;
 
-  const data = await withDbRetry(() => listPostsServer({ page: 1, limit: FEED_LIMIT })).catch(
+  const feedPage = await withDbRetry(() => listPostsCached({ page: 1, limit: FEED_LIMIT })).catch(
     () => null,
   );
 
-  const items = (data?.posts ?? [])
+  const items = (feedPage?.posts ?? [])
     .map((post) => {
       const url = `${SITE_URL}${postPath(post.id)}`;
       const title = stripMarkdown(post.title);
@@ -41,9 +42,9 @@ export async function GET(): Promise<Response> {
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
     "  <channel>",
-    `    <title>${escapeXml(messages.meta.siteTitle)}</title>`,
+    `    <title>${escapeXml(texts.meta.siteTitle)}</title>`,
     `    <link>${SITE_URL}</link>`,
-    `    <description>${escapeXml(messages.meta.siteDescription)}</description>`,
+    `    <description>${escapeXml(texts.meta.siteDescription)}</description>`,
     "    <language>zh-CN</language>",
     `    <atom:link href="${selfUrl}" rel="self" type="application/rss+xml"/>`,
     `    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`,

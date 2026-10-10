@@ -5,7 +5,6 @@ const LABEL_LINE = line("h-[21px]");
 function Field({ width = "w-12" }: { width?: string }) {
   return (
     <div className="flex flex-col gap-2">
-
       <span className="block text-(length:--type-xs) leading-normal font-medium tracking-[-0.005em] text-heading">
         <span className={LABEL_LINE}>
           <span className={`${BAR} block h-3.5 ${width} rounded-xs`} />
@@ -20,7 +19,6 @@ function Field({ width = "w-12" }: { width?: string }) {
 export function LoginSkeleton() {
   return (
     <div className="auth-card" aria-hidden="true">
-
       <div className="mb-10">
         <span className="auth-title block">
           <span className={line("h-[30px]")}>

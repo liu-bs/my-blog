@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
-import { clearAuthStatus } from "@/lib/authStatus";
+import { clearAuthStatus } from "@/lib/auth-status";
 import { safeRedirect } from "@/lib/url";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {

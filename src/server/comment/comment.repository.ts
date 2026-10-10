@@ -1,13 +1,19 @@
 import "server-only";
 
-import type { PrismaClient } from "@prisma/client";
 import type { Comment } from "@shared";
-import { getPrisma } from "@server/common/db";
+import { getPrisma, isRecordMissingError, type DbClient } from "@server/common/db";
 
-type Tx = PrismaClient | Parameters<Parameters<PrismaClient["$transaction"]>[0]>[0];
+export interface CommentOwnership {
+  id: string;
+
+  postId: string;
+
+  userId: string;
+
+  postAuthorId: string | null;
+}
 
 type PrismaComment = {
-
   id: string;
 
   postId: string;
@@ -38,7 +44,7 @@ function mapToComment(p: PrismaComment): Comment {
   };
 }
 
-export async function findCommentsByPostId(
+export async function listCommentsByPostId(
   postId: string,
   opts?: { take?: number; skip?: number },
 ): Promise<Comment[]> {
@@ -56,7 +62,7 @@ export async function countComments(postId: string): Promise<number> {
   return getPrisma().comment.count({ where: { postId } });
 }
 
-export async function createCommentRecord(comment: Comment, tx?: Tx): Promise<void> {
+export async function createCommentRecord(comment: Comment, tx?: DbClient): Promise<void> {
   const client = tx ?? getPrisma();
   await client.comment.create({
     data: {
@@ -72,7 +78,7 @@ export async function createCommentRecord(comment: Comment, tx?: Tx): Promise<vo
   });
 }
 
-export async function deleteCommentRecord(id: string, tx?: Tx): Promise<void> {
+export async function deleteCommentRecord(id: string, tx?: DbClient): Promise<void> {
   const client = tx ?? getPrisma();
   await client.comment.delete({ where: { id } });
 }
@@ -82,16 +88,7 @@ export async function findCommentById(id: string): Promise<Comment | null> {
   return row ? mapToComment(row) : null;
 }
 
-export async function findCommentForDelete(id: string): Promise<{
-
-  id: string;
-
-  postId: string;
-
-  userId: string;
-
-  postAuthorId: string | null;
-} | null> {
+export async function findCommentOwnership(id: string): Promise<CommentOwnership | null> {
   const row = await getPrisma().comment.findUnique({
     where: { id },
     select: {
@@ -121,19 +118,26 @@ export async function updateCommentRecord(
     });
     return mapToComment(updated);
   } catch (err: unknown) {
-    if (err instanceof Error && "code" in err && err.code === "P2025") return null;
+    if (isRecordMissingError(err)) return null;
     throw err;
   }
 }
 
-export async function updateCommentsAuthor(
+export async function updateCommentsAuthorProfile(
   userId: string,
   userName: string,
   userAvatar: string | null,
-): Promise<number> {
-  const result = await getPrisma().comment.updateMany({
+): Promise<string[]> {
+  const commentedPostIds = await getPrisma().comment.findMany({
+    where: { userId },
+    select: { postId: true },
+    distinct: ["postId"],
+  });
+
+  await getPrisma().comment.updateMany({
     where: { userId },
     data: { userName, userAvatar },
   });
-  return result.count;
+
+  return commentedPostIds.map((row) => row.postId);
 }

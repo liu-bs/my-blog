@@ -1,19 +1,14 @@
 import "server-only";
 import { getPrisma } from "@server/common/db";
 import { logger } from "@server/common/logger";
+import type { RateLimitPolicy } from "@server/common/policy";
 
-export async function isRateLimited(
-  key: string,
-  limit: number,
-  windowMs: number,
-): Promise<boolean> {
-
+export async function isRateLimited(key: string, policy: RateLimitPolicy): Promise<boolean> {
   const id = `ratelimit:${key}`;
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + windowMs);
+  const expiresAt = new Date(now.getTime() + policy.windowMs);
 
   try {
-
     const rows = await getPrisma().$queryRaw<{ count: number }[]>`
       INSERT INTO "RateLimit" (id, count, "expiresAt")
       VALUES (${id}, 1, ${expiresAt})
@@ -30,7 +25,7 @@ export async function isRateLimited(
         .catch(() => {});
     }
 
-    return count > limit;
+    return count > policy.limit;
   } catch (err) {
     logger.error("isRateLimited failed, request allowed", { key, error: String(err) });
     return false;

@@ -5,7 +5,6 @@ export const metadata = { robots: { index: false, follow: false } };
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-
       <div className="auth-halo" aria-hidden="true" />
 
       <div className="auth-main">{children}</div>

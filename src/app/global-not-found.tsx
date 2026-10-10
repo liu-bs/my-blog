@@ -1,13 +1,13 @@
 "use client";
 
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import {
   ERROR_PAGE_CSS,
   THEME_INIT_SCRIPT,
   errorShellStyle,
   errorTitleStyle,
   errorDescStyle,
-} from "./errorPageShell";
+} from "./error-page-shell";
 
 const linkBaseStyle = {
   height: "40px",
@@ -24,10 +24,8 @@ const linkBaseStyle = {
 export default function GlobalNotFound() {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-
-      <title>{`${messages.errors.notFoundTitle} · ${messages.meta.siteTitle}`}</title>
+      <title>{`${texts.errors.notFoundTitle} · ${texts.meta.siteTitle}`}</title>
       <body className="antialiased">
-
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <style>{ERROR_PAGE_CSS}</style>
 
@@ -36,7 +34,7 @@ export default function GlobalNotFound() {
           style={errorShellStyle}
         >
           <h1 style={errorTitleStyle}>404</h1>
-          <p style={errorDescStyle}>{messages.errors.notFoundDesc}</p>
+          <p style={errorDescStyle}>{texts.errors.notFoundDesc}</p>
 
           <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "12px" }}>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
@@ -48,7 +46,7 @@ export default function GlobalNotFound() {
                 color: "var(--color-page)",
               }}
             >
-              {messages.errors.goHome}
+              {texts.errors.goHome}
             </a>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a
@@ -59,7 +57,7 @@ export default function GlobalNotFound() {
                 color: "var(--color-body)",
               }}
             >
-              {messages.errors.browsePosts}
+              {texts.errors.browsePosts}
             </a>
           </div>
         </div>

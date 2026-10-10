@@ -10,7 +10,6 @@ export function useRequireAuth(user: User | null, redirectPath: string) {
   return useCallback(
     (action: () => void) => {
       if (!user) {
-
         router.push(buildLoginRedirect(redirectPath));
         return;
       }

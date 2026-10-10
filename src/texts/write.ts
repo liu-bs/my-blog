@@ -1,5 +1,4 @@
 const write = {
-
   editTitle: "编辑文章",
 
   createTitle: "新建文章",

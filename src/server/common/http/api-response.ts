@@ -13,32 +13,38 @@ export function sendSuccess<T>(
 }
 
 export function sendError(err: unknown): NextResponse {
-
-  const appError = isAppError(err)
+  const reportedError = isAppError(err)
     ? err
     : new InternalServerError(err instanceof Error ? err.message : "Internal server error");
 
-  if (appError.statusCode >= 500) {
-    logger.error(appError.message, {
-      code: appError.code,
-      statusCode: appError.statusCode,
+  if (reportedError.statusCode >= 500) {
+    logger.error(reportedError.message, {
+      code: reportedError.code,
+      statusCode: reportedError.statusCode,
       stack: err instanceof Error ? err.stack : undefined,
     });
   } else {
-    logger.warn(appError.message, { code: appError.code, statusCode: appError.statusCode });
+    logger.warn(reportedError.message, {
+      code: reportedError.code,
+      statusCode: reportedError.statusCode,
+    });
   }
 
   const message =
-    appError.statusCode >= 500 ? "Internal server error, please try again later" : appError.message;
+    reportedError.statusCode >= 500
+      ? "Internal server error, please try again later"
+      : reportedError.message;
 
   return NextResponse.json(
     {
-      code: appError.statusCode,
+      code: reportedError.statusCode,
       data: null,
       message,
 
-      ...(appError.statusCode < 500 && appError.details ? { details: appError.details } : {}),
+      ...(reportedError.statusCode < 500 && reportedError.details
+        ? { details: reportedError.details }
+        : {}),
     },
-    { status: appError.statusCode },
+    { status: reportedError.statusCode },
   );
 }

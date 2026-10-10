@@ -4,7 +4,7 @@ import { useActionState, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Info } from "lucide-react";
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import { PasswordToggle } from "@/components/ui/PasswordToggle";
 import { Alert } from "@/components/ui/Alert";
 import { SubmitButton } from "@/components/ui/SubmitButton";
@@ -19,27 +19,26 @@ import {
   validateForm,
   type ErrorFeedbackOptions,
   type FeedbackResult,
-} from "@/lib/formFeedback";
+} from "@/lib/form-feedback";
 import { useAuth } from "@/components/AuthProvider";
 import { loginAction } from "@server/auth/auth.controller";
 import { safeRedirect } from "@/lib/url";
 import { loginSchema, type LoginField } from "@/shared/validation/auth";
 
 interface LoginState {
-
   emailError: string | null;
 
-  pwdError: string | null;
+  passwordError: string | null;
 
   formError: string | null;
 }
 
-const initialState: LoginState = { emailError: null, pwdError: null, formError: null };
+const initialState: LoginState = { emailError: null, passwordError: null, formError: null };
 
 function toLoginState(feedback: FeedbackResult<LoginField>): LoginState {
   return {
     emailError: feedback.fields.email ?? null,
-    pwdError: feedback.fields.password ?? null,
+    passwordError: feedback.fields.password ?? null,
     formError: feedback.form,
   };
 }
@@ -62,10 +61,10 @@ function LoginContent() {
 
   const loginErrorRules: ErrorFeedbackOptions<LoginField> = {
     fields: ["email", "password"],
-    fallback: messages.feedback.session.loginFailed,
+    fallback: texts.feedback.session.loginFailed,
     byStatus: {
-      401: { fields: {}, form: messages.auth.emailOrPwdError },
-      403: { fields: { email: messages.auth.accountDisabled }, form: null },
+      401: { fields: {}, form: texts.auth.emailOrPasswordError },
+      403: { fields: { email: texts.auth.accountDisabled }, form: null },
     },
   };
 
@@ -76,7 +75,7 @@ function LoginContent() {
     const invalid = validateForm(
       loginSchema,
       { email, password },
-      { messages: { email: messages.auth.invalidEmail, password: messages.auth.emptyPwd } },
+      { fieldTexts: { email: texts.auth.invalidEmail, password: texts.auth.emptyPassword } },
     );
     if (hasFeedback(invalid)) {
       focusFirstInvalid();
@@ -93,7 +92,7 @@ function LoginContent() {
       }
 
       setMe(result.data.user);
-      notify.success(messages.feedback.session.loggedIn);
+      notify.success(texts.feedback.session.loggedIn);
 
       router.replace(safeR);
       return initialState;
@@ -106,15 +105,14 @@ function LoginContent() {
 
   return (
     <div className="auth-card">
-
       <div className="mb-10">
-        <h1 className="auth-title">{messages.auth.loginTitle}</h1>
-        <p className="auth-subtitle">{messages.auth.loginSubtitle}</p>
+        <h1 className="auth-title">{texts.auth.loginTitle}</h1>
+        <p className="auth-subtitle">{texts.auth.loginSubtitle}</p>
       </div>
 
       {hasRedirect && (
         <Alert variant="info" icon={<Info size={18} strokeWidth={2.5} />} className="mb-5">
-          {messages.auth.redirectNotice}
+          {texts.auth.redirectNotice}
         </Alert>
       )}
 
@@ -125,7 +123,7 @@ function LoginContent() {
       )}
 
       <form action={formAction} noValidate className="auth-form-stack">
-        <FormField label={messages.auth.email} required error={formState.emailError ?? undefined}>
+        <FormField label={texts.auth.email} required error={formState.emailError ?? undefined}>
           <Input
             id="email"
             name="email"
@@ -139,28 +137,32 @@ function LoginContent() {
           />
         </FormField>
 
-        <FormField label={messages.auth.password} required error={formState.pwdError ?? undefined}>
+        <FormField
+          label={texts.auth.password}
+          required
+          error={formState.passwordError ?? undefined}
+        >
           <Input
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
-            placeholder={messages.auth.pwdPlaceholder}
+            placeholder={texts.auth.passwordPlaceholder}
             autoComplete="current-password"
             value={values.password}
             onChange={(e) => setValues((prev) => ({ ...prev, password: e.target.value }))}
             leftIcon={<Lock size={18} strokeWidth={2.5} />}
             rightElement={<PasswordToggle show={showPassword} onToggle={setShowPassword} />}
-            error={!!formState.pwdError}
+            error={!!formState.passwordError}
           />
         </FormField>
 
-        <SubmitButton className="mt-2 w-full">{messages.auth.loginSubmit}</SubmitButton>
+        <SubmitButton className="mt-2 w-full">{texts.auth.loginSubmit}</SubmitButton>
       </form>
 
       <div className="auth-switch">
-        {messages.auth.noAccount}
+        {texts.auth.noAccount}
         <Link href="/register" className="auth-switch-link">
-          {messages.auth.registerNow}
+          {texts.auth.registerNow}
         </Link>
       </div>
     </div>

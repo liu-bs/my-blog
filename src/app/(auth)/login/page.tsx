@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export function generateMetadata(): Metadata {
   return {
-    title: `${messages.auth.loginTitle} · ${messages.meta.siteTitle}`,
-    description: messages.auth.loginSubtitle,
+    title: `${texts.auth.loginTitle} · ${texts.meta.siteTitle}`,
+    description: texts.auth.loginSubtitle,
   };
 }
 

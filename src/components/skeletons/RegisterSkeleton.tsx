@@ -7,7 +7,6 @@ const HINT_LINE = line("h-[18px]");
 function Field({ width = "w-12", hint = false }: { width?: string; hint?: boolean }) {
   return (
     <div className="flex flex-col gap-2">
-
       <span className="block text-(length:--type-xs) leading-normal font-medium tracking-[-0.005em] text-heading">
         <span className={LABEL_LINE}>
           <span className={`${BAR} block h-3.5 ${width} rounded-xs`} />
@@ -30,7 +29,6 @@ function Field({ width = "w-12", hint = false }: { width?: string; hint?: boolea
 export function RegisterSkeleton() {
   return (
     <div className="auth-card" aria-hidden="true">
-
       <div className="mb-10">
         <span className="auth-title block">
           <span className={line("h-[30px]")}>
@@ -46,7 +44,6 @@ export function RegisterSkeleton() {
       </div>
 
       <div className="auth-form-stack">
-
         <div className="grid grid-cols-2 gap-4 max-[480px]:grid-cols-1">
           <Field width="w-10" />
           <Field width="w-10" />

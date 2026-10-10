@@ -3,8 +3,8 @@ import common from "./common";
 import footer from "./footer";
 import meta from "./meta";
 import home from "./home";
-import posts from "./posts";
-import post from "./post";
+import postList from "./post-list";
+import postDetail from "./post-detail";
 import auth from "./auth";
 import profile from "./profile";
 import settings from "./settings";
@@ -12,8 +12,7 @@ import write from "./write";
 import errors from "./errors";
 import feedback from "./feedback";
 
-export const messages = {
-
+export const texts = {
   nav,
 
   common,
@@ -24,9 +23,9 @@ export const messages = {
 
   home,
 
-  posts,
+  postList,
 
-  post,
+  postDetail,
 
   auth,
 
@@ -41,11 +40,11 @@ export const messages = {
   feedback,
 };
 
-type MessageParams = Record<string, string | number>;
+type TemplateParams = Record<string, string | number>;
 
 const PLACEHOLDER = /\{(\w+)\}/g;
 
-export function formatTemplate(template: string, params?: MessageParams): string {
+export function formatTemplate(template: string, params?: TemplateParams): string {
   if (!params) return template;
   return template.replace(PLACEHOLDER, (match, name: string) =>
     name in params ? String(params[name]) : match,

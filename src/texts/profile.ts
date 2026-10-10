@@ -4,25 +4,25 @@ const profile = {
 
   noBio: "暂无简介",
 
-  statsArticles: "文章",
+  statsPosts: "文章",
 
   statsLikes: "获赞",
 
   statsViews: "阅读",
 
-  writeArticle: "写作",
+  writePost: "写作",
 
   editProfile: "编辑资料",
 
-  articlesTab: "文章 · {count}",
+  postsTab: "文章 · {count}",
 
   draftsTab: "草稿 · {count}",
 
   favoritesTab: "收藏 · {count}",
 
-  noArticlesTitle: "还没有文章",
+  noPostsTitle: "还没有文章",
 
-  noArticlesDesc: "开始写第一篇文章",
+  noPostsDesc: "开始写第一篇文章",
 
   noDraftsTitle: "没有草稿",
 

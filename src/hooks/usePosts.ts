@@ -2,11 +2,11 @@
 
 import { useCallback } from "react";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
-import { messages } from "@/texts";
+import { texts } from "@/texts";
 import { notify } from "@/lib/toast";
-import { unwrap } from "@/lib/apiRequest";
-import { toggleLikeAction, toggleFavoriteAction } from "@server/blog/blog.controller";
-import { createPostAction, updatePostAction, deletePostAction } from "@server/blog/blog.controller";
+import { unwrap } from "@/lib/api-request";
+import { toggleLikeAction, toggleFavoriteAction } from "@server/post/post.controller";
+import { createPostAction, updatePostAction, deletePostAction } from "@server/post/post.controller";
 import type { CreatePostDto, PostData, UpdatePostDto, UpdatePostMutationVars } from "@shared";
 
 const postActions = {
@@ -64,7 +64,7 @@ function useTogglePostAssociation<TData extends { [K in TKey]: boolean }, TKey e
     async (id: string): Promise<TData> => {
       const data = await apiFn(id);
 
-      notify.success(messages.feedback.toggle[`${kind}${data[dataKey] ? "On" : "Off"}`]);
+      notify.success(texts.feedback.toggle[`${kind}${data[dataKey] ? "On" : "Off"}`]);
       return data;
     },
     [apiFn, dataKey, kind],

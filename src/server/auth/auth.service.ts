@@ -1,166 +1,71 @@
 import "server-only";
 
-import type { NextRequest } from "next/server";
-import { cache } from "react";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import type {
-  User,
-  RegisterDto,
-  LoginDto,
-  ChangePasswordDto,
-  UpdateProfileDto,
-  SafeUser,
-  AuthPayload,
-} from "@shared";
 import { randomUUID } from "node:crypto";
+
+import type {
+  ChangePasswordDto,
+  LoginDto,
+  RegisterDto,
+  SafeUser,
+  UpdateProfileDto,
+  User,
+} from "@shared";
 import {
-  UnauthorizedError,
-  NotFoundError,
   ConflictError,
   ForbiddenError,
+  NotFoundError,
+  UnauthorizedError,
 } from "@server/common/errors";
-import { passwordService } from "./password.service";
-import { logger } from "@server/common/logger";
-import { tokenService, type TokenService } from "./token.service";
-import { AUTH_TOKEN_COOKIE } from "@shared";
-import { joinName } from "@shared/format";
+import { isUniqueConstraintViolation } from "@server/common/db";
+import { hashPassword, verifyPassword } from "@server/common/password";
 import {
-  findUserById,
-  findUserByEmail,
-  existsByEmailOrUsername,
   createUser,
+  getUserById,
+  getUserByEmail,
+  invalidateUserSessions,
+  isEmailOrUsernameTaken,
   updateUser,
-  bumpTokenVersion,
-  isUniqueConstraintError,
-} from "@server/user/user.repository";
+} from "@server/user/user.service";
 
-import { syncCommentAuthorProfile } from "@server/comment/comment.service";
-import { syncPostAuthorName } from "@server/blog/blog.service";
+const PLACEHOLDER_PASSWORD_HASH = "$2b$10$EEuWh8NBvDVQU0H3Nueyju/L/PkhwhtYGHTgoh92VnpGbaozrN6u.";
 
-const DUMMY_PASSWORD_HASH = "$2b$10$EEuWh8NBvDVQU0H3Nueyju/L/PkhwhtYGHTgoh92VnpGbaozrN6u.";
+const DUPLICATE_ACCOUNT_MESSAGE = "Email or username already in use";
 
-export type { UpdateProfileDto, SafeUser };
-
-async function resolveAuthData(): Promise<{ payload: AuthPayload; user: User } | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(AUTH_TOKEN_COOKIE)?.value;
-  if (!token) return null;
-
-  const result = tokenService.verify(token);
-  if (!result.success) return null;
-
-  const decoded = result.payload;
-
-  const user = await findUserById(decoded.id).catch(() => undefined);
-  if (!user) return null;
-  if ((user.tokenVersion ?? 0) !== decoded.tokenVersion) return null;
-  if (user.disabled) return null;
-
-  return { payload: decoded, user };
-}
-
-const resolveAuthDataCached = cache(resolveAuthData);
-
-export const getAuthPayload = cache(async (): Promise<AuthPayload | null> => {
-  const data = await resolveAuthDataCached();
-  return data?.payload ?? null;
-});
-
-const getCurrentUser = cache(async (): Promise<SafeUser | null> => {
-  try {
-    const data = await resolveAuthDataCached();
-    if (!data) return null;
-    return toSafeUser(data.user);
-  } catch {
-    return null;
-  }
-});
-
-export async function requireUserOrRedirect(redirectTo: string): Promise<SafeUser> {
-  const user = await getCurrentUser();
-  if (!user) {
-    redirect(`/login?redirect=${encodeURIComponent(redirectTo)}&stale=1`);
-  }
-  return user;
-}
-
-export interface AuthDeps {
-
-  tokenService: TokenService;
-
-  findUserById: (id: string) => Promise<User | undefined>;
-}
-
-export async function requireAuth(request: NextRequest, deps: AuthDeps): Promise<AuthPayload> {
-  const token = request.cookies.get(AUTH_TOKEN_COOKIE)?.value;
-  if (!token) {
-    throw new UnauthorizedError("Unauthorized, please log in first");
-  }
-
-  const result = deps.tokenService.verify(token);
-  if (!result.success) {
-    const msg =
-      result.errorType === "expired"
-        ? "Login session has expired, please log in again"
-        : "Token is invalid, please log in again";
-    throw new UnauthorizedError(msg);
-  }
-
-  const decoded = result.payload;
-  const user = await deps.findUserById(decoded.id).catch(() => undefined);
-  if (!user) {
-    throw new UnauthorizedError("User not found, please log in again");
-  }
-  if ((user.tokenVersion ?? 0) !== decoded.tokenVersion) {
-    throw new UnauthorizedError("Token has expired, please log in again");
-  }
-  if (user.disabled) {
-    throw new ForbiddenError("Account has been disabled");
-  }
-  return decoded;
-}
-
-export async function tryAuth(request: NextRequest, deps: AuthDeps): Promise<AuthPayload | null> {
-  try {
-    return await requireAuth(request, deps);
-  } catch {
-    return null;
-  }
-}
+export const ACCOUNT_DISABLED_MESSAGE = "Account has been disabled";
 
 export function toSafeUser(user: User): SafeUser {
-  const { password: _p, tokenVersion: _t, disabled: _d, ...safe } = user;
-  void _p;
-  void _t;
-  void _d;
-  return safe;
+  const {
+    password: _password,
+    tokenVersion: _tokenVersion,
+    disabled: _disabled,
+    ...safeUser
+  } = user;
+  return safeUser;
 }
 
 export async function register(dto: RegisterDto): Promise<User> {
-  const exists = await existsByEmailOrUsername(dto.email, dto.username);
-  if (exists) {
-    throw new ConflictError("Email or username already in use");
+  if (await isEmailOrUsernameTaken(dto.email, dto.username)) {
+    throw new ConflictError(DUPLICATE_ACCOUNT_MESSAGE);
   }
 
   const now = new Date().toISOString();
   const newUser: User = {
     id: randomUUID(),
     ...dto,
-    password: await passwordService.hash(dto.password),
+    password: await hashPassword(dto.password),
     avatar: "",
     coverImage: "",
     bio: "",
     location: "",
     website: "",
-    joined: new Date().toISOString(),
+    joined: now,
     role: "Writer",
     company: "",
     verified: false,
     disabled: false,
     tags: [],
     social: { twitter: "", github: "", linkedin: "" },
-    stats: { articles: 0, likes: 0, views: 0 },
+    stats: { posts: 0, likes: 0, views: 0 },
     tokenVersion: 0,
     appearance: { theme: "system", fontSize: "medium" },
     createdAt: now,
@@ -170,112 +75,57 @@ export async function register(dto: RegisterDto): Promise<User> {
   try {
     return await createUser(newUser);
   } catch (err) {
-    if (isUniqueConstraintError(err)) {
-      throw new ConflictError("Email or username already in use");
-    }
+    if (isUniqueConstraintViolation(err)) throw new ConflictError(DUPLICATE_ACCOUNT_MESSAGE);
     throw err;
   }
 }
 
 export async function login(dto: LoginDto): Promise<User> {
-  const user = await findUserByEmail(dto.email);
-  const matched = await passwordService.compare(
+  const user = await getUserByEmail(dto.email);
+  const isPasswordCorrect = await verifyPassword(
     dto.password,
-    user?.password ?? DUMMY_PASSWORD_HASH,
+    user?.password ?? PLACEHOLDER_PASSWORD_HASH,
   );
-  if (!user || !matched) {
+  if (!user || !isPasswordCorrect) {
     throw new UnauthorizedError("Email or password incorrect");
   }
   if (user.disabled) {
-    throw new ForbiddenError("Account has been disabled");
+    throw new ForbiddenError(ACCOUNT_DISABLED_MESSAGE);
   }
   return user;
 }
 
-export async function getMe(userId: string): Promise<User> {
-  const user = await findUserById(userId);
-  if (!user) {
-    throw new NotFoundError("User not found");
-  }
+export async function getAccount(userId: string): Promise<User> {
+  const user = await getUserById(userId);
+  if (!user) throw new NotFoundError("User not found");
   return user;
 }
 
-export async function logout(userId: string): Promise<void> {
-  await bumpTokenVersion(userId);
+export function logout(userId: string): Promise<void> {
+  return invalidateUserSessions(userId);
 }
 
 export async function changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
-  const user = await findUserById(userId);
-  if (!user || !(await passwordService.compare(dto.currentPassword, user.password ?? ""))) {
+  const user = await getUserById(userId);
+  if (!user || !(await verifyPassword(dto.currentPassword, user.password ?? ""))) {
     throw new UnauthorizedError("Current password incorrect");
   }
-  await updateUser(userId, {
-    password: await passwordService.hash(dto.newPassword),
-  });
-  await bumpTokenVersion(userId);
+  await updateUser(userId, { password: await hashPassword(dto.newPassword) });
+  await invalidateUserSessions(userId);
 }
 
 export async function updateProfile(userId: string, dto: UpdateProfileDto): Promise<User> {
-  const user = await findUserById(userId);
-  if (!user) {
-    throw new NotFoundError("User not found");
-  }
-
-  const firstName = dto.firstName !== undefined ? dto.firstName.trim() : user.firstName;
-  const lastName = dto.lastName !== undefined ? dto.lastName.trim() : user.lastName;
-  const avatar = dto.avatar ?? user.avatar;
-  const bio = dto.bio?.trim() ?? user.bio;
-  const location = dto.location !== undefined ? dto.location.trim() || "" : user.location;
-  const website = dto.website !== undefined ? dto.website.trim() || "" : user.website;
+  const user = await getUserById(userId);
+  if (!user) throw new NotFoundError("User not found");
 
   const updated = await updateUser(userId, {
-    firstName,
-    lastName,
-    avatar,
-    bio,
-    location,
-    website,
+    firstName: dto.firstName !== undefined ? dto.firstName.trim() : user.firstName,
+    lastName: dto.lastName !== undefined ? dto.lastName.trim() : user.lastName,
+    avatar: dto.avatar ?? user.avatar,
+    bio: dto.bio?.trim() ?? user.bio,
+    location: dto.location !== undefined ? dto.location.trim() : user.location,
+    website: dto.website !== undefined ? dto.website.trim() : user.website,
   });
-  if (!updated) {
-    throw new NotFoundError("User not found");
-  }
-
-  const newName = joinName(firstName, lastName) || user.username;
-  const newAvatar = avatar || undefined;
-
-  const safeSync = (label: string, fn: () => Promise<unknown>) =>
-    fn()
-      .then((result) => {
-        const count = typeof result === "number" ? result : null;
-        if (count === null || count > 0) {
-          logger.info(`Synced ${label}`, { userId, ...(count !== null ? { count } : {}) });
-        }
-      })
-      .catch((err: unknown) => {
-        logger.error(`Failed to sync ${label}`, {
-          userId,
-          error: err instanceof Error ? err.message : String(err),
-        });
-      });
-
-  await safeSync("comments with updated username/avatar", () =>
-    syncCommentAuthorProfile(userId, newName, newAvatar ?? null),
-  );
-  await safeSync("post authorName", () => syncPostAuthorName(userId, newName));
-
+  if (!updated) throw new NotFoundError("User not found");
   return updated;
-}
-
-export async function refresh(decoded: AuthPayload): Promise<User> {
-  const user = await findUserById(decoded.id);
-  if (!user) {
-    throw new UnauthorizedError("User not found");
-  }
-  if ((user.tokenVersion ?? 0) !== decoded.tokenVersion) {
-    throw new UnauthorizedError("Token has expired, please log in again");
-  }
-  if (user.disabled) {
-    throw new ForbiddenError("Account has been disabled");
-  }
-  return user;
 }

@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState, useState, useEffect } from "react";
-import { formatTemplate, messages } from "@/texts";
+import { formatTemplate, texts } from "@/texts";
 import { useRouter } from "next/navigation";
 import { MapPin, Globe, Info, Check, Lock, Image as ImageIcon, User } from "lucide-react";
 import { PasswordToggle } from "@/components/ui/PasswordToggle";
-import { entityName } from "@/lib/message";
+import { entityLabel } from "@/lib/error-message";
 import { notify } from "@/lib/toast";
 import {
   actionFailure,
@@ -14,7 +14,7 @@ import {
   validateFieldValue,
   type ErrorFeedbackOptions,
   type FieldErrors,
-} from "@/lib/formFeedback";
+} from "@/lib/form-feedback";
 import { Avatar } from "@/components/ui/Avatar";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { FormField } from "@/components/ui/FormField";
@@ -22,8 +22,8 @@ import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { PasswordStrength } from "@/components/ui/PasswordStrength";
 import { useAuth } from "@/components/AuthProvider";
-import { useTablistKeyboard } from "@/hooks/useTablistKeyboard";
-import { clearAuthStatus } from "@/lib/authStatus";
+import { useTabListKeyboard } from "@/hooks/useTabListKeyboard";
+import { clearAuthStatus } from "@/lib/auth-status";
 import { updateProfileAction, changePasswordAction } from "@server/auth/auth.controller";
 import { getInitials, joinName, splitName } from "@shared/format";
 import { changePasswordFieldsSchema, updateProfileSchema } from "@/shared/validation/auth";
@@ -35,21 +35,20 @@ type SettingsTab = "profile" | "password";
 
 const SETTINGS_TABS: readonly SettingsTab[] = ["profile", "password"];
 
-const PWD_FIELDS: readonly ChangePasswordField[] = [
+const PASSWORD_FIELDS: readonly ChangePasswordField[] = [
   "currentPassword",
   "newPassword",
   "confirmPassword",
 ];
 
 export function SettingsForm() {
-
   const router = useRouter();
 
   const { user, refreshMe, setMe } = useAuth();
 
   const [tab, setTab] = useState<SettingsTab>("profile");
 
-  const tabKeyNav = useTablistKeyboard(SETTINGS_TABS, setTab);
+  const tabKeyNav = useTabListKeyboard(SETTINGS_TABS, setTab);
 
   const [displayName, setDisplayName] = useState("");
 
@@ -61,11 +60,11 @@ export function SettingsForm() {
 
   const [website, setWebsite] = useState("");
 
-  const [currentPwd, setCurrentPwd] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
 
-  const [newPwd, setNewPwd] = useState("");
+  const [newPassword, setNewPassword] = useState("");
 
-  const [confirmPwd, setConfirmPwd] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [showCurrent, setShowCurrent] = useState(false);
 
@@ -75,7 +74,7 @@ export function SettingsForm() {
 
   const [profileErrors, setProfileErrors] = useState<FieldErrors<ProfileField>>({});
 
-  const [pwdErrors, setPwdErrors] = useState<FieldErrors<ChangePasswordField>>({});
+  const [passwordErrors, setPasswordErrors] = useState<FieldErrors<ChangePasswordField>>({});
 
   const [urlTouched, setUrlTouched] = useState<Partial<Record<"avatar" | "website", boolean>>>({});
 
@@ -90,14 +89,14 @@ export function SettingsForm() {
 
   const profileErrorRules: ErrorFeedbackOptions<ProfileField> = {
     fields: ["firstName", "avatar", "bio", "location", "website"],
-    fallback: formatTemplate(messages.feedback.update.failed, { entity: entityName("profile") }),
+    fallback: formatTemplate(texts.feedback.update.failed, { entity: entityLabel("profile") }),
   };
 
-  const pwdErrorRules: ErrorFeedbackOptions<ChangePasswordField> = {
-    fields: PWD_FIELDS,
-    fallback: messages.feedback.common.actionFailed,
+  const passwordFeedbackOptions: ErrorFeedbackOptions<ChangePasswordField> = {
+    fields: PASSWORD_FIELDS,
+    fallback: texts.feedback.common.actionFailed,
     byStatus: {
-      401: { fields: { currentPassword: messages.settings.pwdIncorrect }, form: null },
+      401: { fields: { currentPassword: texts.settings.passwordIncorrect }, form: null },
     },
   };
 
@@ -125,7 +124,7 @@ export function SettingsForm() {
         try {
           await refreshMe();
         } catch (err) {
-          notify.error(err, messages.common.operationFailed);
+          notify.error(err, texts.common.operationFailed);
         }
         setProfileErrors({});
         notify.updated("profile");
@@ -140,56 +139,56 @@ export function SettingsForm() {
     { error: null },
   );
 
-  const [pwdState, pwdAction] = useActionState<FormError, FormData>(
+  const [passwordState, passwordAction] = useActionState<FormError, FormData>(
     async (_prev, formData) => {
-      const currentPassword = (formData.get("currentPwd") as string) ?? "";
-      const newPassword = (formData.get("newPwd") as string) ?? "";
-      const confirmPassword = (formData.get("confirmPwd") as string) ?? "";
+      const currentPassword = (formData.get("currentPassword") as string) ?? "";
+      const newPassword = (formData.get("newPassword") as string) ?? "";
+      const confirmPassword = (formData.get("confirmPassword") as string) ?? "";
 
       const errors: FieldErrors<ChangePasswordField> = {};
       const currentError = validateFieldValue(
         changePasswordFieldsSchema.shape.currentPassword,
         currentPassword,
-        messages.settings.pwdRequired,
+        texts.settings.currentPasswordRequired,
       );
       if (currentError) errors.currentPassword = currentError;
 
       const lengthError = validateFieldValue(
         changePasswordFieldsSchema.shape.newPassword,
         newPassword,
-        messages.settings.pwdTooShort,
+        texts.settings.newPasswordTooShort,
       );
       if (lengthError) errors.newPassword = lengthError;
 
       if (newPassword && newPassword === currentPassword)
-        errors.newPassword = messages.settings.pwdSame;
-      if (newPassword !== confirmPassword) errors.confirmPassword = messages.settings.pwdMismatch;
+        errors.newPassword = texts.settings.sameAsCurrentPassword;
+      if (newPassword !== confirmPassword) errors.confirmPassword = texts.settings.passwordMismatch;
 
       if (Object.keys(errors).length > 0) {
-        setPwdErrors(errors);
+        setPasswordErrors(errors);
         focusFirstInvalid();
         return { error: null };
       }
-      setPwdErrors({});
+      setPasswordErrors({});
 
       try {
         const result = await changePasswordAction({ currentPassword, newPassword });
         if (!result.ok) {
-          const failed = resolveSubmitError(actionFailure(result), pwdErrorRules);
-          setPwdErrors(failed.fields);
+          const failed = resolveSubmitError(actionFailure(result), passwordFeedbackOptions);
+          setPasswordErrors(failed.fields);
           focusFirstInvalid();
           return { error: failed.form };
         }
 
         setMe(null);
         clearAuthStatus();
-        notify.success(messages.feedback.session.passwordChanged);
+        notify.success(texts.feedback.session.passwordChanged);
 
         router.replace("/login");
         return { error: null };
       } catch (err) {
-        const failed = resolveSubmitError(err, pwdErrorRules);
-        setPwdErrors(failed.fields);
+        const failed = resolveSubmitError(err, passwordFeedbackOptions);
+        setPasswordErrors(failed.fields);
         focusFirstInvalid();
         return { error: failed.form };
       }
@@ -206,7 +205,7 @@ export function SettingsForm() {
   const avatarLiveError = validateFieldValue(
     updateProfileSchema.shape.avatar,
     avatarUrl,
-    messages.settings.avatarInvalid,
+    texts.settings.avatarInvalid,
   );
 
   const avatarError = profileErrors.avatar ?? (urlTouched.avatar ? avatarLiveError : undefined);
@@ -214,14 +213,13 @@ export function SettingsForm() {
   const websiteLiveError = validateFieldValue(
     updateProfileSchema.shape.website,
     website,
-    messages.settings.websiteInvalid,
+    texts.settings.websiteInvalid,
   );
 
   const websiteError = profileErrors.website ?? (urlTouched.website ? websiteLiveError : undefined);
 
   return (
     <div className="animate-fade-in">
-
       <div className="mb-8 segmented" role="tablist" onKeyDown={tabKeyNav}>
         <button
           type="button"
@@ -234,7 +232,7 @@ export function SettingsForm() {
           onClick={() => setTab("profile")}
           className={`segmented-item ${tab === "profile" ? "segmented-item-on" : ""}`}
         >
-          {messages.settings.tabProfile}
+          {texts.settings.tabProfile}
         </button>
         <button
           type="button"
@@ -247,14 +245,13 @@ export function SettingsForm() {
           onClick={() => setTab("password")}
           className={`segmented-item ${tab === "password" ? "segmented-item-on" : ""}`}
         >
-          {messages.settings.tabPassword}
+          {texts.settings.tabPassword}
         </button>
       </div>
 
       {tab === "profile" && (
         <div role="tabpanel" id="settings-panel-profile" aria-labelledby="settings-tab-profile">
           <form action={profileAction} noValidate className="form-stack">
-
             {profileState.error && (
               <Alert variant="error" icon={<Info size={16} strokeWidth={2.5} />} className="shake">
                 {profileState.error}
@@ -270,8 +267,8 @@ export function SettingsForm() {
               />
               <div className="min-w-0 flex-1">
                 <FormField
-                  label={messages.settings.avatarUrl}
-                  hint={messages.settings.avatarHint}
+                  label={texts.settings.avatarUrl}
+                  hint={texts.settings.avatarHint}
                   error={avatarError ?? undefined}
                 >
                   <Input
@@ -296,7 +293,7 @@ export function SettingsForm() {
             </div>
 
             <FormField
-              label={messages.settings.firstName}
+              label={texts.settings.firstName}
               required
               error={profileErrors.firstName ?? undefined}
             >
@@ -312,7 +309,7 @@ export function SettingsForm() {
               />
             </FormField>
 
-            <FormField label={messages.settings.bio} error={profileErrors.bio ?? undefined}>
+            <FormField label={texts.settings.bio} error={profileErrors.bio ?? undefined}>
               <textarea
                 id="bio"
                 name="bio"
@@ -329,8 +326,8 @@ export function SettingsForm() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
-                label={messages.settings.location}
-                hint={messages.common.optional}
+                label={texts.settings.location}
+                hint={texts.common.optional}
                 error={profileErrors.location ?? undefined}
               >
                 <Input
@@ -345,8 +342,8 @@ export function SettingsForm() {
                 />
               </FormField>
               <FormField
-                label={messages.settings.website}
-                hint={messages.common.optional}
+                label={texts.settings.website}
+                hint={texts.common.optional}
                 error={websiteError ?? undefined}
               >
                 <Input
@@ -370,7 +367,7 @@ export function SettingsForm() {
             <div className="flex justify-end pt-4">
               <SubmitButton>
                 <Check size={16} strokeWidth={2.5} />
-                {messages.settings.saveChanges}
+                {texts.settings.saveChanges}
               </SubmitButton>
             </div>
           </form>
@@ -379,65 +376,64 @@ export function SettingsForm() {
 
       {tab === "password" && (
         <div role="tabpanel" id="settings-panel-password" aria-labelledby="settings-tab-password">
-          <form action={pwdAction} noValidate className="form-stack">
-
-            {pwdState.error && (
+          <form action={passwordAction} noValidate className="form-stack">
+            {passwordState.error && (
               <Alert variant="error" icon={<Info size={16} strokeWidth={2.5} />} className="shake">
-                {pwdState.error}
+                {passwordState.error}
               </Alert>
             )}
 
             <FormField
-              label={messages.settings.currentPwd}
+              label={texts.settings.currentPassword}
               required
-              error={pwdErrors.currentPassword ?? undefined}
+              error={passwordErrors.currentPassword ?? undefined}
             >
               <Input
-                id="currentPwd"
-                name="currentPwd"
+                id="currentPassword"
+                name="currentPassword"
                 type={showCurrent ? "text" : "password"}
-                value={currentPwd}
-                onChange={(e) => setCurrentPwd(e.target.value)}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
                 autoComplete="current-password"
-                error={!!pwdErrors.currentPassword}
+                error={!!passwordErrors.currentPassword}
                 leftIcon={<Lock size={18} strokeWidth={2.5} />}
                 rightElement={<PasswordToggle show={showCurrent} onToggle={setShowCurrent} />}
               />
             </FormField>
 
             <FormField
-              label={messages.settings.newPwd}
-              hint={messages.settings.newPwdHint}
+              label={texts.settings.newPassword}
+              hint={texts.settings.newPasswordFieldHint}
               required
-              error={pwdErrors.newPassword ?? undefined}
+              error={passwordErrors.newPassword ?? undefined}
             >
               <Input
-                id="newPwd"
-                name="newPwd"
+                id="newPassword"
+                name="newPassword"
                 type={showNew ? "text" : "password"}
-                value={newPwd}
-                onChange={(e) => setNewPwd(e.target.value)}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
-                error={!!pwdErrors.newPassword}
+                error={!!passwordErrors.newPassword}
                 leftIcon={<Lock size={18} strokeWidth={2.5} />}
                 rightElement={<PasswordToggle show={showNew} onToggle={setShowNew} />}
               />
-              <PasswordStrength password={newPwd} />
+              <PasswordStrength password={newPassword} />
             </FormField>
 
             <FormField
-              label={messages.settings.confirmPwd}
+              label={texts.settings.confirmPassword}
               required
-              error={pwdErrors.confirmPassword ?? undefined}
+              error={passwordErrors.confirmPassword ?? undefined}
             >
               <Input
-                id="confirmPwd"
-                name="confirmPwd"
+                id="confirmPassword"
+                name="confirmPassword"
                 type={showConfirm ? "text" : "password"}
-                value={confirmPwd}
-                onChange={(e) => setConfirmPwd(e.target.value)}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
-                error={!!pwdErrors.confirmPassword}
+                error={!!passwordErrors.confirmPassword}
                 leftIcon={<Lock size={18} strokeWidth={2.5} />}
                 rightElement={<PasswordToggle show={showConfirm} onToggle={setShowConfirm} />}
               />
@@ -446,7 +442,7 @@ export function SettingsForm() {
             <div className="flex justify-end pt-4">
               <SubmitButton>
                 <Check size={16} strokeWidth={2.5} />
-                {messages.settings.updatePwd}
+                {texts.settings.updatePassword}
               </SubmitButton>
             </div>
           </form>

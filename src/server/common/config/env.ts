@@ -44,7 +44,6 @@ function durationToSeconds(value: string): number {
 const JWT_EXPIRES_IN = getEnv("JWT_EXPIRES_IN", "7d");
 
 export const env = {
-
   NODE_ENV,
 
   isProd: NODE_ENV === "production",

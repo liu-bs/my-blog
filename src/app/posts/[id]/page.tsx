@@ -2,7 +2,7 @@ import { Container } from "@/components/ui/Container";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound, permanentRedirect } from "next/navigation";
-import { formatTemplate, messages } from "@/texts";
+import { formatTemplate, texts } from "@/texts";
 import type { Metadata } from "next";
 import "@/app/styles/hljs-theme.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -11,34 +11,34 @@ import { formatDate, getInitials, splitName } from "@shared/format";
 
 import { estimateReadingTime, stripHtml, stripMarkdown } from "@shared/markdown";
 import { decodePostId, encodePostId, postPath } from "@shared";
+import { withDbRetry } from "@server/common/db";
+import { listCommentsCached } from "@server/comment/comment.cache";
 import {
-  getPublicPostServer,
-  getPublicCommentsServer,
-  getNeighborPostsServer,
-  listPostsServer,
-  findRenamedPostId,
-  withDbRetry,
-} from "@server/blog/blog.cache";
+  getPostCached,
+  getNeighborPostsCached,
+  getRenamedPostId,
+  listPostsCached,
+} from "@server/post/post.cache";
 import { SITE_URL, STATIC_PARAMS_LIMIT, COMMENT_PAGE_SIZE } from "@/config/site";
 
 import { pageAlternates } from "@/lib/seo";
 import { isOptimizableImageSrc } from "@/lib/url";
 import type { NeighborPostsData } from "@shared";
 import { tagClassFor, tagVariantFor } from "@/components/ui/Tag";
-import { PostActions } from "@/components/blog/PostActions";
-import { PostHeadStats } from "@/components/blog/PostHeadStats";
-import { PostToc } from "@/components/blog/PostToc";
-import { AuthorActions } from "@/components/blog/AuthorActions";
-import { ViewReporter } from "@/components/blog/ViewReporter";
-import { LazyComments, LazyBackToTop } from "@/components/blog/LazyIslands";
-import { PostStateProvider } from "@/components/blog/PostStateProvider";
-import { BackLink } from "@/components/blog/BackLink";
+import { PostActions } from "@/components/post/PostActions";
+import { PostHeadStats } from "@/components/post/PostHeadStats";
+import { PostToc } from "@/components/post/PostToc";
+import { AuthorActions } from "@/components/post/AuthorActions";
+import { PostViewTracker } from "@/components/post/PostViewTracker";
+import { DeferredComments, DeferredBackToTop } from "@/components/post/DeferredPostWidgets";
+import { PostStateProvider } from "@/components/post/PostStateProvider";
+import { BackLink } from "@/components/post/BackLink";
 
 export async function generateStaticParams() {
   try {
-    const data = await listPostsServer({ page: 1, limit: STATIC_PARAMS_LIMIT });
+    const indexedPosts = await listPostsCached({ page: 1, limit: STATIC_PARAMS_LIMIT });
 
-    const params = data.posts.map((p) => ({ id: encodePostId(p.id) }));
+    const params = indexedPosts.posts.map((post) => ({ id: encodePostId(post.id) }));
     if (params.length > 0) return params;
   } catch {}
 
@@ -46,7 +46,7 @@ export async function generateStaticParams() {
 }
 
 async function redirectIfRenamed(id: string): Promise<void> {
-  const newId = await findRenamedPostId(id);
+  const newId = await getRenamedPostId(id);
   if (!newId) return;
   permanentRedirect(postPath(newId));
 }
@@ -58,11 +58,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id: rawId } = await params;
   const id = decodePostId(rawId);
-  const metaResult = await getPublicPostServer(id);
+  const metaResult = await getPostCached(id);
   if (!metaResult) {
     await redirectIfRenamed(id);
     return {
-      title: messages.meta.siteTitle,
+      title: texts.meta.siteTitle,
       robots: { index: false, follow: false },
     };
   }
@@ -72,7 +72,7 @@ export async function generateMetadata({
   const description = stripHtml(post.summary || post.content).slice(0, 160);
 
   return {
-    title: `${cleanTitle} · ${messages.meta.siteTitle}`,
+    title: `${cleanTitle} · ${texts.meta.siteTitle}`,
     description,
     alternates: pageAlternates(postPath(id)),
     openGraph: {
@@ -107,7 +107,7 @@ async function NeighborPosts({ neighborPosts }: { neighborPosts: NeighborPostsDa
         >
           <span className="flex items-center gap-1 text-(length:--type-2xs) font-medium text-faint">
             <ChevronLeft size={14} strokeWidth={2.5} />
-            {messages.post.prevPost}
+            {texts.postDetail.prevPost}
           </span>
           <span className="line-clamp-2 text-(length:--type-sm) font-semibold text-heading transition-colors duration-[var(--duration-fast)] group-hover:text-accent">
             {stripMarkdown(prevPost.title)}
@@ -123,7 +123,7 @@ async function NeighborPosts({ neighborPosts }: { neighborPosts: NeighborPostsDa
           className="group flex flex-col gap-1 card card-hover p-4 text-right max-sm:text-left"
         >
           <span className="flex items-center justify-end gap-1 text-(length:--type-2xs) font-medium text-faint">
-            {messages.post.nextPost}
+            {texts.postDetail.nextPost}
             <ChevronRight size={14} strokeWidth={2.5} />
           </span>
           <span className="line-clamp-2 text-(length:--type-sm) font-semibold text-heading transition-colors duration-[var(--duration-fast)] group-hover:text-accent">
@@ -142,11 +142,11 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
   const id = decodePostId(rawId);
 
-  const neighborsPromise = getNeighborPostsServer(id).catch(() => null);
+  const neighborsPromise = getNeighborPostsCached(id).catch(() => null);
 
-  const commentsPromise = getPublicCommentsServer(id, COMMENT_PAGE_SIZE).catch(() => null);
+  const commentsPromise = listCommentsCached(id, COMMENT_PAGE_SIZE).catch(() => null);
 
-  const postResult = await withDbRetry(() => getPublicPostServer(id));
+  const postResult = await withDbRetry(() => getPostCached(id));
   if (!postResult) {
     await redirectIfRenamed(id);
     notFound();
@@ -164,13 +164,10 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
   const categoryLabel = post.category;
 
   return (
-
     <PostStateProvider initialPost={{ ...post, content: "", contentRaw: undefined }}>
       <Container className="page-section">
-
         <div className="grid grid-cols-1 gap-10 pb-12 max-lg:gap-0 max-lg:pb-8 lg:grid-cols-[1fr_220px]">
           <article>
-
             <BackLink />
 
             <header className="mb-10 animate-fade-in">
@@ -195,7 +192,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                     </span>
                     <span className="meta-text">
                       {formatDate(post.publishedAt || post.createdAt)} ·{" "}
-                      {formatTemplate(messages.post.readingTime, {
+                      {formatTemplate(texts.postDetail.readingTime, {
                         minutes: estimateReadingTime(post.content),
                       })}
                     </span>
@@ -220,19 +217,18 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
               />
             )}
 
-            <div id="article-content" className="animate-fade-in">
-
-              <div className="article-content" dangerouslySetInnerHTML={{ __html: post.content }} />
+            <div id="post-content" className="animate-fade-in">
+              <div className="post-content" dangerouslySetInnerHTML={{ __html: post.content }} />
 
               {post.tags?.length > 0 && (
                 <div className="mt-10 flex flex-wrap gap-2 border-t border-stroke pt-8">
-                  {post.tags.map((t) => (
+                  {post.tags.map((tag) => (
                     <Link
-                      key={t}
-                      href={`/posts?tag=${encodeURIComponent(t)}`}
-                      className={`badge-lg ${tagClassFor[tagVariantFor(t)]}`}
+                      key={tag}
+                      href={`/posts?tag=${encodeURIComponent(tag)}`}
+                      className={`badge-lg ${tagClassFor[tagVariantFor(tag)]}`}
                     >
-                      {t}
+                      {tag}
                     </Link>
                   ))}
                 </div>
@@ -240,9 +236,9 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
               <PostActions user={null} />
 
-              <ViewReporter postId={post.id} />
+              <PostViewTracker postId={post.id} />
 
-              <LazyComments
+              <DeferredComments
                 postId={post.id}
                 user={null}
                 postAuthorId={post.authorId}
@@ -253,10 +249,10 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
             <NeighborPosts neighborPosts={neighborPosts} />
           </article>
 
-          <PostToc articleId="article-content" />
+          <PostToc contentId="post-content" />
         </div>
 
-        <LazyBackToTop />
+        <DeferredBackToTop />
 
         <script
           type="application/ld+json"
@@ -291,13 +287,13 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                 {
                   "@type": "ListItem",
                   position: 1,
-                  name: messages.nav.home,
+                  name: texts.nav.home,
                   item: SITE_URL,
                 },
                 {
                   "@type": "ListItem",
                   position: 2,
-                  name: messages.nav.posts,
+                  name: texts.nav.posts,
                   item: `${SITE_URL}/posts`,
                 },
                 { "@type": "ListItem", position: 3, name: stripMarkdown(post.title) },
