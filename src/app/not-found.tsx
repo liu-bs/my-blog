@@ -1,4 +1,4 @@
-import { texts } from "@/texts";
+import errors from "@/texts/errors";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 
@@ -10,13 +10,13 @@ export default function NotFound() {
           404
         </h1>
         <p className="mb-10 max-w-90 text-(length:--type-base) leading-relaxed text-muted">
-          {texts.errors.notFoundDesc}
+          {errors.notFoundDesc}
         </p>
 
         <div className="flex items-center gap-3">
-          <Button href="/">{texts.errors.goHome}</Button>
+          <Button href="/">{errors.goHome}</Button>
           <Button variant="outline" href="/posts">
-            {texts.errors.browsePosts}
+            {errors.browsePosts}
           </Button>
         </div>
       </div>

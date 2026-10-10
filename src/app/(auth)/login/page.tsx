@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { texts } from "@/texts";
+import auth from "@/texts/auth";
+import meta from "@/texts/meta";
 import { LoginForm } from "@/components/auth/LoginForm";
 
 export function generateMetadata(): Metadata {
   return {
-    title: `${texts.auth.loginTitle} · ${texts.meta.siteTitle}`,
-    description: texts.auth.loginSubtitle,
+    title: `${auth.loginTitle} · ${meta.siteTitle}`,
+    description: auth.loginSubtitle,
   };
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { texts } from "@/texts";
+import nav from "@/texts/nav";
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 
@@ -33,7 +33,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setDark(!isDark)}
-      aria-label={texts.nav.themeToggle}
+      aria-label={nav.themeToggle}
       className="relative icon-btn-ghost overflow-hidden"
     >
       <span

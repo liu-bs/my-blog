@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
-import { texts } from "@/texts";
+import feedback from "@/texts/feedback";
 import { notify } from "@/lib/toast";
 import { unwrap } from "@/lib/api-request";
 import { toggleLikeAction, toggleFavoriteAction } from "@server/post/post.controller";
@@ -64,7 +64,7 @@ function useTogglePostAssociation<TData extends { [K in TKey]: boolean }, TKey e
     async (id: string): Promise<TData> => {
       const data = await apiFn(id);
 
-      notify.success(texts.feedback.toggle[`${kind}${data[dataKey] ? "On" : "Off"}`]);
+      notify.success(feedback.toggle[`${kind}${data[dataKey] ? "On" : "Off"}`]);
       return data;
     },
     [apiFn, dataKey, kind],

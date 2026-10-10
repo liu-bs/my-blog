@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { texts } from "@/texts";
+import common from "@/texts/common";
 import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
@@ -20,9 +20,9 @@ export function LoginRequired({ icon, description }: LoginRequiredProps) {
     <Container className="page-section">
       <EmptyState
         icon={icon}
-        title={texts.common.loginRequired}
+        title={common.loginRequired}
         description={description}
-        action={<Button href={buildLoginRedirect(pathname)}>{texts.common.goLogin}</Button>}
+        action={<Button href={buildLoginRedirect(pathname)}>{common.goLogin}</Button>}
       />
     </Container>
   );

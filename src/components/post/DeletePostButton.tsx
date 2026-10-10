@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Pencil } from "lucide-react";
-import { texts } from "@/texts";
+import common from "@/texts/common";
+import postDetail from "@/texts/post-detail";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useDeletePost } from "@/hooks/usePosts";
@@ -49,7 +50,7 @@ export function DeletePostButton({
         <div className="mt-4 row-sm justify-end border-t border-stroke pt-4">
           <Button variant="outline" size="sm" href={postEditPath(postId)}>
             <Pencil size={14} strokeWidth={2.5} />
-            {texts.postDetail.editPost}
+            {postDetail.editPost}
           </Button>
           <Button
             variant="outline"
@@ -58,7 +59,7 @@ export function DeletePostButton({
             onClick={() => setShowDelete(true)}
           >
             <Trash2 size={14} strokeWidth={2.5} />
-            {texts.postDetail.deletePost}
+            {postDetail.deletePost}
           </Button>
         </div>
       ) : (
@@ -69,27 +70,23 @@ export function DeletePostButton({
           onClick={() => setShowDelete(true)}
         >
           <Trash2 size={14} strokeWidth={2.5} />
-          {texts.common.delete}
+          {common.delete}
         </Button>
       )}
 
-      <Modal
-        open={showDelete}
-        onClose={() => setShowDelete(false)}
-        title={texts.common.confirmDelete}
-      >
+      <Modal open={showDelete} onClose={() => setShowDelete(false)} title={common.confirmDelete}>
         <p className="text-(length:--type-sm) leading-normal text-muted">
-          {description ?? texts.postDetail.deletePostDesc}
+          {description ?? postDetail.deletePostDesc}
         </p>
 
         <div className="mt-6 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setShowDelete(false)}>
-            {texts.common.cancel}
+            {common.cancel}
           </Button>
 
           <Button variant="danger" onClick={confirmDelete} isLoading={deleteMutation.isPending}>
             <Trash2 size={16} strokeWidth={2.5} />
-            {texts.common.delete}
+            {common.delete}
           </Button>
         </div>
       </Modal>

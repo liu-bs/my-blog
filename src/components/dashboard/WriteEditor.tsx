@@ -4,7 +4,10 @@ import { Container } from "@/components/ui/Container";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, Pencil, Check, Send } from "lucide-react";
-import { formatTemplate, texts } from "@/texts";
+import common from "@/texts/common";
+import feedback from "@/texts/feedback";
+import write from "@/texts/write";
+import { formatTemplate } from "@/texts/format";
 import { entityLabel } from "@/lib/error-message";
 import { notify } from "@/lib/toast";
 import {
@@ -23,7 +26,7 @@ import { useCreatePost, useUpdatePost } from "@/hooks/usePosts";
 import { estimateReadingTime } from "@shared/markdown";
 import { CATEGORY_VALUES } from "@/lib/category";
 import { hasInAppHistory } from "@/lib/url";
-import { postCreateSchema } from "@/shared/validation/post";
+import { loadPostValidation } from "@/lib/validation-loader";
 import { postEditPath, postPath } from "@shared";
 import type { PostData, PostFormField } from "@shared";
 import {
@@ -116,7 +119,7 @@ export function WriteEditor({
     prefilledForId.current = editId;
     if (!hasNotifiedRestore.current) {
       hasNotifiedRestore.current = true;
-      notify.info(texts.feedback.post.draftRestored);
+      notify.info(feedback.post.draftRestored);
     }
   }, [draftKey, editId]);
 
@@ -190,11 +193,11 @@ export function WriteEditor({
       <Container className="page-section">
         <EmptyState
           icon={<Pencil size={20} strokeWidth={2.5} />}
-          title={texts.write.loadErrorTitle}
-          description={texts.write.loadErrorDesc}
+          title={write.loadErrorTitle}
+          description={write.loadErrorDesc}
           action={
             <Button href="/profile" variant="ghost">
-              {texts.write.backToMyPosts}
+              {write.backToMyPosts}
             </Button>
           }
         />
@@ -204,26 +207,28 @@ export function WriteEditor({
 
   const saveErrorRules: ErrorFeedbackOptions<PostFormField> = {
     fields: ["title", "content", "category", "summary", "coverImage"],
-    fallback: formatTemplate(texts.feedback.update.failed, { entity: entityLabel("post") }),
+    fallback: formatTemplate(feedback.update.failed, { entity: entityLabel("post") }),
     byStatus: {
-      401: { toast: texts.feedback.common.notLoggedIn },
+      401: { toast: feedback.common.notLoggedIn },
     },
   };
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    savePost(false);
+    void savePost(false);
   };
 
-  const savePost = (asDraft: boolean) => {
+  const savePost = async (asDraft: boolean) => {
+    const { postCreateSchema } = await loadPostValidation();
+
     const invalid = validateForm(
       postCreateSchema,
       { title, content, category, summary, coverImage, isDraft: asDraft },
       {
         fieldTexts: {
-          title: texts.write.titleRequired,
-          content: texts.write.contentRequired,
-          coverImage: texts.write.coverInvalid,
+          title: write.titleRequired,
+          content: write.contentRequired,
+          coverImage: write.coverInvalid,
         },
         knownFields: ["title", "content", "category", "summary", "coverImage"],
       },
@@ -231,7 +236,7 @@ export function WriteEditor({
 
     const errors: FieldErrors<PostFormField> = isCoverUrlAllowed(coverImage)
       ? invalid.fields
-      : { ...invalid.fields, coverImage: texts.write.coverInvalid };
+      : { ...invalid.fields, coverImage: write.coverInvalid };
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -256,14 +261,14 @@ export function WriteEditor({
       setBaseline({ title, category, tags, content, coverImage, summary });
 
       if (asDraft) {
-        notify.success(texts.feedback.post[isEditMode ? "draftUpdated" : "draftSaved"]);
+        notify.success(feedback.post[isEditMode ? "draftUpdated" : "draftSaved"]);
 
         if (!isEditMode && data?.post?.id) {
           router.replace(postEditPath(data.post.id));
         }
       } else {
         if (isEditMode) notify.updated("post");
-        else notify.success(texts.feedback.post.published);
+        else notify.success(feedback.post.published);
 
         const target = data?.post?.id ? postPath(data.post.id) : "/posts";
 
@@ -304,7 +309,7 @@ export function WriteEditor({
       <PageHeader
         title={
           <h1 className="page-title max-md:page-title-mobile">
-            {isEditMode ? texts.write.editTitle : texts.write.createTitle}
+            {isEditMode ? write.editTitle : write.createTitle}
           </h1>
         }
         actions={
@@ -313,7 +318,7 @@ export function WriteEditor({
               type="button"
               onClick={() => setViewMode("edit")}
               className={`segmented-item ${viewMode !== "preview" ? "segmented-item-on" : ""}`}
-              aria-label={texts.write.viewEdit}
+              aria-label={write.viewEdit}
             >
               <Pencil size={12} strokeWidth={2.5} />
             </button>
@@ -321,7 +326,7 @@ export function WriteEditor({
               type="button"
               onClick={() => setViewMode("preview")}
               className={`segmented-item ${viewMode === "preview" ? "segmented-item-on" : ""}`}
-              aria-label={texts.write.viewPreview}
+              aria-label={write.viewPreview}
             >
               <Eye size={12} strokeWidth={2.5} />
             </button>
@@ -329,15 +334,20 @@ export function WriteEditor({
         }
       />
 
-      <form id="write-form" onSubmit={handleSave} noValidate>
+      <form
+        id="write-form"
+        onSubmit={handleSave}
+        noValidate
+        onFocus={() => void loadPostValidation()}
+      >
         <div className="animate-fade-in form-stack">
           <div>
             <Input
               id="title"
               name="title"
               type="text"
-              aria-label={texts.write.titlePlaceholder}
-              placeholder={texts.write.titlePlaceholder}
+              aria-label={write.titlePlaceholder}
+              placeholder={write.titlePlaceholder}
               aria-describedby={fieldErrors.title ? "title-error" : undefined}
               value={title}
               onChange={(e) => {
@@ -396,7 +406,7 @@ export function WriteEditor({
           <div className="mt-8 row-md flex-wrap justify-between border-t border-stroke pt-6">
             <span className="text-(length:--type-xs) leading-normal text-muted">
               {content.length > 0
-                ? formatTemplate(texts.write.charCount, {
+                ? formatTemplate(write.charCount, {
                     count: content.length,
                     minutes: estimateReadingTime(content),
                   })
@@ -404,7 +414,7 @@ export function WriteEditor({
             </span>
             <div className="row-sm max-md:ml-auto">
               <Button variant="ghost" type="button" onClick={handleBack}>
-                {texts.common.back}
+                {common.back}
               </Button>
 
               {(!isEditMode || editingPost?.isDraft) && (
@@ -412,14 +422,14 @@ export function WriteEditor({
                   type="button"
                   variant="outline"
                   disabled={mutation.isPending}
-                  onClick={() => savePost(true)}
+                  onClick={() => void savePost(true)}
                 >
                   {mutation.isPending ? (
                     <Spinner data-icon="inline-start" />
                   ) : (
                     <Check data-icon="inline-start" size={16} strokeWidth={2.5} />
                   )}
-                  {isEditMode ? texts.write.updateDraft : texts.write.saveDraft}
+                  {isEditMode ? write.updateDraft : write.saveDraft}
                 </Button>
               )}
 
@@ -433,9 +443,9 @@ export function WriteEditor({
                 )}
                 {isEditMode
                   ? editingPost?.isDraft
-                    ? texts.write.publishPost
-                    : texts.write.updatePost
-                  : texts.write.publishPost}
+                    ? write.publishPost
+                    : write.updatePost
+                  : write.publishPost}
               </Button>
             </div>
           </div>

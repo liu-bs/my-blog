@@ -1,5 +1,5 @@
 import { Eye, EyeOff } from "lucide-react";
-import { texts } from "@/texts";
+import auth from "@/texts/auth";
 
 interface PasswordToggleProps {
   show: boolean;
@@ -12,7 +12,7 @@ export function PasswordToggle({ show, onToggle }: PasswordToggleProps) {
     <button
       type="button"
       onClick={() => onToggle(!show)}
-      aria-label={show ? texts.auth.hidePassword : texts.auth.showPassword}
+      aria-label={show ? auth.hidePassword : auth.showPassword}
       className="password-toggle"
     >
       {show ? <EyeOff size={18} strokeWidth={2.5} /> : <Eye size={18} strokeWidth={2.5} />}

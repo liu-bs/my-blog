@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useOptimistic, useTransition } from "react";
 import { Heart, Bookmark, MessageCircle } from "lucide-react";
-import { formatTemplate, texts } from "@/texts";
+import postDetail from "@/texts/post-detail";
+import { formatTemplate } from "@/texts/format";
 import { useToggleLike, useToggleFavorite } from "@/hooks/usePosts";
 import { getUserPostStateAction } from "@server/post/post.controller";
 import { usePostPageAuth } from "@/hooks/usePostPageAuth";
@@ -121,17 +122,17 @@ export function PostActions({ user: ssrUser }: PostActionsProps) {
         isLoading={isLikePending}
         disabled={isLikePending || isFavPending || stateLoading}
         aria-pressed={optimisticState.liked}
-        title={!user ? texts.postDetail.loginToLike : undefined}
+        title={!user ? postDetail.loginToLike : undefined}
         className={`rounded-full ${guestCls}`}
       >
-        {!user && <span className="sr-only">{texts.postDetail.loginToLike}</span>}
+        {!user && <span className="sr-only">{postDetail.loginToLike}</span>}
         <Heart
           size={16}
           strokeWidth={2.5}
           className={optimisticState.liked ? "fill-current" : ""}
           aria-hidden="true"
         />
-        {optimisticState.liked ? texts.postDetail.liked : texts.postDetail.like} ·{" "}
+        {optimisticState.liked ? postDetail.liked : postDetail.like} ·{" "}
         {formatCount(optimisticState.likes)}
       </Button>
 
@@ -142,23 +143,23 @@ export function PostActions({ user: ssrUser }: PostActionsProps) {
         isLoading={isFavPending}
         disabled={isLikePending || isFavPending || stateLoading}
         aria-pressed={optimisticState.favorited}
-        title={!user ? texts.postDetail.loginToFavorite : undefined}
+        title={!user ? postDetail.loginToFavorite : undefined}
         className={`rounded-full ${guestCls}`}
       >
-        {!user && <span className="sr-only">{texts.postDetail.loginToFavorite}</span>}
+        {!user && <span className="sr-only">{postDetail.loginToFavorite}</span>}
         <Bookmark
           size={16}
           strokeWidth={2.5}
           className={optimisticState.favorited ? "fill-current" : ""}
           aria-hidden="true"
         />
-        {optimisticState.favorited ? texts.postDetail.favorited : texts.postDetail.favorite} ·{" "}
+        {optimisticState.favorited ? postDetail.favorited : postDetail.favorite} ·{" "}
         {formatCount(optimisticState.favorites)}
       </Button>
 
       <span className="inline-flex items-center gap-1.5 text-(length:--type-xs) text-muted">
         <MessageCircle size={16} strokeWidth={2.5} aria-hidden="true" />
-        {formatTemplate(texts.postDetail.commentsCount, { count: post.commentsCount })}
+        {formatTemplate(postDetail.commentsCount, { count: post.commentsCount })}
       </span>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { texts } from "@/texts";
+import write from "@/texts/write";
 import { MarkdownToolbar } from "@/components/dashboard/write/MarkdownToolbar";
 import { getMarkdownRenderer } from "@shared/markdown";
 
@@ -88,22 +88,22 @@ export function MarkdownPane({
     if (!e.metaKey && !e.ctrlKey) return;
     if (e.key === "b") {
       e.preventDefault();
-      insertMarkdown("**", "**", texts.write.phBold);
+      insertMarkdown("**", "**", write.phBold);
     } else if (e.key === "i") {
       e.preventDefault();
-      insertMarkdown("*", "*", texts.write.phItalic);
+      insertMarkdown("*", "*", write.phItalic);
     } else if (e.key === "k") {
       e.preventDefault();
-      insertMarkdown("[", "](https://)", texts.write.phLink);
+      insertMarkdown("[", "](https://)", write.phLink);
     }
   };
 
-  const emptyPreviewHtml = `<span class="text-muted">${texts.write.noContent}</span>`;
+  const emptyPreviewHtml = `<span class="text-muted">${write.noContent}</span>`;
 
   const sharedTextareaProps = {
     name: "content",
-    "aria-label": texts.write.contentPlaceholder,
-    placeholder: texts.write.contentPlaceholder,
+    "aria-label": write.contentPlaceholder,
+    placeholder: write.contentPlaceholder,
     onKeyDown: handleKeyDown,
     value: content,
   };

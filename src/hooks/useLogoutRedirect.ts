@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { texts } from "@/texts";
+import feedback from "@/texts/feedback";
 import { notify } from "@/lib/toast";
 import { useLogout } from "@/hooks/useAuth";
 
@@ -13,8 +13,8 @@ export function useLogoutRedirect(onBeforeLeave: () => void) {
     onBeforeLeave();
     router.replace("/");
     logoutMutation.mutate(undefined, {
-      onSuccess: () => notify.success(texts.feedback.session.loggedOut),
-      onError: () => notify.fail(texts.feedback.session.logoutFailed),
+      onSuccess: () => notify.success(feedback.session.loggedOut),
+      onError: () => notify.fail(feedback.session.logoutFailed),
     });
   };
 }

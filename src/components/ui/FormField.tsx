@@ -1,4 +1,4 @@
-import { texts } from "@/texts";
+import common from "@/texts/common";
 import type { ReactNode } from "react";
 import type { FormFieldProps } from "@shared";
 
@@ -41,7 +41,7 @@ export function FormField({
         {label}
 
         {required && (
-          <span className="ml-1 text-state-error" aria-label={texts.common.required}>
+          <span className="ml-1 text-state-error" aria-label={common.required}>
             *
           </span>
         )}

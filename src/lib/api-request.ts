@@ -1,7 +1,8 @@
 import { ApiRequestError } from "@shared";
 export { ApiRequestError };
 import type { ApiResponse, ActionResult, RequestOptions, ValidationErrorDetail } from "@shared";
-import { formatTemplate, texts } from "@/texts";
+import feedback from "@/texts/feedback";
+import { formatTemplate } from "@/texts/format";
 
 const DEFAULT_TIMEOUT = 15_000;
 
@@ -107,10 +108,10 @@ export async function apiRequest<T>(
       if (isCallerAbort) {
         throw new ApiRequestError(0, 0, "Request aborted");
       }
-      throw new ApiRequestError(0, 0, texts.feedback.common.timeout);
+      throw new ApiRequestError(0, 0, feedback.common.timeout);
     }
 
-    throw new ApiRequestError(0, 0, texts.feedback.common.networkError);
+    throw new ApiRequestError(0, 0, feedback.common.networkError);
   } finally {
     clearTimeout(timeoutId);
   }
@@ -124,7 +125,7 @@ export async function apiRequest<T>(
       throw new ApiRequestError(
         res.status,
         res.status,
-        formatTemplate(texts.feedback.common.requestFailed, { status: res.status }),
+        formatTemplate(feedback.common.requestFailed, { status: res.status }),
       );
     }
   }
@@ -154,7 +155,7 @@ export async function apiRequest<T>(
   }
 
   const message =
-    payload?.message || formatTemplate(texts.feedback.common.requestFailed, { status: res.status });
+    payload?.message || formatTemplate(feedback.common.requestFailed, { status: res.status });
   throw new ApiRequestError(res.status, payload?.code ?? res.status, message, payload?.details);
 }
 

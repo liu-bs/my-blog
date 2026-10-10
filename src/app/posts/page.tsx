@@ -10,7 +10,10 @@ import { withDbRetry } from "@server/common/db";
 import { listPostsCached, listCategoriesCached, listTagsCached } from "@server/post/post.cache";
 import { PAGE_SIZE } from "@/config/site";
 import { ALL_CATEGORY } from "@/lib/category";
-import { formatTemplate, texts } from "@/texts";
+import common from "@/texts/common";
+import meta from "@/texts/meta";
+import postList from "@/texts/post-list";
+import { formatTemplate } from "@/texts/format";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { pageAlternates } from "@/lib/seo";
@@ -21,8 +24,8 @@ import { postPath } from "@shared";
 
 export function generateMetadata(): Metadata {
   return {
-    title: `${texts.postList.title} · ${texts.meta.siteTitle}`,
-    description: texts.postList.subtitle,
+    title: `${postList.title} · ${meta.siteTitle}`,
+    description: postList.subtitle,
 
     alternates: pageAlternates("/posts"),
   };
@@ -137,7 +140,7 @@ export default async function PostsPage({
 
   return (
     <Container className="page-section">
-      <PageHeader title={texts.postList.title} subtitle={texts.postList.subtitle} />
+      <PageHeader title={postList.title} subtitle={postList.subtitle} />
 
       <PostSidebar
         categories={categories}
@@ -149,23 +152,23 @@ export default async function PostsPage({
         <div className="mb-6 page-actions animate-fade-in">
           <p className="text-(length:--type-xs) leading-normal font-medium text-body">
             {totalPages > 1
-              ? formatTemplate(texts.postList.totalWithPage, {
+              ? formatTemplate(postList.totalWithPage, {
                   count: total,
                   current: currentPage,
                   total: totalPages,
                 })
-              : formatTemplate(texts.postList.totalOnly, { count: total })}
+              : formatTemplate(postList.totalOnly, { count: total })}
           </p>
           <div className="row-md flex-wrap">
             <PostSearchInput initialValue={rawSearch ?? ""} />
 
             {activeFilters.length > 0 && (
-              <div className="row-md flex-wrap" role="group" aria-label={texts.postList.filter}>
+              <div className="row-md flex-wrap" role="group" aria-label={postList.filter}>
                 {activeFilters.map((f) => (
                   <Link
                     key={f.key}
                     href={f.href}
-                    aria-label={formatTemplate(texts.postList.removeFilterAria, { name: f.label })}
+                    aria-label={formatTemplate(postList.removeFilterAria, { name: f.label })}
                     className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-(length:--type-2xs) leading-normal font-medium text-page shadow-(--shadow-sm) transition-[filter] duration-[var(--duration-fast)] ease-smooth hover:brightness-105"
                   >
                     {f.label}
@@ -178,7 +181,7 @@ export default async function PostsPage({
                     href="/posts"
                     className="text-(length:--type-2xs) leading-normal text-muted underline decoration-stroke underline-offset-4 transition-colors duration-[var(--duration-fast)] ease-smooth hover:text-heading"
                   >
-                    {texts.postList.clearFilters}
+                    {postList.clearFilters}
                   </Link>
                 )}
               </div>
@@ -190,11 +193,11 @@ export default async function PostsPage({
           <div className="animate-fade-in">
             <EmptyState
               icon={<Search size={20} strokeWidth={2.5} />}
-              title={texts.postList.loadErrorTitle}
-              description={texts.postList.loadErrorDesc}
+              title={postList.loadErrorTitle}
+              description={postList.loadErrorDesc}
               action={
                 <Button href="/posts" variant="ghost">
-                  {texts.common.refresh}
+                  {common.refresh}
                 </Button>
               }
             />
@@ -203,12 +206,12 @@ export default async function PostsPage({
           <div className="animate-fade-in">
             <EmptyState
               icon={<Search size={20} strokeWidth={2.5} />}
-              title={texts.postList.noResultsTitle}
-              description={texts.postList.noResultsDesc}
+              title={postList.noResultsTitle}
+              description={postList.noResultsDesc}
               action={
                 hasFilters ? (
                   <Button href="/posts" variant="ghost">
-                    {texts.postList.clearFilters}
+                    {postList.clearFilters}
                   </Button>
                 ) : undefined
               }
@@ -232,12 +235,12 @@ export default async function PostsPage({
         {totalPages > 1 && (
           <nav
             className="mt-12 flex items-center justify-center gap-2"
-            aria-label={texts.postList.pagination}
+            aria-label={postList.pagination}
           >
             {currentPage === 1 ? (
               <span
                 className="pointer-events-none page-btn w-9 opacity-40"
-                aria-label={texts.postList.prevPage}
+                aria-label={postList.prevPage}
               >
                 <ChevronLeft size={16} />
               </span>
@@ -247,7 +250,7 @@ export default async function PostsPage({
                   page: String(Math.max(1, currentPage - 1)),
                 })}
                 className="page-btn w-9"
-                aria-label={texts.postList.prevPage}
+                aria-label={postList.prevPage}
               >
                 <ChevronLeft size={16} />
               </Link>
@@ -257,7 +260,7 @@ export default async function PostsPage({
                 key={n}
                 href={buildPostsUrl(baseParams, { page: String(n) })}
                 aria-current={n === currentPage ? "page" : undefined}
-                aria-label={formatTemplate(texts.postList.pageN, { n })}
+                aria-label={formatTemplate(postList.pageN, { n })}
                 className={`page-btn min-w-9 px-2.5 text-(length:--type-xs) ${
                   n === currentPage ? "page-btn-active" : ""
                 }`}
@@ -268,7 +271,7 @@ export default async function PostsPage({
             {currentPage === totalPages ? (
               <span
                 className="pointer-events-none page-btn w-9 opacity-40"
-                aria-label={texts.postList.nextPage}
+                aria-label={postList.nextPage}
               >
                 <ChevronRight size={16} />
               </span>
@@ -278,7 +281,7 @@ export default async function PostsPage({
                   page: String(Math.min(totalPages, currentPage + 1)),
                 })}
                 className="page-btn w-9"
-                aria-label={texts.postList.nextPage}
+                aria-label={postList.nextPage}
               >
                 <ChevronRight size={16} />
               </Link>

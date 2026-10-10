@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { texts } from "@/texts";
+import write from "@/texts/write";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
 import { isSafeImageUrl } from "@shared";
@@ -48,12 +48,12 @@ export function CoverField({
     return () => clearTimeout(timer);
   }, [url, allowed]);
 
-  const shownError = error ?? (touched && !allowed ? texts.write.coverInvalid : undefined);
+  const shownError = error ?? (touched && !allowed ? write.coverInvalid : undefined);
 
   return (
     <FormField
-      label={texts.write.coverLabel}
-      hint={previewFailed ? texts.write.coverPreviewFailed : texts.write.coverHint}
+      label={write.coverLabel}
+      hint={previewFailed ? write.coverPreviewFailed : write.coverHint}
       error={shownError}
     >
       <div className="row-sm">
@@ -83,7 +83,7 @@ export function CoverField({
           <div className="shrink-0 overflow-hidden rounded-md border border-stroke-strong">
             <Image
               src={previewSrc}
-              alt={texts.write.coverPreview}
+              alt={write.coverPreview}
               width={40}
               height={40}
               unoptimized={!isOptimizableImageSrc(previewSrc)}

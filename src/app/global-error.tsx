@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { texts } from "@/texts";
+import errors from "@/texts/errors";
+import meta from "@/texts/meta";
 import {
   ERROR_PAGE_CSS,
   THEME_INIT_SCRIPT,
@@ -34,15 +35,15 @@ export default function GlobalError({
 
   return (
     <html lang="zh-CN" suppressHydrationWarning>
-      <title>{`${texts.errors.errorTitle} · ${texts.meta.siteTitle}`}</title>
+      <title>{`${errors.errorTitle} · ${meta.siteTitle}`}</title>
       <body>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
 
         <style>{ERROR_PAGE_CSS + RELOAD_CSS}</style>
 
         <div style={errorShellStyle}>
-          <h1 style={errorTitleStyle}>{texts.errors.errorTitle}</h1>
-          <p style={errorDescStyle}>{texts.errors.errorDesc}</p>
+          <h1 style={errorTitleStyle}>{errors.errorTitle}</h1>
+          <p style={errorDescStyle}>{errors.errorDesc}</p>
 
           <button
             onClick={retry}
@@ -64,7 +65,7 @@ export default function GlobalError({
               transition: "opacity var(--duration-fast) var(--ease-smooth)",
             }}
           >
-            {texts.errors.reload}
+            {errors.reload}
           </button>
         </div>
       </body>

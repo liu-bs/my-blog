@@ -1,7 +1,10 @@
 "use client";
 
 import { useActionState, useState, useEffect } from "react";
-import { formatTemplate, texts } from "@/texts";
+import common from "@/texts/common";
+import feedback from "@/texts/feedback";
+import settings from "@/texts/settings";
+import { formatTemplate } from "@/texts/format";
 import { useRouter } from "next/navigation";
 import { MapPin, Globe, Info, Check, Lock, Image as ImageIcon, User } from "lucide-react";
 import { PasswordToggle } from "@/components/ui/PasswordToggle";
@@ -26,7 +29,7 @@ import { useTabListKeyboard } from "@/hooks/useTabListKeyboard";
 import { clearAuthStatus } from "@/lib/auth-status";
 import { updateProfileAction, changePasswordAction } from "@server/auth/auth.controller";
 import { getInitials, joinName, splitName } from "@shared/format";
-import { changePasswordFieldsSchema, updateProfileSchema } from "@/shared/validation/auth";
+import { loadAuthValidation, peekAuthValidation } from "@/lib/validation-loader";
 import type { ChangePasswordField, ProfileField } from "@shared";
 
 type FormError = { error: string | null };
@@ -89,14 +92,14 @@ export function SettingsForm() {
 
   const profileErrorRules: ErrorFeedbackOptions<ProfileField> = {
     fields: ["firstName", "avatar", "bio", "location", "website"],
-    fallback: formatTemplate(texts.feedback.update.failed, { entity: entityLabel("profile") }),
+    fallback: formatTemplate(feedback.update.failed, { entity: entityLabel("profile") }),
   };
 
   const passwordFeedbackOptions: ErrorFeedbackOptions<ChangePasswordField> = {
     fields: PASSWORD_FIELDS,
-    fallback: texts.feedback.common.actionFailed,
+    fallback: feedback.common.actionFailed,
     byStatus: {
-      401: { fields: { currentPassword: texts.settings.passwordIncorrect }, form: null },
+      401: { fields: { currentPassword: settings.passwordIncorrect }, form: null },
     },
   };
 
@@ -124,7 +127,7 @@ export function SettingsForm() {
         try {
           await refreshMe();
         } catch (err) {
-          notify.error(err, texts.common.operationFailed);
+          notify.error(err, common.operationFailed);
         }
         setProfileErrors({});
         notify.updated("profile");
@@ -146,23 +149,26 @@ export function SettingsForm() {
       const confirmPassword = (formData.get("confirmPassword") as string) ?? "";
 
       const errors: FieldErrors<ChangePasswordField> = {};
+
+      const { changePasswordFieldsSchema } = await loadAuthValidation();
+
       const currentError = validateFieldValue(
         changePasswordFieldsSchema.shape.currentPassword,
         currentPassword,
-        texts.settings.currentPasswordRequired,
+        settings.currentPasswordRequired,
       );
       if (currentError) errors.currentPassword = currentError;
 
       const lengthError = validateFieldValue(
         changePasswordFieldsSchema.shape.newPassword,
         newPassword,
-        texts.settings.newPasswordTooShort,
+        settings.newPasswordTooShort,
       );
       if (lengthError) errors.newPassword = lengthError;
 
       if (newPassword && newPassword === currentPassword)
-        errors.newPassword = texts.settings.sameAsCurrentPassword;
-      if (newPassword !== confirmPassword) errors.confirmPassword = texts.settings.passwordMismatch;
+        errors.newPassword = settings.sameAsCurrentPassword;
+      if (newPassword !== confirmPassword) errors.confirmPassword = settings.passwordMismatch;
 
       if (Object.keys(errors).length > 0) {
         setPasswordErrors(errors);
@@ -182,7 +188,7 @@ export function SettingsForm() {
 
         setMe(null);
         clearAuthStatus();
-        notify.success(texts.feedback.session.passwordChanged);
+        notify.success(feedback.session.passwordChanged);
 
         router.replace("/login");
         return { error: null };
@@ -202,19 +208,17 @@ export function SettingsForm() {
 
   const avatarUrl = avatar.trim();
 
-  const avatarLiveError = validateFieldValue(
-    updateProfileSchema.shape.avatar,
-    avatarUrl,
-    texts.settings.avatarInvalid,
-  );
+  const profileSchema = peekAuthValidation()?.updateProfileSchema;
+
+  const avatarLiveError = profileSchema
+    ? validateFieldValue(profileSchema.shape.avatar, avatarUrl, settings.avatarInvalid)
+    : null;
 
   const avatarError = profileErrors.avatar ?? (urlTouched.avatar ? avatarLiveError : undefined);
 
-  const websiteLiveError = validateFieldValue(
-    updateProfileSchema.shape.website,
-    website,
-    texts.settings.websiteInvalid,
-  );
+  const websiteLiveError = profileSchema
+    ? validateFieldValue(profileSchema.shape.website, website, settings.websiteInvalid)
+    : null;
 
   const websiteError = profileErrors.website ?? (urlTouched.website ? websiteLiveError : undefined);
 
@@ -232,7 +236,7 @@ export function SettingsForm() {
           onClick={() => setTab("profile")}
           className={`segmented-item ${tab === "profile" ? "segmented-item-on" : ""}`}
         >
-          {texts.settings.tabProfile}
+          {settings.tabProfile}
         </button>
         <button
           type="button"
@@ -245,13 +249,18 @@ export function SettingsForm() {
           onClick={() => setTab("password")}
           className={`segmented-item ${tab === "password" ? "segmented-item-on" : ""}`}
         >
-          {texts.settings.tabPassword}
+          {settings.tabPassword}
         </button>
       </div>
 
       {tab === "profile" && (
         <div role="tabpanel" id="settings-panel-profile" aria-labelledby="settings-tab-profile">
-          <form action={profileAction} noValidate className="form-stack">
+          <form
+            action={profileAction}
+            noValidate
+            className="form-stack"
+            onFocus={() => void loadAuthValidation()}
+          >
             {profileState.error && (
               <Alert variant="error" icon={<Info size={16} strokeWidth={2.5} />} className="shake">
                 {profileState.error}
@@ -267,8 +276,8 @@ export function SettingsForm() {
               />
               <div className="min-w-0 flex-1">
                 <FormField
-                  label={texts.settings.avatarUrl}
-                  hint={texts.settings.avatarHint}
+                  label={settings.avatarUrl}
+                  hint={settings.avatarHint}
                   error={avatarError ?? undefined}
                 >
                   <Input
@@ -293,7 +302,7 @@ export function SettingsForm() {
             </div>
 
             <FormField
-              label={texts.settings.firstName}
+              label={settings.firstName}
               required
               error={profileErrors.firstName ?? undefined}
             >
@@ -309,7 +318,7 @@ export function SettingsForm() {
               />
             </FormField>
 
-            <FormField label={texts.settings.bio} error={profileErrors.bio ?? undefined}>
+            <FormField label={settings.bio} error={profileErrors.bio ?? undefined}>
               <textarea
                 id="bio"
                 name="bio"
@@ -326,8 +335,8 @@ export function SettingsForm() {
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
-                label={texts.settings.location}
-                hint={texts.common.optional}
+                label={settings.location}
+                hint={common.optional}
                 error={profileErrors.location ?? undefined}
               >
                 <Input
@@ -342,8 +351,8 @@ export function SettingsForm() {
                 />
               </FormField>
               <FormField
-                label={texts.settings.website}
-                hint={texts.common.optional}
+                label={settings.website}
+                hint={common.optional}
                 error={websiteError ?? undefined}
               >
                 <Input
@@ -367,7 +376,7 @@ export function SettingsForm() {
             <div className="flex justify-end pt-4">
               <SubmitButton>
                 <Check size={16} strokeWidth={2.5} />
-                {texts.settings.saveChanges}
+                {settings.saveChanges}
               </SubmitButton>
             </div>
           </form>
@@ -376,7 +385,12 @@ export function SettingsForm() {
 
       {tab === "password" && (
         <div role="tabpanel" id="settings-panel-password" aria-labelledby="settings-tab-password">
-          <form action={passwordAction} noValidate className="form-stack">
+          <form
+            action={passwordAction}
+            noValidate
+            className="form-stack"
+            onFocus={() => void loadAuthValidation()}
+          >
             {passwordState.error && (
               <Alert variant="error" icon={<Info size={16} strokeWidth={2.5} />} className="shake">
                 {passwordState.error}
@@ -384,7 +398,7 @@ export function SettingsForm() {
             )}
 
             <FormField
-              label={texts.settings.currentPassword}
+              label={settings.currentPassword}
               required
               error={passwordErrors.currentPassword ?? undefined}
             >
@@ -402,8 +416,8 @@ export function SettingsForm() {
             </FormField>
 
             <FormField
-              label={texts.settings.newPassword}
-              hint={texts.settings.newPasswordFieldHint}
+              label={settings.newPassword}
+              hint={settings.newPasswordFieldHint}
               required
               error={passwordErrors.newPassword ?? undefined}
             >
@@ -422,7 +436,7 @@ export function SettingsForm() {
             </FormField>
 
             <FormField
-              label={texts.settings.confirmPassword}
+              label={settings.confirmPassword}
               required
               error={passwordErrors.confirmPassword ?? undefined}
             >
@@ -442,7 +456,7 @@ export function SettingsForm() {
             <div className="flex justify-end pt-4">
               <SubmitButton>
                 <Check size={16} strokeWidth={2.5} />
-                {texts.settings.updatePassword}
+                {settings.updatePassword}
               </SubmitButton>
             </div>
           </form>

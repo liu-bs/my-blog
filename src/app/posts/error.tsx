@@ -1,7 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { texts } from "@/texts";
+import errors from "@/texts/errors";
 import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
@@ -12,11 +12,11 @@ export default function PostsError() {
       <div className="animate-fade-in">
         <EmptyState
           icon={<Search size={20} strokeWidth={2.5} />}
-          title={texts.errors.postsErrorTitle}
-          description={texts.errors.postsErrorDesc}
+          title={errors.postsErrorTitle}
+          description={errors.postsErrorDesc}
           action={
             <Button href="/posts" variant="ghost">
-              {texts.errors.reload}
+              {errors.reload}
             </Button>
           }
         />

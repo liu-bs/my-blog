@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { MessageCircle, PenLine, FileText, Bookmark, NotebookPen } from "lucide-react";
-import { formatTemplate, texts } from "@/texts";
+import profile from "@/texts/profile";
+import { formatTemplate } from "@/texts/format";
 import { useTabListKeyboard } from "@/hooks/useTabListKeyboard";
 import { PostCard } from "@/components/post/PostCard";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -51,7 +52,7 @@ export function ProfileTabs({ publishedPosts, favorites, drafts }: ProfileTabsPr
           onClick={() => setTab("posts")}
           className={`segmented-item ${tab === "posts" ? "segmented-item-on" : ""}`}
         >
-          {formatTemplate(texts.profile.postsTab, { count: publishedPosts.length })}
+          {formatTemplate(profile.postsTab, { count: publishedPosts.length })}
         </button>
         <button
           type="button"
@@ -64,7 +65,7 @@ export function ProfileTabs({ publishedPosts, favorites, drafts }: ProfileTabsPr
           onClick={() => setTab("drafts")}
           className={`segmented-item ${tab === "drafts" ? "segmented-item-on" : ""}`}
         >
-          {formatTemplate(texts.profile.draftsTab, { count: draftList.length })}
+          {formatTemplate(profile.draftsTab, { count: draftList.length })}
         </button>
         <button
           type="button"
@@ -77,7 +78,7 @@ export function ProfileTabs({ publishedPosts, favorites, drafts }: ProfileTabsPr
           onClick={() => setTab("favorites")}
           className={`segmented-item ${tab === "favorites" ? "segmented-item-on" : ""}`}
         >
-          {formatTemplate(texts.profile.favoritesTab, { count: favoriteList.length })}
+          {formatTemplate(profile.favoritesTab, { count: favoriteList.length })}
         </button>
       </div>
 
@@ -91,12 +92,12 @@ export function ProfileTabs({ publishedPosts, favorites, drafts }: ProfileTabsPr
           {publishedPosts.length === 0 ? (
             <EmptyState
               icon={<FileText size={20} strokeWidth={2.5} />}
-              title={texts.profile.noPostsTitle}
-              description={texts.profile.noPostsDesc}
+              title={profile.noPostsTitle}
+              description={profile.noPostsDesc}
               action={
                 <Button href="/write">
                   <PenLine size={16} strokeWidth={2.5} />
-                  {texts.profile.writePost}
+                  {profile.writePost}
                 </Button>
               }
             />
@@ -131,12 +132,12 @@ export function ProfileTabs({ publishedPosts, favorites, drafts }: ProfileTabsPr
           {draftList.length === 0 ? (
             <EmptyState
               icon={<NotebookPen size={20} strokeWidth={2.5} />}
-              title={texts.profile.noDraftsTitle}
-              description={texts.profile.noDraftsDesc}
+              title={profile.noDraftsTitle}
+              description={profile.noDraftsDesc}
               action={
                 <Button href="/write">
                   <PenLine size={16} strokeWidth={2.5} />
-                  {texts.profile.writePost}
+                  {profile.writePost}
                 </Button>
               }
             />
@@ -151,10 +152,10 @@ export function ProfileTabs({ publishedPosts, favorites, drafts }: ProfileTabsPr
                   badge={
                     <span className="chip-sm">
                       <NotebookPen size={10} strokeWidth={2.5} />
-                      {texts.profile.draftBadge}
+                      {profile.draftBadge}
                     </span>
                   }
-                  readMoreLabel={texts.profile.continueEditing}
+                  readMoreLabel={profile.continueEditing}
                   actions={
                     <DeletePostButton
                       postId={post.id}
@@ -179,11 +180,11 @@ export function ProfileTabs({ publishedPosts, favorites, drafts }: ProfileTabsPr
           {favoriteList.length === 0 ? (
             <EmptyState
               icon={<Bookmark size={20} strokeWidth={2.5} />}
-              title={texts.profile.noFavoritesTitle}
-              description={texts.profile.noFavoritesDesc}
+              title={profile.noFavoritesTitle}
+              description={profile.noFavoritesDesc}
               action={
                 <Button href="/posts" variant="ghost">
-                  {texts.profile.browsePosts}
+                  {profile.browsePosts}
                 </Button>
               }
             />

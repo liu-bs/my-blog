@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { texts } from "@/texts";
+import postDetail from "@/texts/post-detail";
 import type { PostTocProps, TocItem } from "@shared";
 import { useThrottledScroll } from "@/hooks/useThrottledScroll";
 
@@ -89,11 +89,11 @@ export function PostToc({ contentId }: PostTocProps) {
   const activeIndex = tocItems.findIndex((h) => h.id === activeId);
 
   return (
-    <aside className="hidden shrink-0 lg:block" aria-label={texts.postDetail.tocLabel}>
+    <aside className="hidden shrink-0 lg:block" aria-label={postDetail.tocLabel}>
       <div className="sticky-below-nav animate-fade-in">
         <div className="mb-5">
           <div className="mb-2 flex items-center justify-between meta-text">
-            <span>{texts.postDetail.readingProgress}</span>
+            <span>{postDetail.readingProgress}</span>
             <span>{Math.round(progress * 100)}%</span>
           </div>
 
@@ -109,13 +109,13 @@ export function PostToc({ contentId }: PostTocProps) {
           <>
             <div className="mb-4 flex items-center gap-2 filter-heading">
               <span className="inline-block h-3 w-0.5 rounded-full bg-current opacity-50" />
-              {texts.postDetail.toc}
+              {postDetail.toc}
               <span className="ml-1 chip-sm tracking-normal normal-case">{tocItems.length}</span>
             </div>
 
             <nav
               className="flex flex-col gap-1 border-l border-stroke"
-              aria-label={texts.postDetail.tocNav}
+              aria-label={postDetail.tocNav}
             >
               {tocItems.map((h) => {
                 const active = activeId === h.id;

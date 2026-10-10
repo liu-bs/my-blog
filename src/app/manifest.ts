@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
-import { texts } from "@/texts";
+import meta from "@/texts/meta";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: texts.meta.siteTitle,
-    short_name: texts.meta.siteTitle,
-    description: texts.meta.siteDescription,
+    name: meta.siteTitle,
+    short_name: meta.siteTitle,
+    description: meta.siteDescription,
 
     id: "/",
     start_url: "/",

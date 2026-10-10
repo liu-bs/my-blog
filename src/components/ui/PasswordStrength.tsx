@@ -13,7 +13,7 @@ function strengthColor(score: number): string {
   return "var(--color-state-success)";
 }
 
-import { texts } from "@/texts";
+import auth from "@/texts/auth";
 import type { PasswordStrengthProps } from "@shared";
 
 export function PasswordStrength({ password }: PasswordStrengthProps) {
@@ -38,11 +38,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
       </div>
 
       <span className="mt-1 block text-(length:--type-2xs)" style={{ color: activeColor }}>
-        {
-          texts.auth[
-            score <= 1 ? "strengthWeak" : score === 2 ? "strengthMedium" : "strengthStrong"
-          ]
-        }
+        {auth[score <= 1 ? "strengthWeak" : score === 2 ? "strengthMedium" : "strengthStrong"]}
       </span>
     </>
   );

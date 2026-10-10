@@ -1,14 +1,15 @@
 import type { ValidationRule } from "@shared";
-import { formatTemplate, texts } from "@/texts";
+import { formatTemplate } from "@/texts/format";
+import feedback from "@/texts/feedback";
 
-export type EntityKey = keyof (typeof texts)["feedback"]["entity"];
+export type EntityKey = keyof typeof feedback.entity;
 
 export function entityLabel(name: EntityKey): string {
-  return texts.feedback.entity[name];
+  return feedback.entity[name];
 }
 
 function fieldLabel(name: string): string | undefined {
-  const dict: Record<string, string> = texts.feedback.field;
+  const dict: Record<string, string> = feedback.field;
   return dict[name];
 }
 
@@ -29,16 +30,16 @@ function getHttpStatus(err: unknown): number | null {
 
 export function toErrorMessage(err: unknown, fallback?: string): string {
   const status = getHttpStatus(err);
-  if (status === null) return fallback ?? texts.feedback.common.unknownError;
+  if (status === null) return fallback ?? feedback.common.unknownError;
   const mapped = HTTP_STATUS_TEXT_KEY[status];
 
   if (mapped) {
-    const dict: Record<string, string> = texts.feedback.common;
+    const dict: Record<string, string> = feedback.common;
     return formatTemplate(dict[mapped.key] ?? mapped.key);
   }
 
-  if (status < 500) return texts.feedback.common.actionFailed;
-  return texts.feedback.common.unknownError;
+  if (status < 500) return feedback.common.actionFailed;
+  return feedback.common.unknownError;
 }
 
 export function toValidationError(detail: {
@@ -48,7 +49,7 @@ export function toValidationError(detail: {
   params?: { min?: number; max?: number };
 }): string {
   const label = fieldLabel(detail.path);
-  const form = texts.feedback.form;
+  const form = feedback.form;
   const invalid = form.invalidField;
 
   if (detail.rule) {

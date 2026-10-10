@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { texts } from "@/texts";
+import common from "@/texts/common";
 import { hasInAppHistory } from "@/lib/url";
 
 export function BackLink() {
@@ -22,7 +22,7 @@ export function BackLink() {
       className="mb-8 inline-flex cursor-pointer items-center gap-2 text-(length:--type-xs) font-medium text-muted transition-colors duration-[var(--duration-fast)] hover:text-heading"
     >
       <ArrowLeft size={14} strokeWidth={2.5} aria-hidden="true" />
-      {texts.common.back}
+      {common.back}
     </button>
   );
 }

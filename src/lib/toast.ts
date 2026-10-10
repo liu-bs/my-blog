@@ -1,35 +1,48 @@
 "use client";
 
-import { toast as sonner } from "sonner";
-import { formatTemplate, texts } from "@/texts";
+import feedback from "@/texts/feedback";
+import { formatTemplate } from "@/texts/format";
 import { entityLabel, toErrorMessage, type EntityKey } from "@/lib/error-message";
+
+type SonnerToast = (typeof import("sonner"))["toast"];
+
+let sonnerPromise: Promise<SonnerToast> | null = null;
+
+function sonner(): Promise<SonnerToast> {
+  sonnerPromise ??= import("sonner").then((m) => m.toast);
+  return sonnerPromise;
+}
 
 export const notify = {
   created(entity: EntityKey): void {
-    sonner.success(formatTemplate(texts.feedback.create.success, { entity: entityLabel(entity) }));
+    const message = formatTemplate(feedback.create.success, { entity: entityLabel(entity) });
+    void sonner().then((toast) => toast.success(message));
   },
 
   updated(entity: EntityKey): void {
-    sonner.success(formatTemplate(texts.feedback.update.success, { entity: entityLabel(entity) }));
+    const message = formatTemplate(feedback.update.success, { entity: entityLabel(entity) });
+    void sonner().then((toast) => toast.success(message));
   },
 
   deleted(entity: EntityKey): void {
-    sonner.success(formatTemplate(texts.feedback.delete.success, { entity: entityLabel(entity) }));
+    const message = formatTemplate(feedback.delete.success, { entity: entityLabel(entity) });
+    void sonner().then((toast) => toast.success(message));
   },
 
   error(err: unknown, fallback?: string): void {
-    sonner.error(toErrorMessage(err, fallback));
+    const message = toErrorMessage(err, fallback);
+    void sonner().then((toast) => toast.error(message));
   },
 
-  success(text: string): void {
-    sonner.success(text);
+  success(message: string): void {
+    void sonner().then((toast) => toast.success(message));
   },
 
-  fail(text: string): void {
-    sonner.error(text);
+  fail(message: string): void {
+    void sonner().then((toast) => toast.error(message));
   },
 
-  info(text: string): void {
-    sonner.info(text);
+  info(message: string): void {
+    void sonner().then((toast) => toast.info(message));
   },
 };

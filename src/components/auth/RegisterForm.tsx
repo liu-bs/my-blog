@@ -4,7 +4,8 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, User, UserPlus, X } from "lucide-react";
-import { texts } from "@/texts";
+import auth from "@/texts/auth";
+import feedback from "@/texts/feedback";
 import { PasswordToggle } from "@/components/ui/PasswordToggle";
 import { Alert } from "@/components/ui/Alert";
 import { SubmitButton } from "@/components/ui/SubmitButton";
@@ -23,7 +24,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-feedback";
 import { registerAction } from "@server/auth/auth.controller";
-import { registerSchema } from "@/shared/validation/auth";
+import { loadAuthValidation, peekAuthValidation } from "@/lib/validation-loader";
 import type { FieldId, FieldState } from "@shared";
 
 const initialField: FieldState = { value: "", isTouched: false, isValid: null, error: null };
@@ -35,13 +36,6 @@ interface RegisterState {
 const initialState: RegisterState = { error: null };
 
 const fieldOrder: readonly FieldId[] = ["firstName", "username", "email", "password"];
-
-const fieldSchemas = {
-  firstName: registerSchema.shape.firstName,
-  username: registerSchema.shape.username,
-  email: registerSchema.shape.email,
-  password: registerSchema.shape.password,
-};
 
 export function RegisterForm() {
   const router = useRouter();
@@ -56,19 +50,23 @@ export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   const fieldMessage: Record<FieldId, string> = {
-    firstName: texts.auth.errNameLength,
-    username: texts.auth.errUsername,
-    email: texts.auth.invalidEmail,
-    password: texts.auth.errPassword,
+    firstName: auth.errNameLength,
+    username: auth.errUsername,
+    email: auth.invalidEmail,
+    password: auth.errPassword,
   };
 
   const updateField = (id: FieldId, value: string) => {
+    const registerSchema = peekAuthValidation()?.registerSchema;
+
     setFields((prev) => {
       const next = { ...prev };
       if (value.length === 0) {
         next[id] = { value: "", isTouched: false, isValid: null, error: null };
       } else {
-        const error = validateFieldValue(fieldSchemas[id], value, fieldMessage[id]);
+        const error = registerSchema
+          ? validateFieldValue(registerSchema.shape[id], value, fieldMessage[id])
+          : null;
         next[id] = { value, isTouched: true, isValid: error === null, error };
       }
       return next;
@@ -89,9 +87,9 @@ export function RegisterForm() {
 
   const registerErrorRules: ErrorFeedbackOptions<FieldId> = {
     fields: fieldOrder,
-    fallback: texts.feedback.session.registerFailed,
+    fallback: feedback.session.registerFailed,
     byStatus: {
-      409: { fields: {}, form: texts.auth.duplicateAccount },
+      409: { fields: {}, form: auth.duplicateAccount },
     },
   };
 
@@ -101,6 +99,8 @@ export function RegisterForm() {
       const username = (formData.get("username") as string)?.trim() ?? "";
       const email = (formData.get("email") as string)?.trim() ?? "";
       const password = (formData.get("password") as string) ?? "";
+
+      const { registerSchema } = await loadAuthValidation();
 
       const invalid = validateForm(
         registerSchema,
@@ -122,7 +122,7 @@ export function RegisterForm() {
           focusFirstInvalid();
           return { error: failed.form };
         }
-        notify.success(texts.feedback.session.registered);
+        notify.success(feedback.session.registered);
 
         router.replace("/login");
         return { error: null };
@@ -147,8 +147,8 @@ export function RegisterForm() {
   return (
     <div className="auth-card">
       <div className="mb-10">
-        <h1 className="auth-title">{texts.auth.registerTitle}</h1>
-        <p className="auth-subtitle">{texts.auth.registerSubtitle}</p>
+        <h1 className="auth-title">{auth.registerTitle}</h1>
+        <p className="auth-subtitle">{auth.registerSubtitle}</p>
       </div>
 
       {formState.error && (
@@ -157,17 +157,18 @@ export function RegisterForm() {
         </Alert>
       )}
 
-      <form action={formAction} noValidate className="auth-form-stack">
-        <FormField
-          label={texts.auth.firstName}
-          required
-          error={fields.firstName.error ?? undefined}
-        >
+      <form
+        action={formAction}
+        noValidate
+        className="auth-form-stack"
+        onFocus={() => void loadAuthValidation()}
+      >
+        <FormField label={auth.firstName} required error={fields.firstName.error ?? undefined}>
           <Input
             id="firstName"
             name="firstName"
             type="text"
-            placeholder={texts.auth.firstNamePlaceholder}
+            placeholder={auth.firstNamePlaceholder}
             maxLength={50}
             autoComplete="nickname"
             value={fields.firstName.value}
@@ -179,16 +180,16 @@ export function RegisterForm() {
         </FormField>
 
         <FormField
-          label={texts.auth.username}
+          label={auth.username}
           required
-          hint={texts.auth.usernameHint}
+          hint={auth.usernameHint}
           error={fields.username.error ?? undefined}
         >
           <Input
             id="username"
             name="username"
             type="text"
-            placeholder={texts.auth.usernamePlaceholder}
+            placeholder={auth.usernamePlaceholder}
             maxLength={30}
             autoComplete="username"
             value={fields.username.value}
@@ -199,7 +200,7 @@ export function RegisterForm() {
           />
         </FormField>
 
-        <FormField label={texts.auth.email} required error={fields.email.error ?? undefined}>
+        <FormField label={auth.email} required error={fields.email.error ?? undefined}>
           <Input
             id="email"
             name="email"
@@ -215,16 +216,16 @@ export function RegisterForm() {
         </FormField>
 
         <FormField
-          label={texts.auth.password}
+          label={auth.password}
           required
-          hint={texts.auth.passwordHint}
+          hint={auth.passwordHint}
           error={fields.password.error ?? undefined}
         >
           <Input
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
-            placeholder={texts.auth.passwordPlaceholderMin}
+            placeholder={auth.passwordPlaceholderMin}
             autoComplete="new-password"
             value={fields.password.value}
             onChange={(e) => updateField("password", e.target.value)}
@@ -236,13 +237,13 @@ export function RegisterForm() {
           <PasswordStrength password={fields.password.value} />
         </FormField>
 
-        <SubmitButton className="mt-2 w-full">{texts.auth.registerSubmit}</SubmitButton>
+        <SubmitButton className="mt-2 w-full">{auth.registerSubmit}</SubmitButton>
       </form>
 
       <div className="auth-switch">
-        {texts.auth.hasAccount}
+        {auth.hasAccount}
         <Link href="/login" className="auth-switch-link">
-          {texts.auth.loginNow}
+          {auth.loginNow}
         </Link>
       </div>
     </div>

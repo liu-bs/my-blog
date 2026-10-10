@@ -3,7 +3,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { StatsGrid } from "@/components/ui/StatsGrid";
 import { getInitials, joinName, formatCount, formatDate } from "@shared/format";
-import { texts } from "@/texts";
+import profile from "@/texts/profile";
 import type { Post, User } from "@shared";
 import { ProfileTabs } from "./ProfileTabs";
 
@@ -52,9 +52,9 @@ export function ProfilePageContent({
   const userName = joinName(user.firstName, user.lastName);
 
   const stats = [
-    { label: texts.profile.statsPosts, value: formatCount(user.stats.posts) },
-    { label: texts.profile.statsLikes, value: formatCount(user.stats.likes) },
-    { label: texts.profile.statsViews, value: formatCount(user.stats.views) },
+    { label: profile.statsPosts, value: formatCount(user.stats.posts) },
+    { label: profile.statsLikes, value: formatCount(user.stats.likes) },
+    { label: profile.statsViews, value: formatCount(user.stats.views) },
   ];
 
   const socialTwitter = user.social?.twitter
@@ -103,8 +103,8 @@ export function ProfilePageContent({
                   {user.verified && (
                     <span
                       role="img"
-                      aria-label={texts.profile.verified}
-                      title={texts.profile.verified}
+                      aria-label={profile.verified}
+                      title={profile.verified}
                       className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-accent text-page"
                     >
                       <Check size={10} strokeWidth={2.5} />
@@ -115,7 +115,7 @@ export function ProfilePageContent({
               </div>
 
               <p className="mt-4 text-(length:--type-xs) leading-relaxed text-body">
-                {user.bio || texts.profile.noBio}
+                {user.bio || profile.noBio}
               </p>
 
               {user.tags?.length > 0 && (
@@ -157,7 +157,7 @@ export function ProfilePageContent({
                 <span className="row-sm">
                   <Users className={META_ICON} strokeWidth={2.5} />
 
-                  {user.role === "Writer" ? texts.profile.roleWriter : user.role}
+                  {user.role === "Writer" ? profile.roleWriter : user.role}
                   {user.company ? ` · ${user.company}` : ""}
                 </span>
               </div>
@@ -207,11 +207,11 @@ export function ProfilePageContent({
               <div className="mt-6 row-md">
                 <Button href="/write" size="md" className="flex-1">
                   <PenLine size={16} strokeWidth={2.5} />
-                  {texts.profile.writePost}
+                  {profile.writePost}
                 </Button>
                 <Button href="/settings" variant="outline" size="md" className="flex-1">
                   <UserPen size={16} strokeWidth={2.5} />
-                  {texts.profile.editProfile}
+                  {profile.editProfile}
                 </Button>
               </div>
             </div>

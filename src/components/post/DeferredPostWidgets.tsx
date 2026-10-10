@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import { texts } from "@/texts";
+import postDetail from "@/texts/post-detail";
 import type { CommentsListData, CommentsSectionProps } from "@shared";
 import { CommentCard } from "@/components/post/CommentCard";
 import { CommentsSkeleton } from "@/components/skeletons/CommentsSkeleton";
@@ -23,7 +23,7 @@ function CommentsPreview({ data }: { data: CommentsListData | null }) {
   return (
     <section className="mt-10 mb-12">
       <h2 className="mb-6 section-title">
-        {texts.postDetail.commentsTitle}{" "}
+        {postDetail.commentsTitle}{" "}
         <span className="ml-1.5 text-(length:--type-xs) font-normal text-muted opacity-80">
           · {data.total}
         </span>

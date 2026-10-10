@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { texts } from "@/texts";
+import errors from "@/texts/errors";
 import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import type { ErrorBoundaryProps } from "@shared";
@@ -29,19 +29,19 @@ export default function Error({ error, retry }: ErrorBoundaryProps) {
     <Container className="page-section">
       <div className="flex min-h-[50vh] animate-fade-in flex-col items-center justify-center text-center">
         <h1 className="mb-5 display-serif text-(length:--type-3xl) leading-tight font-bold text-heading">
-          {texts.errors.errorTitle}
+          {errors.errorTitle}
         </h1>
         <p className="mb-10 max-w-100 text-(length:--type-base) leading-relaxed text-muted">
-          {texts.errors.errorDesc}
+          {errors.errorDesc}
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button onClick={retry}>{texts.errors.reload}</Button>
+          <Button onClick={retry}>{errors.reload}</Button>
           <Button variant="ghost" href="/">
-            {texts.errors.goHome}
+            {errors.goHome}
           </Button>
           <Button variant="ghost" onClick={copyError}>
-            {copied ? texts.errors.copied : texts.errors.copyError}
+            {copied ? errors.copied : errors.copyError}
           </Button>
         </div>
       </div>

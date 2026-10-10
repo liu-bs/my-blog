@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLinkStatus } from "next/link";
-import { texts } from "@/texts";
+import nav from "@/texts/nav";
 import { NAV_LINKS } from "@/config/site";
 import { isRouteActive } from "@/lib/url";
 
@@ -29,7 +29,7 @@ export function NavLinks() {
             aria-current={active ? "page" : undefined}
             className={active ? "nav-item nav-item-on" : "nav-item"}
           >
-            {texts.nav[link.key]}
+            {nav[link.key]}
 
             <NavPendingMarker />
           </Link>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { texts } from "@/texts";
+import write from "@/texts/write";
 import { X, ChevronDown } from "lucide-react";
 import { FormField } from "@/components/ui/FormField";
 import { Tag, tagVariantFor } from "@/components/ui/Tag";
@@ -57,7 +57,7 @@ export function PostMetaFields({
   return (
     <>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[180px_1fr]">
-        <FormField label={texts.write.categoryLabel}>
+        <FormField label={write.categoryLabel}>
           <div className="relative">
             <select
               id="category"
@@ -80,7 +80,7 @@ export function PostMetaFields({
           </div>
         </FormField>
 
-        <FormField label={texts.write.tagLabel} hint={texts.write.tagHint}>
+        <FormField label={write.tagLabel} hint={write.tagHint}>
           <div className="flex flex-wrap gap-2">
             {tags.map((item) => (
               <Tag
@@ -95,7 +95,7 @@ export function PostMetaFields({
                   type="button"
                   onClick={() => removeTag(item)}
                   className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-current/70 transition-colors duration-[var(--duration-fast)] ease-smooth hover:text-current"
-                  aria-label={`${texts.write.removeTag}：${item}`}
+                  aria-label={`${write.removeTag}：${item}`}
                 >
                   <X size={12} strokeWidth={2.5} />
                 </button>
@@ -111,7 +111,7 @@ export function PostMetaFields({
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagKeyDown}
                 onBlur={handleTagBlur}
-                placeholder={texts.write.tagPlaceholder}
+                placeholder={write.tagPlaceholder}
                 className="input-focus h-9 w-32 rounded-md border border-stroke-strong bg-card-bg px-3 text-(length:--type-2xs) leading-normal text-body placeholder:text-muted"
               />
             )}
@@ -120,11 +120,11 @@ export function PostMetaFields({
       </div>
 
       <div>
-        <FormField label={texts.write.summaryLabel} hint={texts.write.summaryHint}>
+        <FormField label={write.summaryLabel} hint={write.summaryHint}>
           <textarea
             id="summary"
             name="summary"
-            placeholder={texts.write.summaryPlaceholder}
+            placeholder={write.summaryPlaceholder}
             value={summary}
             onChange={(e) => onSummaryChange(e.target.value)}
             maxLength={500}

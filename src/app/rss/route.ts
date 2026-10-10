@@ -3,7 +3,7 @@ import { listPostsCached } from "@server/post/post.cache";
 import { SITE_URL } from "@/config/site";
 import { stripHtml, stripMarkdown } from "@shared/markdown";
 import { postPath } from "@shared";
-import { texts } from "@/texts";
+import meta from "@/texts/meta";
 
 const FEED_LIMIT = 20;
 
@@ -42,9 +42,9 @@ export async function GET(): Promise<Response> {
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
     "  <channel>",
-    `    <title>${escapeXml(texts.meta.siteTitle)}</title>`,
+    `    <title>${escapeXml(meta.siteTitle)}</title>`,
     `    <link>${SITE_URL}</link>`,
-    `    <description>${escapeXml(texts.meta.siteDescription)}</description>`,
+    `    <description>${escapeXml(meta.siteDescription)}</description>`,
     "    <language>zh-CN</language>",
     `    <atom:link href="${selfUrl}" rel="self" type="application/rss+xml"/>`,
     `    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`,

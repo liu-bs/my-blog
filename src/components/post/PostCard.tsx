@@ -2,7 +2,7 @@ import { memo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Eye, Heart } from "lucide-react";
-import { texts } from "@/texts";
+import common from "@/texts/common";
 import { CoverFallback } from "@/components/ui/CoverFallback";
 import { Avatar } from "@/components/ui/Avatar";
 import { Tag, tagVariantFor } from "@/components/ui/Tag";
@@ -140,7 +140,7 @@ export const PostCard = memo(function PostCard({
 
         {href && (
           <span className="mt-2 inline-flex items-center gap-1 text-(length:--type-2xs) font-semibold text-muted transition-colors duration-[var(--duration-fast)] group-hover:text-accent">
-            {readMoreLabel ?? texts.common.readMore}
+            {readMoreLabel ?? common.readMore}
             <svg
               width="12"
               height="12"

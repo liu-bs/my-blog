@@ -3,7 +3,7 @@
 import { useAuth } from "@/components/AuthProvider";
 import { LoginRequired } from "@/components/auth/LoginRequired";
 import { UserCircle } from "lucide-react";
-import { texts } from "@/texts";
+import errors from "@/texts/errors";
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -16,7 +16,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     return (
       <LoginRequired
         icon={<UserCircle size={20} strokeWidth={2.5} />}
-        description={texts.errors.dashboardLoginDesc}
+        description={errors.dashboardLoginDesc}
       />
     );
   }

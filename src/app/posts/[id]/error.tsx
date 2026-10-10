@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
-import { texts } from "@/texts";
+import errors from "@/texts/errors";
 import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
@@ -12,11 +12,11 @@ export default function PostDetailError() {
       <div className="animate-fade-in">
         <EmptyState
           icon={<AlertCircle size={20} strokeWidth={2.5} />}
-          title={texts.errors.postErrorTitle}
-          description={texts.errors.postErrorDesc}
+          title={errors.postErrorTitle}
+          description={errors.postErrorDesc}
           action={
             <Button href="/posts" variant="ghost">
-              {texts.errors.backToList}
+              {errors.backToList}
             </Button>
           }
         />

@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, FileText, Home, LogIn, SquareArrowRightExit, UserPlus } from "lucide-react";
-import { formatTemplate, texts } from "@/texts";
+import nav from "@/texts/nav";
+import { formatTemplate } from "@/texts/format";
 import { NAV_LINKS } from "@/config/site";
 import { isRouteActive } from "@/lib/url";
 import { useDismissable } from "@/hooks/useDismissable";
@@ -89,7 +90,7 @@ export function MobileMenu() {
       <button
         ref={toggleRef}
         onClick={() => setMobileOpen((v) => !v)}
-        aria-label={mobileOpen ? texts.nav.closeMenu : texts.nav.openMenu}
+        aria-label={mobileOpen ? nav.closeMenu : nav.openMenu}
         aria-expanded={mobileOpen}
         className="icon-btn-ghost hidden max-md:flex"
       >
@@ -130,7 +131,7 @@ export function MobileMenu() {
                   initials={initials}
                   src={user?.avatar || undefined}
                   size="lg"
-                  alt={formatTemplate(texts.nav.avatarAlt, { name: displayName })}
+                  alt={formatTemplate(nav.avatarAlt, { name: displayName })}
                 />
 
                 <span className="min-w-0">
@@ -157,7 +158,7 @@ export function MobileMenu() {
                     className={active ? "sheet-item sheet-item-on" : "sheet-item"}
                   >
                     <Icon {...ROW_ICON} />
-                    {texts.nav[link.key]}
+                    {nav[link.key]}
                   </Link>
                 );
               })}
@@ -175,7 +176,7 @@ export function MobileMenu() {
                       className="sheet-item-sub"
                     >
                       <Icon {...ROW_ICON} />
-                      {texts.nav[item.labelKey]}
+                      {nav[item.labelKey]}
                     </Link>
                   );
                 })}
@@ -185,12 +186,12 @@ export function MobileMenu() {
                 <div className="sheet-group">
                   <Link href="/login" onClick={close} className="sheet-item-sub">
                     <LogIn {...ROW_ICON} />
-                    {texts.nav.login}
+                    {nav.login}
                   </Link>
 
                   <Link href="/register" onClick={close} className="sheet-item-sub">
                     <UserPlus {...ROW_ICON} />
-                    {texts.nav.register}
+                    {nav.register}
                   </Link>
                 </div>
               )
@@ -205,10 +206,8 @@ export function MobileMenu() {
                 className="sheet-item-sub"
               >
                 <ThemeGlyph isDark={isDark} />
-                {texts.nav.theme}
-                <span className="sheet-value">
-                  {isDark ? texts.nav.themeDark : texts.nav.themeLight}
-                </span>
+                {nav.theme}
+                <span className="sheet-value">{isDark ? nav.themeDark : nav.themeLight}</span>
               </button>
             </div>
 
@@ -216,7 +215,7 @@ export function MobileMenu() {
               <div className="sheet-group">
                 <button onClick={handleLogout} className="sheet-item-sub sheet-item-danger">
                   <SquareArrowRightExit {...ROW_ICON} />
-                  {texts.nav.logout}
+                  {nav.logout}
                 </button>
               </div>
             )}

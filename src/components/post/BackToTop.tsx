@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowUp } from "lucide-react";
-import { texts } from "@/texts";
+import common from "@/texts/common";
 import { useThrottledScroll } from "@/hooks/useThrottledScroll";
 
 export function BackToTop() {
@@ -26,7 +26,7 @@ export function BackToTop() {
               : "smooth",
           })
         }
-        aria-label={texts.common.backToTop}
+        aria-label={common.backToTop}
         tabIndex={isVisible ? 0 : -1}
         className="flex h-11 w-11 items-center justify-center rounded-full border border-stroke bg-card-bg text-heading shadow-(--shadow-md) transition-[background-color,box-shadow] duration-[var(--duration-fast)] ease-smooth hover:bg-btn-hover-bg hover:shadow-(--shadow-lg) max-md:h-10 max-md:w-10"
       >

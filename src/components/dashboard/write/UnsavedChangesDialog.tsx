@@ -1,6 +1,6 @@
 "use client";
 
-import { texts } from "@/texts";
+import write from "@/texts/write";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 
@@ -16,18 +16,16 @@ export function UnsavedChangesDialog({
   onDiscard: () => void;
 }) {
   return (
-    <Modal open={open} onClose={() => onOpenChange(false)} title={texts.write.leaveConfirmTitle}>
-      <p className="text-(length:--type-sm) leading-normal text-body">
-        {texts.write.leaveConfirmDesc}
-      </p>
+    <Modal open={open} onClose={() => onOpenChange(false)} title={write.leaveConfirmTitle}>
+      <p className="text-(length:--type-sm) leading-normal text-body">{write.leaveConfirmDesc}</p>
 
       <div className="mt-8 flex justify-end gap-2">
         <Button variant="ghost" onClick={() => onOpenChange(false)}>
-          {texts.write.keepEditing}
+          {write.keepEditing}
         </Button>
 
         <Button variant="danger" onClick={onDiscard}>
-          {texts.write.discardChanges}
+          {write.discardChanges}
         </Button>
       </div>
     </Modal>

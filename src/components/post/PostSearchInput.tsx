@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
-import { texts } from "@/texts";
+import postList from "@/texts/post-list";
 import type { PostSearchInputProps } from "@shared";
 
 const DEBOUNCE_MS = 300;
@@ -66,8 +66,8 @@ export function PostSearchInput({ initialValue }: PostSearchInputProps) {
         name="q"
         value={value}
         onChange={(e) => setDraft(e.target.value)}
-        placeholder={texts.postList.searchPlaceholder}
-        aria-label={texts.postList.searchPlaceholder}
+        placeholder={postList.searchPlaceholder}
+        aria-label={postList.searchPlaceholder}
         className="input-focus h-10 w-full max-w-50 rounded-md border border-stroke-strong bg-card-bg py-0 pr-9 pl-9 text-(length:--type-xs) leading-normal text-body placeholder:text-faint"
       />
 
@@ -75,7 +75,7 @@ export function PostSearchInput({ initialValue }: PostSearchInputProps) {
         <button
           type="button"
           onClick={() => setDraft("")}
-          aria-label={texts.postList.clearSearch}
+          aria-label={postList.clearSearch}
           className="absolute top-1/2 right-2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-faint transition-colors duration-[var(--duration-fast)] hover:bg-btn-hover-bg hover:text-heading"
         >
           <X size={14} strokeWidth={2.5} />

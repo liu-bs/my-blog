@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
-import { texts } from "@/texts";
+import nav from "@/texts/nav";
 import { ThemeToggle } from "./ThemeToggle";
 
 import { NavLinks } from "./NavLinks";
@@ -19,9 +19,7 @@ export function Navbar() {
             <BookOpen size={20} strokeWidth={2.25} className="h-5 w-5" />
           </span>
 
-          <span className="display-serif text-(length:--type-sm) font-semibold">
-            {texts.nav.brand}
-          </span>
+          <span className="display-serif text-(length:--type-sm) font-semibold">{nav.brand}</span>
         </Link>
 
         <NavLinks />

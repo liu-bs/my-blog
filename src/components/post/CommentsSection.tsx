@@ -3,7 +3,10 @@
 import { useOptimistic, useTransition, useState } from "react";
 import Link from "next/link";
 import { AlertCircle, MessageCircle, Send, Check, Trash2 } from "lucide-react";
-import { formatTemplate, texts } from "@/texts";
+import common from "@/texts/common";
+import feedback from "@/texts/feedback";
+import postDetail from "@/texts/post-detail";
+import { formatTemplate } from "@/texts/format";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -87,23 +90,23 @@ export function CommentsSection({
   const [editError, setEditError] = useState<string | null>(null);
 
   const validateComment = (value: string): string | null =>
-    validateFieldValue(createCommentSchema.shape.content, value, texts.postDetail.commentEmpty);
+    validateFieldValue(createCommentSchema.shape.content, value, postDetail.commentEmpty);
 
   const commentLabel = entityLabel("comment");
 
   const createErrorRules: ErrorFeedbackOptions<CommentField> = {
     fields: ["content"],
-    fallback: formatTemplate(texts.feedback.create.failed, { entity: commentLabel }),
+    fallback: formatTemplate(feedback.create.failed, { entity: commentLabel }),
   };
 
   const updateErrorRules: ErrorFeedbackOptions<CommentField> = {
     fields: ["content"],
-    fallback: formatTemplate(texts.feedback.update.failed, { entity: commentLabel }),
+    fallback: formatTemplate(feedback.update.failed, { entity: commentLabel }),
   };
 
   const deleteErrorRules: ErrorFeedbackOptions<never> = {
     fields: [],
-    fallback: formatTemplate(texts.feedback.delete.failed, { entity: commentLabel }),
+    fallback: formatTemplate(feedback.delete.failed, { entity: commentLabel }),
   };
 
   const submitComment = () => {
@@ -183,7 +186,7 @@ export function CommentsSection({
   return (
     <section className="mt-10 mb-12">
       <h2 className="mb-6 section-title">
-        {texts.postDetail.commentsTitle}{" "}
+        {postDetail.commentsTitle}{" "}
         <span className="ml-1.5 text-(length:--type-xs) font-normal text-muted opacity-80">
           · {totalComments}
         </span>
@@ -195,7 +198,7 @@ export function CommentsSection({
             <textarea
               id="comment-content"
               name="comment"
-              aria-label={texts.postDetail.commentPlaceholder}
+              aria-label={postDetail.commentPlaceholder}
               value={commentText}
               onChange={(e) => {
                 setCommentText(e.target.value);
@@ -208,7 +211,7 @@ export function CommentsSection({
                   submitComment();
                 }
               }}
-              placeholder={texts.postDetail.commentPlaceholder}
+              placeholder={postDetail.commentPlaceholder}
               aria-invalid={!!createError}
               maxLength={COMMENT_MAX_LENGTH}
               rows={4}
@@ -231,7 +234,7 @@ export function CommentsSection({
                 isLoading={isPending}
               >
                 <Send size={16} strokeWidth={2.5} />
-                {texts.postDetail.submitComment}
+                {postDetail.submitComment}
               </Button>
             </div>
           </>
@@ -241,9 +244,9 @@ export function CommentsSection({
               href={buildLoginRedirect(postPath(postId))}
               className="text-accent hover:underline"
             >
-              {texts.postDetail.commentLoginBefore}
+              {postDetail.commentLoginBefore}
             </Link>
-            {texts.postDetail.commentLoginAfter}
+            {postDetail.commentLoginAfter}
           </div>
         )}
       </div>
@@ -252,23 +255,23 @@ export function CommentsSection({
         {isError ? (
           <EmptyState
             icon={<AlertCircle size={20} strokeWidth={2.5} />}
-            title={texts.postDetail.commentLoadError}
+            title={postDetail.commentLoadError}
             action={
               <Button variant="ghost" onClick={() => refetchComments()}>
-                {texts.common.retry}
+                {common.retry}
               </Button>
             }
           />
         ) : isLoadingComments ? (
-          <div aria-busy="true" aria-label={texts.postDetail.commentsTitle}>
+          <div aria-busy="true" aria-label={postDetail.commentsTitle}>
             <CommentCardSkeleton />
           </div>
         ) : (
           optimisticComments.length === 0 && (
             <EmptyState
               icon={<MessageCircle size={20} strokeWidth={2.5} />}
-              title={texts.postDetail.noCommentsTitle}
-              description={texts.postDetail.noCommentsDesc}
+              title={postDetail.noCommentsTitle}
+              description={postDetail.noCommentsDesc}
             />
           )
         )}
@@ -286,7 +289,7 @@ export function CommentsSection({
                   <textarea
                     id={`comment-edit-${c.id}`}
                     name="comment"
-                    aria-label={`${texts.common.edit} ${texts.postDetail.commentsTitle}`}
+                    aria-label={`${common.edit} ${postDetail.commentsTitle}`}
                     value={editText}
                     onChange={(e) => {
                       setEditText(e.target.value);
@@ -315,7 +318,7 @@ export function CommentsSection({
                       isLoading={updateCommentMutation.isPending}
                     >
                       <Check size={14} strokeWidth={2.5} />
-                      {texts.common.save}
+                      {common.save}
                     </Button>
 
                     <Button
@@ -326,7 +329,7 @@ export function CommentsSection({
                         setEditText("");
                       }}
                     >
-                      {texts.common.cancel}
+                      {common.cancel}
                     </Button>
                   </div>
                 </div>
@@ -343,7 +346,7 @@ export function CommentsSection({
                           onClick={() => startEdit(c.id, c.content)}
                           className="text-(length:--type-2xs) leading-normal text-muted transition-colors duration-[var(--duration-fast)] ease-smooth hover:text-heading"
                         >
-                          {texts.common.edit}
+                          {common.edit}
                         </button>
                       )}
 
@@ -352,7 +355,7 @@ export function CommentsSection({
                           onClick={() => setDeleteTargetId(c.id)}
                           className="text-(length:--type-2xs) leading-normal text-muted transition-colors duration-[var(--duration-fast)] ease-smooth hover:text-heading"
                         >
-                          {texts.common.delete}
+                          {common.delete}
                         </button>
                       )}
                     </div>
@@ -366,7 +369,7 @@ export function CommentsSection({
         {commentsData?.hasMore && (
           <div className="mt-6 text-center">
             <Button variant="ghost" size="sm" onClick={loadMore} isLoading={isLoadingMore}>
-              {formatTemplate(texts.postDetail.loadMoreComments, {
+              {formatTemplate(postDetail.loadMoreComments, {
                 count: Math.max(0, totalComments - optimisticComments.length),
               })}
             </Button>
@@ -377,15 +380,15 @@ export function CommentsSection({
       <Modal
         open={deleteTargetId !== null}
         onClose={() => setDeleteTargetId(null)}
-        title={texts.postDetail.deleteCommentTitle}
+        title={postDetail.deleteCommentTitle}
       >
         <p className="text-(length:--type-sm) leading-normal text-body">
-          {texts.postDetail.deleteCommentDesc}
+          {postDetail.deleteCommentDesc}
         </p>
 
         <div className="mt-8 flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setDeleteTargetId(null)}>
-            {texts.common.cancel}
+            {common.cancel}
           </Button>
 
           <Button
@@ -413,7 +416,7 @@ export function CommentsSection({
             }}
           >
             <Trash2 size={16} strokeWidth={2.5} />
-            {texts.postDetail.confirmDeleteBtn}
+            {postDetail.confirmDeleteBtn}
           </Button>
         </div>
       </Modal>

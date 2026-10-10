@@ -5,38 +5,39 @@ import { Navbar } from "@/components/shell/Navbar";
 import { Footer } from "@/components/shell/Footer";
 import { Providers } from "@/components/Providers";
 import { SITE_URL } from "@/config/site";
-import { texts } from "@/texts";
+import meta from "@/texts/meta";
+import nav from "@/texts/nav";
 import { pageAlternates } from "@/lib/seo";
 import { THEME_INIT_SCRIPT } from "@/app/error-page-shell";
 
 export function generateMetadata(): Metadata {
   return {
-    title: texts.meta.siteTitle,
-    description: texts.meta.siteDescription,
+    title: meta.siteTitle,
+    description: meta.siteDescription,
 
     metadataBase: new URL(SITE_URL),
 
     alternates: pageAlternates("/"),
     openGraph: {
-      title: texts.meta.siteTitle,
-      description: texts.meta.siteDescription,
+      title: meta.siteTitle,
+      description: meta.siteDescription,
       type: "website",
       locale: "zh_CN",
-      siteName: texts.meta.siteTitle,
+      siteName: meta.siteTitle,
       images: [
         {
           url: "/og-default.png",
           width: 1200,
           height: 630,
-          alt: texts.meta.ogImageAlt,
+          alt: meta.ogImageAlt,
         },
       ],
     },
 
     twitter: {
       card: "summary_large_image",
-      title: texts.meta.siteTitle,
-      description: texts.meta.siteDescription,
+      title: meta.siteTitle,
+      description: meta.siteDescription,
       images: ["/og-default.png"],
     },
 
@@ -62,7 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             href="#main-content"
             className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-(--z-skip) focus:rounded-md focus:bg-accent focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-page"
           >
-            {texts.nav.skipToContent}
+            {nav.skipToContent}
           </a>
 
           <Suspense fallback={null}>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { texts } from "@/texts";
+import postList from "@/texts/post-list";
 import { Button } from "@/components/ui/Button";
 import { tagClassFor, tagVariantFor } from "@/components/ui/Tag";
 import { ALL_CATEGORY } from "@/lib/category";
@@ -39,7 +39,7 @@ export function PostSidebar({
         aria-controls="posts-filter-panel"
         className="mb-5 lg:hidden"
       >
-        {texts.postList.filter}
+        {postList.filter}
 
         <ChevronDown
           size={14}
@@ -57,7 +57,7 @@ export function PostSidebar({
           <div className="sticky-below-nav content-stack-lg">
             {categories.length > 1 && (
               <div className="animate-fade-in">
-                <h3 className="mb-3 filter-heading">{texts.postList.categories}</h3>
+                <h3 className="mb-3 filter-heading">{postList.categories}</h3>
                 <ul className="space-y-1">
                   {categories.map((name) => {
                     const active = currentCategory === name;
@@ -78,7 +78,7 @@ export function PostSidebar({
                               : "text-body hover:bg-btn-hover-bg hover:text-heading"
                           }`}
                         >
-                          <span>{name === ALL_CATEGORY ? texts.postList.allCategories : name}</span>
+                          <span>{name === ALL_CATEGORY ? postList.allCategories : name}</span>
                         </Link>
                       </li>
                     );
@@ -89,7 +89,7 @@ export function PostSidebar({
 
             {tags.length > 0 && (
               <div className="animate-fade-in">
-                <h3 className="mb-3 filter-heading">{texts.postList.tags}</h3>
+                <h3 className="mb-3 filter-heading">{postList.tags}</h3>
                 <div className="flex flex-wrap gap-2">
                   {tags.map((item) => {
                     const tagName = typeof item === "string" ? item : item.name;

@@ -5,7 +5,10 @@ import { PostCard } from "@/components/post/PostCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PinnedBadge } from "@/components/ui/PinnedBadge";
 import { StartWritingButton } from "@/components/post/StartWritingButton";
-import { formatTemplate, texts } from "@/texts";
+import common from "@/texts/common";
+import home from "@/texts/home";
+import meta from "@/texts/meta";
+import { formatTemplate } from "@/texts/format";
 import { withDbRetry } from "@server/common/db";
 import { listPostsCached } from "@server/post/post.cache";
 import { postPath } from "@shared";
@@ -14,8 +17,8 @@ import { pageAlternates } from "@/lib/seo";
 
 export function generateMetadata() {
   return {
-    title: `${texts.home.heroTitle.replace("\n", "")} · ${texts.meta.siteTitle}`,
-    description: texts.home.heroLead,
+    title: `${home.heroTitle.replace("\n", "")} · ${meta.siteTitle}`,
+    description: home.heroLead,
     alternates: pageAlternates("/"),
   };
 }
@@ -35,7 +38,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="hero-section" aria-label={texts.home.heroSection}>
+      <section className="hero-section" aria-label={home.heroSection}>
         <Container>
           <div className="grid grid-cols-1 items-center gap-(--space-10) max-lg:gap-10 lg:grid-cols-[1fr_480px]">
             <div className="max-w-152 max-lg:max-w-none">
@@ -45,23 +48,23 @@ export default async function HomePage() {
                   aria-hidden="true"
                 />
                 <span className="text-(length:--type-xs) font-medium tracking-[0.02em] text-muted">
-                  {texts.home.heroKicker}
+                  {home.heroKicker}
                 </span>
               </div>
 
               <h1 className="m-0 mb-8 animate-fade-in [animation-delay:120ms]">
                 <span className="hero-headline whitespace-pre-line text-heading">
-                  {texts.home.heroTitle}
+                  {home.heroTitle}
                 </span>
               </h1>
 
               <p className="m-0 mb-10 animate-fade-in hero-lead text-body [animation-delay:240ms]">
-                {texts.home.heroLead}
+                {home.heroLead}
               </p>
 
               <div className="flex animate-fade-in flex-wrap items-center gap-5 border-t border-stroke pt-8 [animation-delay:360ms]">
                 <Button href="/posts" size="lg">
-                  {texts.home.browsePosts}
+                  {home.browsePosts}
                 </Button>
                 <StartWritingButton />
               </div>
@@ -99,37 +102,35 @@ export default async function HomePage() {
       </section>
 
       {postsLoadError ? (
-        <section className="animate-fade-in page-section" aria-label={texts.home.latestSection}>
+        <section className="animate-fade-in page-section" aria-label={home.latestSection}>
           <Container>
             <div className="page-header">
-              <h2 className="section-title">{texts.home.latestTitle}</h2>
+              <h2 className="section-title">{home.latestTitle}</h2>
             </div>
 
             <EmptyState
               icon={<Search size={20} strokeWidth={2.5} />}
-              title={texts.home.loadErrorTitle}
-              description={texts.home.loadErrorDesc}
-              action={
-                <Button onClick={() => window.location.reload()}>{texts.common.refresh}</Button>
-              }
+              title={home.loadErrorTitle}
+              description={home.loadErrorDesc}
+              action={<Button onClick={() => window.location.reload()}>{common.refresh}</Button>}
             />
           </Container>
         </section>
       ) : (
         hasPosts && (
-          <section className="animate-fade-in page-section" aria-label={texts.home.latestSection}>
+          <section className="animate-fade-in page-section" aria-label={home.latestSection}>
             <Container>
               <div className="page-header flex items-end justify-between gap-4">
                 <div>
-                  <h2 className="section-title">{texts.home.latestTitle}</h2>
+                  <h2 className="section-title">{home.latestTitle}</h2>
                   <p className="mt-2 text-(length:--type-xs) leading-normal text-muted">
-                    {texts.home.latestSubtitle}
+                    {home.latestSubtitle}
                   </p>
                 </div>
                 <Button href="/posts" variant="ghost" size="sm">
                   {hasMore
-                    ? formatTemplate(texts.home.viewAllCount, { count: postsResult?.total ?? "" })
-                    : texts.home.viewAll}
+                    ? formatTemplate(home.viewAllCount, { count: postsResult?.total ?? "" })
+                    : home.viewAll}
                 </Button>
               </div>
 

@@ -3,7 +3,8 @@
 import { useId, useRef, useState } from "react";
 import Link from "next/link";
 import { LogIn, NotepadText, SquareArrowRightExit, BookUser, Columns3Cog } from "lucide-react";
-import { formatTemplate, texts } from "@/texts";
+import nav from "@/texts/nav";
+import { formatTemplate } from "@/texts/format";
 import { Avatar } from "../ui/Avatar";
 import { useAuth } from "@/components/AuthProvider";
 import { getInitials, joinName } from "@shared/format";
@@ -45,7 +46,7 @@ export function UserMenu() {
     return (
       <Link href="/login" className="bar-btn">
         <LogIn size={18} strokeWidth={2.25} className="h-4.5 w-4.5 shrink-0" />
-        {texts.nav.login}
+        {nav.login}
       </Link>
     );
   }
@@ -79,7 +80,7 @@ export function UserMenu() {
             setUserMenuOpen((v) => !v);
           }
         }}
-        aria-label={texts.nav.userMenu}
+        aria-label={nav.userMenu}
         aria-expanded={userMenuOpen}
         aria-controls={panelId}
         className="icon-btn-ghost"
@@ -88,7 +89,7 @@ export function UserMenu() {
           initials={initials}
           src={user?.avatar || undefined}
           size="sm"
-          alt={formatTemplate(texts.nav.avatarAlt, { name: displayName })}
+          alt={formatTemplate(nav.avatarAlt, { name: displayName })}
         />
       </button>
 
@@ -106,7 +107,7 @@ export function UserMenu() {
               initials={initials}
               src={user?.avatar || undefined}
               size="md"
-              alt={formatTemplate(texts.nav.avatarAlt, { name: displayName })}
+              alt={formatTemplate(nav.avatarAlt, { name: displayName })}
             />
             <div className="min-w-0">
               <p className="m-0 truncate text-(length:--type-xs) leading-normal font-semibold text-heading">
@@ -136,7 +137,7 @@ export function UserMenu() {
                     strokeWidth={2.25}
                     className="h-4 w-4 shrink-0 text-muted transition-colors duration-[var(--duration-fast)] ease-smooth group-hover:text-heading"
                   />
-                  {texts.nav[item.labelKey]}
+                  {nav[item.labelKey]}
                 </Link>
               );
             })}
@@ -154,7 +155,7 @@ export function UserMenu() {
                 strokeWidth={2.25}
                 className="h-4 w-4 shrink-0 transition-colors duration-[var(--duration-fast)] ease-smooth group-hover:text-state-error"
               />
-              {texts.nav.logout}
+              {nav.logout}
             </button>
           </div>
         </div>

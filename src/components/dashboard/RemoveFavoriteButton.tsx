@@ -1,7 +1,7 @@
 "use client";
 
 import { BookmarkX } from "lucide-react";
-import { texts } from "@/texts";
+import profile from "@/texts/profile";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToggleFavorite } from "@/hooks/usePosts";
@@ -33,7 +33,7 @@ export function RemoveFavoriteButton({ postId, onRemoved }: RemoveFavoriteButton
       ) : (
         <BookmarkX data-icon="inline-start" size={14} strokeWidth={2.5} />
       )}
-      {texts.profile.removeFavorite}
+      {profile.removeFavorite}
     </Button>
   );
 }

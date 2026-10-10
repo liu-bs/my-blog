@@ -2,7 +2,10 @@ import { Container } from "@/components/ui/Container";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound, permanentRedirect } from "next/navigation";
-import { formatTemplate, texts } from "@/texts";
+import meta from "@/texts/meta";
+import nav from "@/texts/nav";
+import postDetail from "@/texts/post-detail";
+import { formatTemplate } from "@/texts/format";
 import type { Metadata } from "next";
 import "@/app/styles/hljs-theme.css";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -62,7 +65,7 @@ export async function generateMetadata({
   if (!metaResult) {
     await redirectIfRenamed(id);
     return {
-      title: texts.meta.siteTitle,
+      title: meta.siteTitle,
       robots: { index: false, follow: false },
     };
   }
@@ -72,7 +75,7 @@ export async function generateMetadata({
   const description = stripHtml(post.summary || post.content).slice(0, 160);
 
   return {
-    title: `${cleanTitle} · ${texts.meta.siteTitle}`,
+    title: `${cleanTitle} · ${meta.siteTitle}`,
     description,
     alternates: pageAlternates(postPath(id)),
     openGraph: {
@@ -107,7 +110,7 @@ async function NeighborPosts({ neighborPosts }: { neighborPosts: NeighborPostsDa
         >
           <span className="flex items-center gap-1 text-(length:--type-2xs) font-medium text-faint">
             <ChevronLeft size={14} strokeWidth={2.5} />
-            {texts.postDetail.prevPost}
+            {postDetail.prevPost}
           </span>
           <span className="line-clamp-2 text-(length:--type-sm) font-semibold text-heading transition-colors duration-[var(--duration-fast)] group-hover:text-accent">
             {stripMarkdown(prevPost.title)}
@@ -123,7 +126,7 @@ async function NeighborPosts({ neighborPosts }: { neighborPosts: NeighborPostsDa
           className="group flex flex-col gap-1 card card-hover p-4 text-right max-sm:text-left"
         >
           <span className="flex items-center justify-end gap-1 text-(length:--type-2xs) font-medium text-faint">
-            {texts.postDetail.nextPost}
+            {postDetail.nextPost}
             <ChevronRight size={14} strokeWidth={2.5} />
           </span>
           <span className="line-clamp-2 text-(length:--type-sm) font-semibold text-heading transition-colors duration-[var(--duration-fast)] group-hover:text-accent">
@@ -192,7 +195,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                     </span>
                     <span className="meta-text">
                       {formatDate(post.publishedAt || post.createdAt)} ·{" "}
-                      {formatTemplate(texts.postDetail.readingTime, {
+                      {formatTemplate(postDetail.readingTime, {
                         minutes: estimateReadingTime(post.content),
                       })}
                     </span>
@@ -287,13 +290,13 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                 {
                   "@type": "ListItem",
                   position: 1,
-                  name: texts.nav.home,
+                  name: nav.home,
                   item: SITE_URL,
                 },
                 {
                   "@type": "ListItem",
                   position: 2,
-                  name: texts.nav.posts,
+                  name: nav.posts,
                   item: `${SITE_URL}/posts`,
                 },
                 { "@type": "ListItem", position: 3, name: stripMarkdown(post.title) },

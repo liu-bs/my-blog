@@ -4,7 +4,8 @@ import { useActionState, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Info } from "lucide-react";
-import { texts } from "@/texts";
+import auth from "@/texts/auth";
+import feedback from "@/texts/feedback";
 import { PasswordToggle } from "@/components/ui/PasswordToggle";
 import { Alert } from "@/components/ui/Alert";
 import { SubmitButton } from "@/components/ui/SubmitButton";
@@ -23,7 +24,8 @@ import {
 import { useAuth } from "@/components/AuthProvider";
 import { loginAction } from "@server/auth/auth.controller";
 import { safeRedirect } from "@/lib/url";
-import { loginSchema, type LoginField } from "@/shared/validation/auth";
+import { loadAuthValidation } from "@/lib/validation-loader";
+import type { LoginField } from "@/shared/validation/auth";
 
 interface LoginState {
   emailError: string | null;
@@ -61,10 +63,10 @@ function LoginContent() {
 
   const loginErrorRules: ErrorFeedbackOptions<LoginField> = {
     fields: ["email", "password"],
-    fallback: texts.feedback.session.loginFailed,
+    fallback: feedback.session.loginFailed,
     byStatus: {
-      401: { fields: {}, form: texts.auth.emailOrPasswordError },
-      403: { fields: { email: texts.auth.accountDisabled }, form: null },
+      401: { fields: {}, form: auth.emailOrPasswordError },
+      403: { fields: { email: auth.accountDisabled }, form: null },
     },
   };
 
@@ -72,10 +74,12 @@ function LoginContent() {
     const email = (formData.get("email") as string)?.trim() ?? "";
     const password = (formData.get("password") as string) ?? "";
 
+    const { loginSchema } = await loadAuthValidation();
+
     const invalid = validateForm(
       loginSchema,
       { email, password },
-      { fieldTexts: { email: texts.auth.invalidEmail, password: texts.auth.emptyPassword } },
+      { fieldTexts: { email: auth.invalidEmail, password: auth.emptyPassword } },
     );
     if (hasFeedback(invalid)) {
       focusFirstInvalid();
@@ -92,7 +96,7 @@ function LoginContent() {
       }
 
       setMe(result.data.user);
-      notify.success(texts.feedback.session.loggedIn);
+      notify.success(feedback.session.loggedIn);
 
       router.replace(safeR);
       return initialState;
@@ -106,13 +110,13 @@ function LoginContent() {
   return (
     <div className="auth-card">
       <div className="mb-10">
-        <h1 className="auth-title">{texts.auth.loginTitle}</h1>
-        <p className="auth-subtitle">{texts.auth.loginSubtitle}</p>
+        <h1 className="auth-title">{auth.loginTitle}</h1>
+        <p className="auth-subtitle">{auth.loginSubtitle}</p>
       </div>
 
       {hasRedirect && (
         <Alert variant="info" icon={<Info size={18} strokeWidth={2.5} />} className="mb-5">
-          {texts.auth.redirectNotice}
+          {auth.redirectNotice}
         </Alert>
       )}
 
@@ -122,8 +126,13 @@ function LoginContent() {
         </Alert>
       )}
 
-      <form action={formAction} noValidate className="auth-form-stack">
-        <FormField label={texts.auth.email} required error={formState.emailError ?? undefined}>
+      <form
+        action={formAction}
+        noValidate
+        className="auth-form-stack"
+        onFocus={() => void loadAuthValidation()}
+      >
+        <FormField label={auth.email} required error={formState.emailError ?? undefined}>
           <Input
             id="email"
             name="email"
@@ -137,16 +146,12 @@ function LoginContent() {
           />
         </FormField>
 
-        <FormField
-          label={texts.auth.password}
-          required
-          error={formState.passwordError ?? undefined}
-        >
+        <FormField label={auth.password} required error={formState.passwordError ?? undefined}>
           <Input
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
-            placeholder={texts.auth.passwordPlaceholder}
+            placeholder={auth.passwordPlaceholder}
             autoComplete="current-password"
             value={values.password}
             onChange={(e) => setValues((prev) => ({ ...prev, password: e.target.value }))}
@@ -156,13 +161,13 @@ function LoginContent() {
           />
         </FormField>
 
-        <SubmitButton className="mt-2 w-full">{texts.auth.loginSubmit}</SubmitButton>
+        <SubmitButton className="mt-2 w-full">{auth.loginSubmit}</SubmitButton>
       </form>
 
       <div className="auth-switch">
-        {texts.auth.noAccount}
+        {auth.noAccount}
         <Link href="/register" className="auth-switch-link">
-          {texts.auth.registerNow}
+          {auth.registerNow}
         </Link>
       </div>
     </div>
