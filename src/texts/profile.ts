@@ -1,5 +1,4 @@
 const profile = {
-
   verified: "已认证",
 
   noBio: "暂无简介",

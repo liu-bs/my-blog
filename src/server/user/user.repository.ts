@@ -5,7 +5,6 @@ import { Prisma } from "@prisma/client";
 import { getPrisma, isRecordMissingError, type DbClient } from "@server/common/db";
 
 type PrismaUser = {
-
   id: string;
 
   email: string;
@@ -164,7 +163,10 @@ export async function findUserWithPostAssociations(id: string): Promise<User | u
   return row ? mapToUser(row as unknown as PrismaUser) : undefined;
 }
 
-export async function countUsersByEmailOrUsername(email: string, username: string): Promise<number> {
+export async function countUsersByEmailOrUsername(
+  email: string,
+  username: string,
+): Promise<number> {
   return getPrisma().user.count({ where: { OR: [{ email }, { username }] } });
 }
 
@@ -191,7 +193,10 @@ export async function createUserRecord(user: User): Promise<User> {
   return user;
 }
 
-export async function updateUserRecord(id: string, partial: Partial<User>): Promise<User | undefined> {
+export async function updateUserRecord(
+  id: string,
+  partial: Partial<User>,
+): Promise<User | undefined> {
   const data: Record<string, unknown> = {};
 
   if (partial.firstName !== undefined) data.firstName = partial.firstName;
@@ -265,11 +270,7 @@ export async function updateUserRecord(id: string, partial: Partial<User>): Prom
       }
     }
 
-    if (
-      !updatedRow ||
-      partial.likedPosts !== undefined ||
-      partial.favoritedPosts !== undefined
-    ) {
+    if (!updatedRow || partial.likedPosts !== undefined || partial.favoritedPosts !== undefined) {
       const row = await tx.user.findUnique({
         where: { id },
         include: userInclude,
@@ -329,10 +330,7 @@ export async function toggleUserPostAssociationRecord(
   return true;
 }
 
-export async function findUserPostState(
-  id: string,
-  postId: string,
-): Promise<UserPostState> {
+export async function findUserPostState(id: string, postId: string): Promise<UserPostState> {
   const client = getPrisma();
   const key = { userId_postId: { userId: id, postId } } as const;
   const [like, favorite] = await Promise.all([

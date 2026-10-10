@@ -43,7 +43,10 @@ export function toFailure(
   };
 }
 
-export async function runAction<T>(label: string, run: () => Promise<ActionResult<T>>): Promise<ActionResult<T>> {
+export async function runAction<T>(
+  label: string,
+  run: () => Promise<ActionResult<T>>,
+): Promise<ActionResult<T>> {
   try {
     return await run();
   } catch (err) {

@@ -115,6 +115,9 @@ export async function getUserPostStateAction(postId: string): Promise<ActionResu
     const viewer = await getAuthPayload();
     if (!viewer) return { ok: true, data: { liked: false, favorited: false } };
 
-    return { ok: true, data: await getUserPostState(viewer.id, requireId(postId, "Post not found")) };
+    return {
+      ok: true,
+      data: await getUserPostState(viewer.id, requireId(postId, "Post not found")),
+    };
   });
 }

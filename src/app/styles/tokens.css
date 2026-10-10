@@ -1,5 +1,4 @@
 :root {
-
   --color-0: #ffffff;
 
   --color-50: #fafafa;
@@ -62,7 +61,6 @@
 }
 
 .dark {
-
   --color-0: #17171c;
 
   --color-50: #0a0a0b;
@@ -123,7 +121,6 @@
 }
 
 @theme {
-
   --color-page: var(--color-50);
 
   --color-surface: var(--color-100);

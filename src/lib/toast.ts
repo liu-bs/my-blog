@@ -5,23 +5,16 @@ import { formatTemplate, texts } from "@/texts";
 import { entityLabel, toErrorMessage, type EntityKey } from "@/lib/error-message";
 
 export const notify = {
-
   created(entity: EntityKey): void {
-    sonner.success(
-      formatTemplate(texts.feedback.create.success, { entity: entityLabel(entity) }),
-    );
+    sonner.success(formatTemplate(texts.feedback.create.success, { entity: entityLabel(entity) }));
   },
 
   updated(entity: EntityKey): void {
-    sonner.success(
-      formatTemplate(texts.feedback.update.success, { entity: entityLabel(entity) }),
-    );
+    sonner.success(formatTemplate(texts.feedback.update.success, { entity: entityLabel(entity) }));
   },
 
   deleted(entity: EntityKey): void {
-    sonner.success(
-      formatTemplate(texts.feedback.delete.success, { entity: entityLabel(entity) }),
-    );
+    sonner.success(formatTemplate(texts.feedback.delete.success, { entity: entityLabel(entity) }));
   },
 
   error(err: unknown, fallback?: string): void {

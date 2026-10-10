@@ -6,21 +6,18 @@ import { toValidationError, toErrorMessage } from "@/lib/error-message";
 export type FieldErrors<F extends string> = Partial<Record<F, string>>;
 
 export interface FeedbackResult<F extends string> {
-
   fields: FieldErrors<F>;
 
   form: string | null;
 }
 
 interface ErrorFeedback<F extends string> extends FeedbackResult<F> {
-
   toastMessage: string | null;
 }
 
 type StatusOverride<F extends string> = FeedbackResult<F> | { toast: string };
 
 export interface ErrorFeedbackOptions<F extends string> {
-
   fields: readonly F[];
 
   fallback: string;
@@ -105,7 +102,6 @@ export function validateForm<F extends string>(
   for (const detail of formatZodIssues(result.error.issues)) {
     const field = detail.path as F;
     if (field && (!knownFields || knownFields.includes(field))) {
-
       fields[field] ??= fieldTexts?.[field] ?? toValidationError(detail);
     } else {
       orphans.push(toValidationError(detail));

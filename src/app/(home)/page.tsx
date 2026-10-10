@@ -21,7 +21,6 @@ export function generateMetadata() {
 }
 
 export default async function HomePage() {
-
   const postsResult = await withDbRetry(() =>
     listPostsCached({ page: 1, limit: HOME_PAGE_SIZE }),
   ).catch(() => null);
@@ -36,13 +35,10 @@ export default async function HomePage() {
 
   return (
     <>
-
       <section className="hero-section" aria-label={texts.home.heroSection}>
         <Container>
           <div className="grid grid-cols-1 items-center gap-(--space-10) max-lg:gap-10 lg:grid-cols-[1fr_480px]">
-
             <div className="max-w-152 max-lg:max-w-none">
-
               <div className="m-0 mb-8 row-sm flex animate-fade-in">
                 <span
                   className="inline-block h-1.5 w-1.5 shrink-0 animate-breathing rounded-full hero-dot"
@@ -75,7 +71,6 @@ export default async function HomePage() {
               className="hero-code-window animate-fade-in overflow-hidden [animation-delay:500ms]"
               aria-hidden="true"
             >
-
               <div className="row-sm border-b border-stroke px-5 py-3.5 hero-titlebar">
                 <span className="h-3 w-3 shrink-0 rounded-full hero-dot-close" />
                 <span className="h-3 w-3 shrink-0 rounded-full hero-dot-minimize" />
@@ -122,12 +117,8 @@ export default async function HomePage() {
         </section>
       ) : (
         hasPosts && (
-          <section
-            className="animate-fade-in page-section"
-            aria-label={texts.home.latestSection}
-          >
+          <section className="animate-fade-in page-section" aria-label={texts.home.latestSection}>
             <Container>
-
               <div className="page-header flex items-end justify-between gap-4">
                 <div>
                   <h2 className="section-title">{texts.home.latestTitle}</h2>

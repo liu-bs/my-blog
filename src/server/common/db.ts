@@ -45,7 +45,10 @@ export async function withDbRetry<T>(load: () => Promise<T>): Promise<T> {
 
 function hasPrismaErrorCode(err: unknown, code: string): boolean {
   return (
-    typeof err === "object" && err !== null && "code" in err && (err as { code?: unknown }).code === code
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code?: unknown }).code === code
   );
 }
 

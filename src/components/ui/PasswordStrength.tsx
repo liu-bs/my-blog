@@ -25,7 +25,6 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
 
   return (
     <>
-
       <div className="mt-2 flex gap-1">
         {[0, 1, 2].map((i) => (
           <div

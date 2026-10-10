@@ -13,7 +13,6 @@ const FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export function Modal({ open, onClose, title, children, maxWidth = "max-w-sm" }: ModalProps) {
-
   const dialogRef = useRef<HTMLDivElement>(null);
 
   const titleId = useId();
@@ -80,7 +79,6 @@ export function Modal({ open, onClose, title, children, maxWidth = "max-w-sm" }:
   if (!mounted) return null;
 
   return createPortal(
-
     <div
       role="dialog"
       aria-modal="true"
@@ -89,7 +87,6 @@ export function Modal({ open, onClose, title, children, maxWidth = "max-w-sm" }:
         exiting ? "pointer-events-none opacity-0" : "animate-fade-in opacity-100"
       }`}
     >
-
       <div
         ref={dialogRef}
         tabIndex={-1}
@@ -97,7 +94,6 @@ export function Modal({ open, onClose, title, children, maxWidth = "max-w-sm" }:
           exiting ? "animate-pop-out" : "animate-pop-in"
         }`}
       >
-
         {title && (
           <div className="mb-7 row-md justify-between">
             <h3

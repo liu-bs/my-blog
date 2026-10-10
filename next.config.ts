@@ -6,16 +6,13 @@ const withBundleAnalyzer = (config: NextConfig): NextConfig =>
   process.env.ANALYZE === "true" ? createBundleAnalyzer({ enabled: true })(config) : config;
 
 const nextConfig: NextConfig = {
-
   cacheComponents: true,
 
   poweredByHeader: false,
   compiler: {
-
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
   },
   images: {
-
     formats: ["image/avif", "image/webp"],
 
     deviceSizes: [640, 750, 828, 1200],
@@ -26,7 +23,6 @@ const nextConfig: NextConfig = {
     })),
   },
   experimental: {
-
     globalNotFound: true,
   },
 
@@ -39,7 +35,6 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: [
-
           { key: "X-Frame-Options", value: "DENY" },
 
           { key: "X-Content-Type-Options", value: "nosniff" },
@@ -58,7 +53,6 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value: [
-
               "default-src 'self'",
 
               `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== "production" ? " 'unsafe-eval'" : ""}`,

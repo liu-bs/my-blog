@@ -8,7 +8,6 @@ if (process.env.NODE_ENV !== "production") {
 export default defineConfig({
   schema: "prisma/schema.prisma",
   datasource: {
-
     url: env("DATABASE_URL"),
   },
 });
