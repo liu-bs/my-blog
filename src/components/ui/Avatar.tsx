@@ -4,6 +4,7 @@
  * 提供 xs/sm/md/lg/xl 五档尺寸，用于导航栏用户菜单、评论区、文章页作者信息等场景
  */
 import Image from "next/image";
+import { isOptimizableImageSrc } from "@/lib/url";
 import type { AvatarProps, AvatarSize } from "@shared";
 
 /** 头像尺寸档位到容器样式类与渲染像素边长的映射（px 用于 Image 的宽高） */
@@ -33,6 +34,7 @@ export function Avatar({ initials, size = "md", src, alt, className = "" }: Avat
         alt={alt || ""}
         width={px}
         height={px}
+        unoptimized={!isOptimizableImageSrc(src)}
         className={`${container} shrink-0 rounded-full object-cover ${className}`}
       />
     );

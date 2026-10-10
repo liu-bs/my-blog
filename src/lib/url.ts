@@ -1,7 +1,10 @@
 /**
  * @file url.ts
- * @description URL/路由小工具：判断应用内历史可后退、登录回跳地址安全校验（防开放重定向）、导航激活态判断与登录跳转链接构建
+ * @description URL/路由小工具：判断应用内历史可后退、登录回跳地址安全校验（防开放重定向）、
+ * 导航激活态判断、图片地址是否可走优化器与登录跳转链接构建
  */
+
+import { OPTIMIZED_IMAGE_HOSTS } from "@/config/site";
 
 /**
  * 判断是否存在可后退的应用内历史
@@ -35,6 +38,20 @@ export function safeRedirect(raw: string): string {
 export function isRouteActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
   return pathname.startsWith(href);
+}
+
+/**
+ * 判断图片地址能否交给 next/image 优化
+ * @param src 站内相对路径或绝对 URL
+ * @returns 站内路径或命中 OPTIMIZED_IMAGE_HOSTS 时为 true；其余域名需加 unoptimized 直连原站
+ */
+export function isOptimizableImageSrc(src: string): boolean {
+  if (src.startsWith("/")) return true;
+  try {
+    return OPTIMIZED_IMAGE_HOSTS.includes(new URL(src).hostname);
+  } catch {
+    return false;
+  }
 }
 
 /**

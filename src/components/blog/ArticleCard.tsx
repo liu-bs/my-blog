@@ -13,6 +13,7 @@ import { CoverFallback } from "@/components/ui/CoverFallback";
 import { Avatar } from "@/components/ui/Avatar";
 import { Tag, tagVariantFor } from "@/components/ui/Tag";
 import { formatCount, formatDate, getInitials } from "@shared/format";
+import { isOptimizableImageSrc } from "@/lib/url";
 
 import { stripHtml, stripMarkdown } from "@shared/markdown";
 import type { ArticleCardProps } from "@shared";
@@ -51,6 +52,7 @@ export const ArticleCard = memo(function ArticleCard({
           alt={post.title}
           fill
           priority={priority}
+          unoptimized={!isOptimizableImageSrc(post.coverImage)}
           sizes={isVertical ? "(max-width: 768px) 100vw, 400px" : "(max-width: 640px) 100vw, 200px"}
           className="aspect-16/10 w-full rounded-md object-cover transition-transform duration-[var(--duration-slow)] ease-smooth group-hover:scale-103"
         />

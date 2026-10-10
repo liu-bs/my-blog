@@ -45,6 +45,8 @@ export default function GlobalError({
 
   return (
     <html lang="zh-CN" suppressHydrationWarning>
+      {/* 浏览器标签标题：本页自行渲染文档，不经过 layout 的 metadata */}
+      <title>{`${messages.errors.errorTitle} · ${messages.meta.siteTitle}`}</title>
       <body>
         {/* 主题初始化脚本：根布局损坏时此处独立保证明暗主题不闪烁 */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

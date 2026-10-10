@@ -30,6 +30,7 @@ import {
 import { SITE_URL, STATIC_PARAMS_LIMIT, COMMENT_PAGE_SIZE } from "@/config/site";
 
 import { pageAlternates } from "@/lib/seo";
+import { isOptimizableImageSrc } from "@/lib/url";
 import type { NeighborPostsData } from "@shared";
 import { tagClassFor, tagVariantFor } from "@/components/ui/Tag";
 import { PostActions } from "@/components/blog/PostActions";
@@ -248,6 +249,7 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
                 width={1200}
                 height={514}
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 1200px, 1200px"
+                unoptimized={!isOptimizableImageSrc(post.coverImage)}
                 priority
                 className="mb-10 aspect-21/9 w-full animate-fade-in rounded-2xl object-cover max-md:aspect-16/9"
               />

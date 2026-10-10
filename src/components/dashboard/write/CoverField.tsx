@@ -11,6 +11,7 @@ import { messages } from "@/texts";
 import { Input } from "@/components/ui/Input";
 import { FormField } from "@/components/ui/FormField";
 import { isSafeImageUrl } from "@shared";
+import { isOptimizableImageSrc } from "@/lib/url";
 import { PREVIEW_DEBOUNCE_MS } from "./MarkdownPane";
 
 /**
@@ -116,6 +117,7 @@ export function CoverField({
               alt={messages.write.coverPreview}
               width={40}
               height={40}
+              unoptimized={!isOptimizableImageSrc(previewSrc)}
               onError={() => setPreviewFailed(true)}
               className="h-10 w-10 object-cover"
             />

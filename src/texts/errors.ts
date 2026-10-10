@@ -23,6 +23,9 @@ const errors = {
   /** 复制成功后的按钮反馈文案 */
   copied: "已复制",
 
+  /** not-found 页浏览器标签标题 */
+  notFoundTitle: "页面不存在",
+
   /** not-found 页描述（页面不存在或已移动） */
   notFoundDesc: "页面不存在或已移动。",
 

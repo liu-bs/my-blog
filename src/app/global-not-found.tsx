@@ -34,6 +34,8 @@ const linkBaseStyle = {
 export default function GlobalNotFound() {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
+      {/* 浏览器标签标题：本页自行渲染文档，不经过 layout 的 metadata */}
+      <title>{`${messages.errors.notFoundTitle} · ${messages.meta.siteTitle}`}</title>
       <body className="antialiased">
         {/* 主题初始化脚本 + 错误页自带样式（不依赖 Tailwind） */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

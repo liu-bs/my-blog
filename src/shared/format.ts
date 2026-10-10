@@ -5,6 +5,9 @@
  * 服务端服务（blog/comment/auth service 拼接作者名）共用，保证前后端展示一致。
  */
 
+/** 日期展示统一时区，避免服务端与浏览器时区不一致导致相差一天 */
+const DISPLAY_TIME_ZONE = "Asia/Shanghai";
+
 /** 中文相对时间格式化器，auto 表示"昨天/今天"等自动措辞 */
 const RELATIVE_FORMAT = new Intl.RelativeTimeFormat("zh-CN", { numeric: "auto" });
 
@@ -70,6 +73,7 @@ export function formatDate(dateStr: string): string {
     year: "numeric",
     month: "long",
     day: "numeric",
+    timeZone: DISPLAY_TIME_ZONE,
   }).format(d);
 }
 

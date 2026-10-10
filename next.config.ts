@@ -6,6 +6,7 @@
  */
 import type { NextConfig } from "next";
 import createBundleAnalyzer from "@next/bundle-analyzer";
+import { OPTIMIZED_IMAGE_HOSTS } from "./src/config/site";
 
 /** 按需启用打包分析：仅当环境变量 ANALYZE==="true" 时包装配置，正常构建零开销 */
 const withBundleAnalyzer = (config: NextConfig): NextConfig =>
@@ -28,25 +29,20 @@ const nextConfig: NextConfig = {
     // 响应式图片断点集合（覆盖移动端到 1200px 内容宽度）
     deviceSizes: [640, 750, 828, 1200],
 
-    // 允许任意 https 远程图片域名（文章封面来自外部图床）
-    remotePatterns: [{ protocol: "https", hostname: "**" }],
+    // 可优化的远程图片域名白名单，与客户端 isOptimizableImageSrc 同源
+    remotePatterns: OPTIMIZED_IMAGE_HOSTS.map((hostname) => ({
+      protocol: "https" as const,
+      hostname,
+    })),
   },
   experimental: {
-    // 内联临界 CSS，减少首屏额外请求
-    inlineCss: true,
     // 启用 global-not-found.tsx（根布局层 404 兜底页）
     globalNotFound: true,
   },
 
-  // 历史语言前缀路径永久重定向到无前缀路径；/rss.xml 兼容旧订阅地址
+  // 旧订阅地址兼容跳转
   async redirects() {
-    return [
-      { source: "/zh", destination: "/", permanent: true },
-      { source: "/en", destination: "/", permanent: true },
-      { source: "/zh/:path*", destination: "/:path*", permanent: true },
-      { source: "/en/:path*", destination: "/:path*", permanent: true },
-      { source: "/rss.xml", destination: "/rss", permanent: false },
-    ];
+    return [{ source: "/rss.xml", destination: "/rss", permanent: false }];
   },
 
   // 全站安全响应头：点击劫持/ MIME 嗅探/引用策略/HSTS/CSP 等基础加固

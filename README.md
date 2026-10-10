@@ -30,7 +30,7 @@
 
 ### 平台能力
 
-- 单语中文：`<html lang="zh-CN">`，URL 无前缀；旧的 `/zh/*`、`/en/*` 链接由 [next.config.ts](next.config.ts) 永久重定向到去前缀路径
+- 单语中文：`<html lang="zh-CN">`，URL 无语言前缀，不做多语言；历史 `/zh/*`、`/en/*` 链接已随语言方案一并移除，访问返回 404
 - 亮 / 暗主题切换
 - SEO：metadata、robots、sitemap（带数量上限保护）
 - 安全：登录时序侧信道防护、令牌刷新与宽限期、数据库限流、CSP 等安全响应头
