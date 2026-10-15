@@ -26,7 +26,7 @@ import { useCreatePost, useUpdatePost } from "@/hooks/usePosts";
 import { estimateReadingTime } from "@shared/markdown";
 import { CATEGORY_VALUES } from "@/lib/category";
 import { hasInAppHistory } from "@/lib/url";
-import { loadPostValidation } from "@/lib/validation-loader";
+import { postCreateSchema } from "@/shared/validation/post";
 import { postEditPath, postPath } from "@shared";
 import type { PostData, PostFormField } from "@shared";
 import {
@@ -219,8 +219,6 @@ export function WriteEditor({
   };
 
   const savePost = async (asDraft: boolean) => {
-    const { postCreateSchema } = await loadPostValidation();
-
     const invalid = validateForm(
       postCreateSchema,
       { title, content, category, summary, coverImage, isDraft: asDraft },
@@ -334,12 +332,7 @@ export function WriteEditor({
         }
       />
 
-      <form
-        id="write-form"
-        onSubmit={handleSave}
-        noValidate
-        onFocus={() => void loadPostValidation()}
-      >
+      <form id="write-form" onSubmit={handleSave} noValidate>
         <div className="animate-fade-in form-stack">
           <div>
             <Input

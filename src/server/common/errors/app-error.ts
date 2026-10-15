@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { ValidationErrorDetail } from "@shared";
 
 const APP_ERROR_BRAND = Symbol.for("my-app/app-error");

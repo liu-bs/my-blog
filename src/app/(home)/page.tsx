@@ -9,10 +9,10 @@ import common from "@/texts/common";
 import home from "@/texts/home";
 import meta from "@/texts/meta";
 import { formatTemplate } from "@/texts/format";
-import { withDbRetry } from "@server/common/db";
+import { withReadRetry } from "@server/common/db";
 import { listPostsCached } from "@server/post/post.cache";
 import { postPath } from "@shared";
-import { HOME_PAGE_SIZE } from "@/config/site";
+import { HOME_PAGE_SIZE } from "@shared/limits";
 import { pageAlternates } from "@/lib/seo";
 
 export function generateMetadata() {
@@ -24,7 +24,7 @@ export function generateMetadata() {
 }
 
 export default async function HomePage() {
-  const postsResult = await withDbRetry(() =>
+  const postsResult = await withReadRetry(() =>
     listPostsCached({ page: 1, limit: HOME_PAGE_SIZE }),
   ).catch(() => null);
 
@@ -112,7 +112,8 @@ export default async function HomePage() {
               icon={<Search size={20} strokeWidth={2.5} />}
               title={home.loadErrorTitle}
               description={home.loadErrorDesc}
-              action={<Button onClick={() => window.location.reload()}>{common.refresh}</Button>}
+
+              action={<Button href="/">{common.refresh}</Button>}
             />
           </Container>
         </section>

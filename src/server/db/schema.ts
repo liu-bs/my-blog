@@ -148,5 +148,4 @@ export const rateLimits = pgTable(
 export type UserRow = typeof users.$inferSelect;
 export type UserInsert = typeof users.$inferInsert;
 export type PostRow = typeof posts.$inferSelect;
-export type PostInsert = typeof posts.$inferInsert;
 export type CommentRow = typeof comments.$inferSelect;

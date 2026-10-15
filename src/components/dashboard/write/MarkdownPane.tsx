@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import write from "@/texts/write";
 import { MarkdownToolbar } from "@/components/dashboard/write/MarkdownToolbar";
-import { getMarkdownRenderer } from "@shared/markdown";
+import { renderPreviewAction } from "@server/post/post.controller";
+import { unwrap } from "@/lib/api-request";
 
 export type ViewMode = "split" | "edit" | "preview";
 
@@ -43,14 +44,20 @@ export function MarkdownPane({
       return;
     }
     if (previewTimer.current) clearTimeout(previewTimer.current);
+    let cancelled = false;
     previewTimer.current = setTimeout(() => {
-      getMarkdownRenderer()
-        .then((render) => render(content))
-        .then((html) => setPreviewHtml(html))
-
-        .catch(() => setPreviewHtml(content));
+      renderPreviewAction(content)
+        .then((result) => unwrap(result))
+        .then((html) => {
+          if (!cancelled) setPreviewHtml(html);
+        })
+        .catch(() => {
+          // 渲染失败时留空，绝不把原始 Markdown 当 HTML 注入
+          if (!cancelled) setPreviewHtml("");
+        });
     }, PREVIEW_DEBOUNCE_MS);
     return () => {
+      cancelled = true;
       if (previewTimer.current) clearTimeout(previewTimer.current);
     };
   }, [content, viewMode]);

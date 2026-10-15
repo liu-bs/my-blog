@@ -6,9 +6,9 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { PinnedBadge } from "@/components/ui/PinnedBadge";
 import { PageHeader } from "@/components/shell/PageHeader";
-import { withDbRetry } from "@server/common/db";
+import { withReadRetry } from "@server/common/db";
 import { listPostsCached, listCategoriesCached, listTagsCached } from "@server/post/post.cache";
-import { PAGE_SIZE } from "@/config/site";
+import { POST_PAGE_SIZE } from "@shared/limits";
 import { ALL_CATEGORY } from "@/lib/category";
 import common from "@/texts/common";
 import meta from "@/texts/meta";
@@ -56,14 +56,14 @@ export default async function PostsPage({
   };
 
   const [postsResult, categoriesResult, tagsResult] = await Promise.all([
-    withDbRetry(() =>
+    withReadRetry(() =>
       listPostsCached({
         category: category !== ALL_CATEGORY ? category : undefined,
         tag: tag ?? undefined,
 
         q: searchTerm,
         page,
-        limit: PAGE_SIZE,
+        limit: POST_PAGE_SIZE,
       }),
     ).catch(() => null),
     listCategoriesCached().catch(() => ({ categories: [] })),

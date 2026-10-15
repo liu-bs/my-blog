@@ -24,7 +24,7 @@ import {
   ValidationError,
 } from "@server/common/errors";
 import { logger } from "@server/common/logger";
-import { PAGE_LIMITS } from "@server/common/policy";
+import { POST_LIST_DEFAULT_LIMIT, POST_LIST_MAX_LIMIT, POST_TAG_MAX_COUNT } from "@shared/limits";
 import { getDb } from "@server/common/db";
 import {
   getUserById,
@@ -70,6 +70,10 @@ export interface ListPostsOptions {
 
 const SUMMARY_MAX_LENGTH = 100;
 
+const MIN_PAGE = 1;
+/** 页码上界：避免 ?page=100000000 触发十亿级 OFFSET（先付代价再被重定向回末页） */
+const MAX_PAGE = 1000;
+
 function buildSummary(content: string): string {
   const plainText = stripMarkdown(content)
     .replace(/\n{2,}/g, " ")
@@ -90,7 +94,7 @@ function normalizeTags(input: string | string[] | undefined): string[] {
   const rawTags = Array.isArray(input) ? input : input.split(",");
   return [
     ...new Set(rawTags.map((tag) => tag.trim().toLowerCase()).filter((tag) => tag.length > 0)),
-  ].slice(0, PAGE_LIMITS.postTagMaxCount);
+  ].slice(0, POST_TAG_MAX_COUNT);
 }
 
 function assertCoverImageUrl(coverImage: string | undefined): void {
@@ -140,16 +144,16 @@ export async function listPosts(options: ListPostsOptions): Promise<PostsListDat
       posts: [],
       total: 0,
       page: options.page ?? 1,
-      limit: options.limit ?? PAGE_LIMITS.postListDefaultLimit,
+      limit: options.limit ?? POST_LIST_DEFAULT_LIMIT,
       totalPages: 0,
     };
   }
 
   const limit = Math.min(
-    PAGE_LIMITS.postListMaxLimit,
-    Math.max(1, options.limit ?? PAGE_LIMITS.postListDefaultLimit),
+    POST_LIST_MAX_LIMIT,
+    Math.max(1, options.limit ?? POST_LIST_DEFAULT_LIMIT),
   );
-  const page = Math.max(1, options.page ?? 1);
+  const page = Math.max(MIN_PAGE, Math.min(options.page ?? 1, MAX_PAGE));
   const skip = (page - 1) * limit;
 
   const category = options.category?.trim();
@@ -407,6 +411,17 @@ export async function assertPostCommentable(postId: string): Promise<void> {
   const post = await findPostStatus(postId);
   if (!post) throw new NotFoundError("Post not found");
   if (post.isDraft) throw new ForbiddenError("Cannot comment on draft posts");
+}
+
+const PREVIEW_MAX_LENGTH = 200_000;
+
+/**
+ * 写作页实时预览用的渲染：与公开文章页复用同一个渲染器与白名单清洗，
+ * 保证"预览所见"与"发布所得"一致，并避免客户端自行 marked 渲染绕过净化。
+ */
+export function renderPostPreview(content: string): string {
+  const markdown = typeof content === "string" ? content.slice(0, PREVIEW_MAX_LENGTH) : "";
+  return renderPostBody(markdown);
 }
 
 export { incrementPostCounterStmt };

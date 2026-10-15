@@ -61,15 +61,3 @@ export const RATE_LIMITS = {
 } as const satisfies Record<string, RateLimitPolicy>;
 
 export const DEFAULT_RATE_LIMIT_MESSAGE = TOO_FREQUENT;
-
-export const PAGE_LIMITS = {
-  postListDefaultLimit: 10,
-
-  postListMaxLimit: 20_000,
-
-  commentListDefaultLimit: 10,
-
-  commentListMaxLimit: 50,
-
-  postTagMaxCount: 20,
-} as const;

@@ -4,7 +4,7 @@ const PERCENT_ESCAPE = /%[0-9A-Fa-f]{2}/;
 
 const MAX_DECODE_DEPTH = 3;
 
-export function isValidPostId(id: string): boolean {
+function isValidPostId(id: string): boolean {
   return POST_ID_PATTERN.test(id);
 }
 

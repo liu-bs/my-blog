@@ -18,7 +18,6 @@ if (!databaseUrl) {
   process.exit(1);
 }
 
-// schema.ts 里的 trgm GIN 索引依赖扩展先存在，drizzle-kit 不会自己建扩展
 const sql = neon(databaseUrl);
 await sql`CREATE EXTENSION IF NOT EXISTS pg_trgm`;
 

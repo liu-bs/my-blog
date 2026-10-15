@@ -3,7 +3,6 @@ allowBuilds:
   "@parcel/watcher": true
   unrs-resolver: true
   esbuild: true
-  # 已不用 Prisma，这三个只是 drizzle-orm 未使用的可选 peer，显式禁止其 postinstall
   "@prisma/client": false
   "@prisma/engines": false
   prisma: false

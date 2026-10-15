@@ -24,7 +24,7 @@ import {
 import { useAuth } from "@/components/AuthProvider";
 import { loginAction } from "@server/auth/auth.controller";
 import { safeRedirect } from "@/lib/url";
-import { loadAuthValidation } from "@/lib/validation-loader";
+import { loginSchema } from "@/shared/validation/auth";
 import type { LoginField } from "@/shared/validation/auth";
 
 interface LoginState {
@@ -73,8 +73,6 @@ function LoginContent() {
   const [formState, formAction] = useActionState<LoginState, FormData>(async (_prev, formData) => {
     const email = (formData.get("email") as string)?.trim() ?? "";
     const password = (formData.get("password") as string) ?? "";
-
-    const { loginSchema } = await loadAuthValidation();
 
     const invalid = validateForm(
       loginSchema,
@@ -126,12 +124,7 @@ function LoginContent() {
         </Alert>
       )}
 
-      <form
-        action={formAction}
-        noValidate
-        className="auth-form-stack"
-        onFocus={() => void loadAuthValidation()}
-      >
+      <form action={formAction} noValidate className="auth-form-stack">
         <FormField label={auth.email} required error={formState.emailError ?? undefined}>
           <Input
             id="email"

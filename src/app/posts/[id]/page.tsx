@@ -14,10 +14,12 @@ import { formatDate, getInitials, splitName } from "@shared/format";
 
 import { estimateReadingTime, stripHtml, stripMarkdown } from "@shared/markdown";
 import { decodePostId, encodePostId, postPath } from "@shared";
-import { withDbRetry } from "@server/common/db";
+import { withReadRetry } from "@server/common/db";
+import { logger } from "@server/common/logger";
 import { listCommentsCached } from "@server/comment/comment.cache";
 import { getPostCached, getNeighborPostsCached, listPostsCached } from "@server/post/post.cache";
-import { SITE_URL, STATIC_PARAMS_LIMIT, COMMENT_PAGE_SIZE } from "@/config/site";
+import { SITE_URL, STATIC_PARAMS_LIMIT } from "@/config/site";
+import { COMMENT_PAGE_SIZE } from "@shared/limits";
 
 import { pageAlternates } from "@/lib/seo";
 import { isOptimizableImageSrc } from "@/lib/url";
@@ -38,7 +40,12 @@ export async function generateStaticParams() {
 
     const params = indexedPosts.posts.map((post) => ({ id: encodePostId(post.id) }));
     if (params.length > 0) return params;
-  } catch {}
+  } catch (error) {
+
+    logger.error("generateStaticParams failed; falling back to on-demand rendering", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 
   return [{ id: "placeholder" }];
 }
@@ -133,13 +140,12 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
   const id = decodePostId(rawId);
 
-  const postResult = await withDbRetry(() => getPostCached(id));
+  const postResult = await withReadRetry(() => getPostCached(id));
   if (!postResult) {
     notFound();
   }
   const { post } = postResult;
 
-  // 先确认文章存在再取评论/上下篇：use cache 里的 NotFoundError 中断构建期预渲染
   const neighborsPromise = getNeighborPostsCached(id).catch(() => null);
 
   const commentsPromise = listCommentsCached(id, COMMENT_PAGE_SIZE).catch(() => null);

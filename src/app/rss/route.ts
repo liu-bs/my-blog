@@ -1,4 +1,4 @@
-import { withDbRetry } from "@server/common/db";
+import { withReadRetry } from "@server/common/db";
 import { listPostsCached } from "@server/post/post.cache";
 import { SITE_URL } from "@/config/site";
 import { stripHtml, stripMarkdown } from "@shared/markdown";
@@ -14,7 +14,7 @@ function escapeXml(text: string): string {
 export async function GET(): Promise<Response> {
   const selfUrl = `${SITE_URL}/rss`;
 
-  const feedPage = await withDbRetry(() => listPostsCached({ page: 1, limit: FEED_LIMIT })).catch(
+  const feedPage = await withReadRetry(() => listPostsCached({ page: 1, limit: FEED_LIMIT })).catch(
     () => null,
   );
 

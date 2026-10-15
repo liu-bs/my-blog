@@ -5,15 +5,10 @@ export const SITE_URL = (process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3
 
 export const PROTECTED_ROUTES = ["/write", "/settings", "/profile"];
 
-export const PAGE_SIZE = 9;
-
-export const HOME_PAGE_SIZE = 6;
-
-export const COMMENT_PAGE_SIZE = 10;
-
 export const STATIC_PARAMS_LIMIT = 100;
 
-export const SITEMAP_LIMIT = 20000;
+/** sitemap 分批拉取的批大小（不再一次性拉全量） */
+export const SITEMAP_BATCH_SIZE = 500;
 
 export const OPTIMIZED_IMAGE_HOSTS = ["images.pexels.com"];
 

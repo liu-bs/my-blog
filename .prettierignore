@@ -5,3 +5,4 @@ node_modules/
 next-env.d.ts
 pnpm-lock.yaml
 comment-template/
+.e2e-shots/

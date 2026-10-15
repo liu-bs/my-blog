@@ -10,7 +10,7 @@ import {
   deleteCommentAction,
 } from "@server/comment/comment.controller";
 import { api } from "@/lib/api-request";
-import { COMMENT_PAGE_SIZE } from "@/config/site";
+import { COMMENT_PAGE_SIZE } from "@shared/limits";
 import type {
   Comment,
   CommentsListData,

@@ -13,12 +13,11 @@ import {
 import { getUserById, getUserDisplayName } from "@server/user/user.service";
 import { getDb, isForeignKeyViolation } from "@server/common/db";
 import { ForbiddenError, NotFoundError, ValidationError } from "@server/common/errors";
-import { PAGE_LIMITS } from "@server/common/policy";
+import { COMMENT_LIST_MAX_LIMIT, COMMENT_PAGE_SIZE } from "@shared/limits";
 import {
   countComments,
   deleteCommentAndDecrementCounter,
   findCommentById,
-  findCommentOwnership,
   insertCommentStmt,
   listCommentsByPostId,
   updateCommentRecord,
@@ -43,10 +42,7 @@ function sanitizeCommentContent(content: string): string {
 export async function listComments(options: ListCommentsOptions): Promise<CommentsListData> {
   await assertPostReadable(options.postId, options.viewerId);
 
-  const take = Math.min(
-    PAGE_LIMITS.commentListMaxLimit,
-    Math.max(1, options.limit ?? PAGE_LIMITS.commentListDefaultLimit),
-  );
+  const take = Math.min(COMMENT_LIST_MAX_LIMIT, Math.max(1, options.limit ?? COMMENT_PAGE_SIZE));
   const skip = Math.max(0, options.offset ?? 0);
 
   const [rows, total] = await Promise.all([
@@ -117,16 +113,9 @@ export async function deleteComment(
   id: string,
   currentUserId: string,
 ): Promise<{ postId: string }> {
-  const ownership = await findCommentOwnership(id);
-  if (!ownership) throw new NotFoundError("Comment not found");
+  // 授权与删除在同一条 SQL 内完成（评论作者或文章作者），消除 TOCTOU 窗口
+  const deleted = await deleteCommentAndDecrementCounter(id, currentUserId);
+  if (!deleted) throw new NotFoundError("Comment not found or not authorized to delete");
 
-  const isCommentAuthor = ownership.userId === currentUserId;
-  const isPostAuthor = ownership.postAuthorId === currentUserId;
-  if (!isCommentAuthor && !isPostAuthor) {
-    throw new ForbiddenError("Not authorized to delete this comment");
-  }
-
-  await deleteCommentAndDecrementCounter(id);
-
-  return { postId: ownership.postId };
+  return { postId: deleted.postId };
 }

@@ -24,7 +24,7 @@ import {
   type FieldErrors,
 } from "@/lib/form-feedback";
 import { registerAction } from "@server/auth/auth.controller";
-import { loadAuthValidation, peekAuthValidation } from "@/lib/validation-loader";
+import { registerSchema } from "@/shared/validation/auth";
 import type { FieldId, FieldState } from "@shared";
 
 const initialField: FieldState = { value: "", isTouched: false, isValid: null, error: null };
@@ -57,8 +57,6 @@ export function RegisterForm() {
   };
 
   const updateField = (id: FieldId, value: string) => {
-    const registerSchema = peekAuthValidation()?.registerSchema;
-
     setFields((prev) => {
       const next = { ...prev };
       if (value.length === 0) {
@@ -99,8 +97,6 @@ export function RegisterForm() {
       const username = (formData.get("username") as string)?.trim() ?? "";
       const email = (formData.get("email") as string)?.trim() ?? "";
       const password = (formData.get("password") as string) ?? "";
-
-      const { registerSchema } = await loadAuthValidation();
 
       const invalid = validateForm(
         registerSchema,
@@ -157,12 +153,7 @@ export function RegisterForm() {
         </Alert>
       )}
 
-      <form
-        action={formAction}
-        noValidate
-        className="auth-form-stack"
-        onFocus={() => void loadAuthValidation()}
-      >
+      <form action={formAction} noValidate className="auth-form-stack">
         <FormField label={auth.firstName} required error={fields.firstName.error ?? undefined}>
           <Input
             id="firstName"

@@ -27,6 +27,7 @@ import {
 import {
   createPost,
   deletePost,
+  renderPostPreview,
   togglePostFavorite,
   togglePostLike,
   updatePost,
@@ -119,5 +120,19 @@ export async function getUserPostStateAction(postId: string): Promise<ActionResu
       ok: true,
       data: await getUserPostState(viewer.id, requireId(postId, "Post not found")),
     };
+  });
+}
+
+const PREVIEW_MAX_LENGTH = 200_000;
+
+/**
+ * 写作页实时预览：复用与公开文章页完全相同的渲染与白名单清洗。
+ * 不要在客户端用 marked 自行渲染——那条路径没有 sanitize，且语言集与线上不一致。
+ */
+export async function renderPreviewAction(content: string): Promise<ActionResult<string>> {
+  return runAction("Preview", async () => {
+    await requireAuthPayload();
+    const markdown = typeof content === "string" ? content.slice(0, PREVIEW_MAX_LENGTH) : "";
+    return { ok: true, data: renderPostPreview(markdown) };
   });
 }

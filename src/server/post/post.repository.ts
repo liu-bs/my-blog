@@ -144,13 +144,15 @@ function buildOrderBy(q: PostQueryOptions) {
 }
 
 export async function listPostsByQuery(q: PostQueryOptions): Promise<Post[]> {
-  const rows = await getDb()
+  const query = getDb()
     .select(POST_LIST_COLUMNS)
     .from(posts)
     .where(buildWhere(q))
-    .orderBy(...buildOrderBy(q))
-    .limit(q.take ?? Number.MAX_SAFE_INTEGER)
-    .offset(q.skip ?? 0);
+    .orderBy(...buildOrderBy(q));
+
+  // 不传 take 时不写 LIMIT，而不是塞一个 Number.MAX_SAFE_INTEGER 当"无界"占位
+  const bounded = q.take !== undefined ? query.limit(q.take) : query;
+  const rows = await bounded.offset(q.skip ?? 0);
   return rows.map(mapToListPost);
 }
 
@@ -384,7 +386,11 @@ export async function togglePostAssociationAndCounters(
       ON CONFLICT DO NOTHING
       RETURNING 1
     ), delta AS (
-      SELECT CASE WHEN EXISTS (SELECT 1 FROM flipped) THEN -1 ELSE 1 END AS d
+      SELECT CASE
+        WHEN EXISTS (SELECT 1 FROM flipped) THEN -1
+        WHEN EXISTS (SELECT 1 FROM added) THEN 1
+        ELSE 0
+      END AS d
     )${
       authorStat
         ? sql`, bumped AS (

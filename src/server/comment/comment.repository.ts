@@ -6,16 +6,6 @@ import type { AtomicStatement } from "@server/common/db";
 import { getDb } from "@server/common/db";
 import { comments, posts, type CommentRow } from "@server/db/schema";
 
-export interface CommentOwnership {
-  id: string;
-
-  postId: string;
-
-  userId: string;
-
-  postAuthorId: string | null;
-}
-
 function mapToComment(row: CommentRow): Comment {
   return {
     id: row.id,
@@ -33,13 +23,14 @@ export async function listCommentsByPostId(
   postId: string,
   opts?: { take?: number; skip?: number },
 ): Promise<Comment[]> {
-  const rows = await getDb()
+  const query = getDb()
     .select()
     .from(comments)
     .where(eq(comments.postId, postId))
-    .orderBy(desc(comments.createdAt), desc(comments.id))
-    .limit(opts?.take ?? Number.MAX_SAFE_INTEGER)
-    .offset(opts?.skip ?? 0);
+    .orderBy(desc(comments.createdAt), desc(comments.id));
+
+  const bounded = opts?.take !== undefined ? query.limit(opts.take) : query;
+  const rows = await bounded.offset(opts?.skip ?? 0);
   return rows.map(mapToComment);
 }
 
@@ -83,35 +74,25 @@ export async function findCommentById(id: string): Promise<Comment | null> {
   return row ? mapToComment(row) : null;
 }
 
-export async function findCommentOwnership(id: string): Promise<CommentOwnership | null> {
-  const [row] = await getDb()
-    .select({
-      id: comments.id,
-      postId: comments.postId,
-      userId: comments.userId,
-      postAuthorId: posts.authorId,
-    })
-    .from(comments)
-    .leftJoin(posts, eq(comments.postId, posts.id))
-    .where(eq(comments.id, id))
-    .limit(1);
-  if (!row) return null;
-  return {
-    id: row.id,
-    postId: row.postId,
-    userId: row.userId,
-    postAuthorId: row.postAuthorId,
-  };
-}
-
 export async function deleteCommentAndDecrementCounter(
   id: string,
+  currentUserId: string,
 ): Promise<{ postId: string } | null> {
+  // 授权条件写进同一条 SQL：避免「读授权 → 再删除」两个事务之间的 TOCTOU 窗口
   const { rows } = await getDb().execute<{ post_id: string }>(sql`
-    WITH deleted AS (
-      DELETE FROM ${comments} WHERE ${comments.id} = ${id} RETURNING ${comments.postId}
+    WITH target AS (
+      SELECT ${comments.id} AS id, ${comments.postId} AS post_id
+      FROM ${comments}
+      JOIN ${posts} ON ${posts.id} = ${comments.postId}
+      WHERE ${comments.id} = ${id}
+        AND (${comments.userId} = ${currentUserId} OR ${posts.authorId} = ${currentUserId})
+    ), deleted AS (
+      DELETE FROM ${comments}
+      WHERE ${comments.id} IN (SELECT id FROM target)
+      RETURNING ${comments.postId} AS post_id
     )
-    UPDATE ${posts} SET ${sql.raw(posts.commentsCount.name)} = ${posts.commentsCount} - 1
+    UPDATE ${posts}
+    SET ${sql.raw(posts.commentsCount.name)} = GREATEST(${posts.commentsCount} - 1, 0)
     FROM deleted WHERE ${posts.id} = deleted.post_id
     RETURNING deleted.post_id AS post_id
   `);

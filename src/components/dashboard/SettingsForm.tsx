@@ -29,7 +29,7 @@ import { useTabListKeyboard } from "@/hooks/useTabListKeyboard";
 import { clearAuthStatus } from "@/lib/auth-status";
 import { updateProfileAction, changePasswordAction } from "@server/auth/auth.controller";
 import { getInitials, joinName, splitName } from "@shared/format";
-import { loadAuthValidation, peekAuthValidation } from "@/lib/validation-loader";
+import { changePasswordFieldsSchema, updateProfileSchema } from "@/shared/validation/auth";
 import type { ChangePasswordField, ProfileField } from "@shared";
 
 type FormError = { error: string | null };
@@ -150,8 +150,6 @@ export function SettingsForm() {
 
       const errors: FieldErrors<ChangePasswordField> = {};
 
-      const { changePasswordFieldsSchema } = await loadAuthValidation();
-
       const currentError = validateFieldValue(
         changePasswordFieldsSchema.shape.currentPassword,
         currentPassword,
@@ -208,17 +206,19 @@ export function SettingsForm() {
 
   const avatarUrl = avatar.trim();
 
-  const profileSchema = peekAuthValidation()?.updateProfileSchema;
-
-  const avatarLiveError = profileSchema
-    ? validateFieldValue(profileSchema.shape.avatar, avatarUrl, settings.avatarInvalid)
-    : null;
+  const avatarLiveError = validateFieldValue(
+    updateProfileSchema.shape.avatar,
+    avatarUrl,
+    settings.avatarInvalid,
+  );
 
   const avatarError = profileErrors.avatar ?? (urlTouched.avatar ? avatarLiveError : undefined);
 
-  const websiteLiveError = profileSchema
-    ? validateFieldValue(profileSchema.shape.website, website, settings.websiteInvalid)
-    : null;
+  const websiteLiveError = validateFieldValue(
+    updateProfileSchema.shape.website,
+    website,
+    settings.websiteInvalid,
+  );
 
   const websiteError = profileErrors.website ?? (urlTouched.website ? websiteLiveError : undefined);
 
@@ -255,12 +255,7 @@ export function SettingsForm() {
 
       {tab === "profile" && (
         <div role="tabpanel" id="settings-panel-profile" aria-labelledby="settings-tab-profile">
-          <form
-            action={profileAction}
-            noValidate
-            className="form-stack"
-            onFocus={() => void loadAuthValidation()}
-          >
+          <form action={profileAction} noValidate className="form-stack">
             {profileState.error && (
               <Alert variant="error" icon={<Info size={16} strokeWidth={2.5} />} className="shake">
                 {profileState.error}
@@ -385,12 +380,7 @@ export function SettingsForm() {
 
       {tab === "password" && (
         <div role="tabpanel" id="settings-panel-password" aria-labelledby="settings-tab-password">
-          <form
-            action={passwordAction}
-            noValidate
-            className="form-stack"
-            onFocus={() => void loadAuthValidation()}
-          >
+          <form action={passwordAction} noValidate className="form-stack">
             {passwordState.error && (
               <Alert variant="error" icon={<Info size={16} strokeWidth={2.5} />} className="shake">
                 {passwordState.error}

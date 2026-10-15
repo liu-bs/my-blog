@@ -25,6 +25,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+
+# pnpm local store
+.pnpm-store/
+
+# Playwright/e2e artifacts
+.e2e-shots/
 
 # Environment files
 .env

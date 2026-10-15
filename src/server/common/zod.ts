@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { z } from "zod/mini";
 import { ValidationError } from "@server/common/errors";
 import { formatZodIssues } from "@shared";

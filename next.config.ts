@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
 
-    deviceSizes: [640, 750, 828, 1200],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
 
     remotePatterns: OPTIMIZED_IMAGE_HOSTS.map((hostname) => ({
       protocol: "https" as const,
@@ -63,6 +63,7 @@ const nextConfig: NextConfig = {
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
+              "object-src 'none'",
             ].join("; "),
           },
         ],

@@ -5,19 +5,35 @@ import { rateLimits } from "@server/db/schema";
 import { logger } from "@server/common/logger";
 import type { RateLimitPolicy } from "@server/common/policy";
 
-export async function isRateLimited(key: string, policy: RateLimitPolicy): Promise<boolean> {
+/**
+ * 时间一律交给数据库的 now()，不要用 JS Date：
+ * `sql` 模板里的裸值走 noopEncoder（drizzle-orm/sql/sql.js:258-273），不会经过
+ * PgTimestamp.mapToDriverValue 的 toISOString()，而是由驱动按**本机时区**格式化
+ * （@neondatabase/serverless 的 dateToString 使用 getTimezoneOffset()）。
+ * 而 expires_at 是无时区 timestamp，PostgreSQL 会静默丢弃偏移 —— 结果就是
+ * 写入本机墙钟，跨时区环境（本地 UTC+8 / 平台 UTC）判断窗口时系统性偏移。
+ */
+export async function isRateLimited(
+  key: string,
+  policy: RateLimitPolicy,
+  mode: "fail-open" | "fail-closed" = "fail-closed",
+): Promise<boolean> {
   const id = `ratelimit:${key}`;
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + policy.windowMs);
 
   const upsert = getDb()
     .insert(rateLimits)
-    .values({ id, count: 1, expiresAt })
+    .values({
+      id,
+      count: 1,
+      expiresAt: sql`now() + ${policy.windowMs} * interval '1 millisecond'`,
+    })
     .onConflictDoUpdate({
       target: rateLimits.id,
       set: {
-        count: sql`CASE WHEN ${rateLimits.expiresAt} <= ${now} THEN 1 ELSE ${rateLimits.count} + 1 END`,
-        expiresAt: sql`CASE WHEN ${rateLimits.expiresAt} <= ${now} THEN ${expiresAt} ELSE ${rateLimits.expiresAt} END`,
+        count: sql`CASE WHEN ${rateLimits.expiresAt} <= now() THEN 1 ELSE ${rateLimits.count} + 1 END`,
+        expiresAt: sql`CASE WHEN ${rateLimits.expiresAt} <= now()
+          THEN now() + ${policy.windowMs} * interval '1 millisecond'
+          ELSE ${rateLimits.expiresAt} END`,
       },
     })
     .returning({ count: rateLimits.count });
@@ -29,7 +45,7 @@ export async function isRateLimited(key: string, policy: RateLimitPolicy): Promi
         ? [
             getDb()
               .delete(rateLimits)
-              .where(sql`${rateLimits.expiresAt} <= ${now}`),
+              .where(sql`${rateLimits.expiresAt} <= now()`),
           ]
         : []),
     ]);
@@ -39,8 +55,8 @@ export async function isRateLimited(key: string, policy: RateLimitPolicy): Promi
 
     return count > policy.limit;
   } catch (err) {
-    logger.error("isRateLimited failed, request allowed", { key, error: String(err) });
-    return false;
+    logger.error("isRateLimited failed", { key, mode, error: String(err) });
+    return mode === "fail-closed";
   }
 }
 
