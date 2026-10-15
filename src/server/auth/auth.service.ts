@@ -67,7 +67,6 @@ export async function register(dto: RegisterDto): Promise<User> {
     social: { twitter: "", github: "", linkedin: "" },
     stats: { posts: 0, likes: 0, views: 0 },
     tokenVersion: 0,
-    appearance: { theme: "system", fontSize: "medium" },
     createdAt: now,
     updatedAt: now,
   };

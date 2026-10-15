@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { sql } from "drizzle-orm";
 import { sendSuccess } from "@server/common/http/api-response";
 import { logger } from "@server/common/logger";
-import { getPrisma } from "@server/common/db";
+import { getDb } from "@server/common/db";
 
 export async function GET() {
   try {
-    await getPrisma().$queryRaw`SELECT 1`;
+    await getDb().execute(sql`SELECT 1`);
   } catch (err) {
     logger.error("Health check failed", {
       error: err instanceof Error ? err.message : String(err),

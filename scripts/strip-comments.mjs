@@ -232,7 +232,6 @@ const EXT_LANG = {
   ".mts": "js",
   ".cjs": "js",
   ".css": "css",
-  ".prisma": "js",
   ".yml": "hash",
   ".yaml": "hash",
   ".toml": "hash",

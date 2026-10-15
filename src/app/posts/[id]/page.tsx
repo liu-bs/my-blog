@@ -1,7 +1,7 @@
 import { Container } from "@/components/ui/Container";
 import Link from "next/link";
 import Image from "next/image";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import meta from "@/texts/meta";
 import nav from "@/texts/nav";
 import postDetail from "@/texts/post-detail";
@@ -16,12 +16,7 @@ import { estimateReadingTime, stripHtml, stripMarkdown } from "@shared/markdown"
 import { decodePostId, encodePostId, postPath } from "@shared";
 import { withDbRetry } from "@server/common/db";
 import { listCommentsCached } from "@server/comment/comment.cache";
-import {
-  getPostCached,
-  getNeighborPostsCached,
-  getRenamedPostId,
-  listPostsCached,
-} from "@server/post/post.cache";
+import { getPostCached, getNeighborPostsCached, listPostsCached } from "@server/post/post.cache";
 import { SITE_URL, STATIC_PARAMS_LIMIT, COMMENT_PAGE_SIZE } from "@/config/site";
 
 import { pageAlternates } from "@/lib/seo";
@@ -48,12 +43,6 @@ export async function generateStaticParams() {
   return [{ id: "placeholder" }];
 }
 
-async function redirectIfRenamed(id: string): Promise<void> {
-  const newId = await getRenamedPostId(id);
-  if (!newId) return;
-  permanentRedirect(postPath(newId));
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -63,7 +52,6 @@ export async function generateMetadata({
   const id = decodePostId(rawId);
   const metaResult = await getPostCached(id);
   if (!metaResult) {
-    await redirectIfRenamed(id);
     return {
       title: meta.siteTitle,
       robots: { index: false, follow: false },
@@ -151,7 +139,6 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
   const postResult = await withDbRetry(() => getPostCached(id));
   if (!postResult) {
-    await redirectIfRenamed(id);
     notFound();
   }
   const { post } = postResult;

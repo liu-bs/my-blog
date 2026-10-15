@@ -39,8 +39,6 @@ export interface User {
 
   tokenVersion?: number;
 
-  appearance?: UserAppearance;
-
   likedPosts?: string[];
 
   favoritedPosts?: string[];
@@ -56,12 +54,6 @@ interface UserSocial {
   github: string;
 
   linkedin: string;
-}
-
-interface UserAppearance {
-  theme: "light" | "dark" | "system";
-
-  fontSize: "small" | "medium" | "large";
 }
 
 export interface UserStats {

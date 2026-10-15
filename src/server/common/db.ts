@@ -1,31 +1,36 @@
 import "server-only";
 
-import { PrismaClient, type Prisma } from "@prisma/client";
-import { PrismaNeon } from "@prisma/adapter-neon";
+import { neon } from "@neondatabase/serverless";
+import type { BatchItem } from "drizzle-orm/batch";
+import { drizzle, type NeonHttpDatabase } from "drizzle-orm/neon-http";
+import * as schema from "@server/db/schema";
 import { env } from "@server/common/config/env";
 import { isAppError } from "@server/common/errors";
 import { logger } from "@server/common/logger";
 
-export type DbClient = PrismaClient | Prisma.TransactionClient;
+export type Db = NeonHttpDatabase<typeof schema>;
 
-const globalForPrisma = globalThis as unknown as {
-  prismaClient?: PrismaClient;
+export type AtomicStatement = BatchItem<"pg">;
+
+const UNIQUE_VIOLATION = "23505";
+const FOREIGN_KEY_VIOLATION = "23503";
+
+const globalForDb = globalThis as unknown as {
+  drizzleDb?: Db;
 };
 
-export const getPrisma = (): PrismaClient => {
-  if (globalForPrisma.prismaClient) return globalForPrisma.prismaClient;
+export const getDb = (): Db => {
+  if (globalForDb.drizzleDb) return globalForDb.drizzleDb;
 
-  const adapter = new PrismaNeon({
-    connectionString: env.DATABASE_URL,
-  });
-  const prisma = new PrismaClient({ adapter });
+  const db = drizzle(neon(env.DATABASE_URL), { schema });
 
-  globalForPrisma.prismaClient = prisma;
-  return prisma;
+  globalForDb.drizzleDb = db;
+  return db;
 };
 
-export function runInTransaction<T>(fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
-  return getPrisma().$transaction(fn);
+/** 动态拼装的多语句原子批：整批一个 fetch，要么全成要么全废 */
+export function atomicBatch(statements: AtomicStatement[]): Promise<unknown[]> {
+  return getDb().batch(statements as [AtomicStatement, ...AtomicStatement[]]);
 }
 
 const DB_RETRY_DELAY_MS = 1500;
@@ -43,23 +48,19 @@ export async function withDbRetry<T>(load: () => Promise<T>): Promise<T> {
   }
 }
 
-function hasPrismaErrorCode(err: unknown, code: string): boolean {
+function hasSqlState(err: unknown, state: string): boolean {
   return (
     typeof err === "object" &&
     err !== null &&
     "code" in err &&
-    (err as { code?: unknown }).code === code
+    (err as { code?: unknown }).code === state
   );
 }
 
 export function isUniqueConstraintViolation(err: unknown): boolean {
-  return hasPrismaErrorCode(err, "P2002");
-}
-
-export function isRecordMissingError(err: unknown): boolean {
-  return hasPrismaErrorCode(err, "P2025");
+  return hasSqlState(err, UNIQUE_VIOLATION);
 }
 
 export function isForeignKeyViolation(err: unknown): boolean {
-  return hasPrismaErrorCode(err, "P2003");
+  return hasSqlState(err, FOREIGN_KEY_VIOLATION);
 }

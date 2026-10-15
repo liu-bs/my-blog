@@ -4,16 +4,16 @@
 
 ## 技术栈
 
-| 领域     | 选型                                                                     |
-| -------- | ------------------------------------------------------------------------ |
-| 框架     | Next.js 16.3（App Router、PPR、`cacheComponents`）+ React 19.3           |
-| 语言     | TypeScript 5.9 严格模式（`noUnusedLocals` / `noUncheckedIndexedAccess`） |
-| 样式     | Tailwind CSS 4.3 + 手写 utility（`src/app/styles/*.css`）                |
-| 数据库   | PostgreSQL（Neon Serverless）+ Prisma 6.19（`@prisma/adapter-neon`）     |
-| 认证     | JWT（httpOnly Cookie + `tokenVersion` 失效）+ bcryptjs                   |
-| 内容渲染 | marked + marked-highlight + highlight.js + sanitize-html（白名单清洗）   |
-| 校验     | zod 4，且只允许 `zod/mini` 子路径（ESLint 强制）                         |
-| 其他     | next-themes、sonner、lucide-react                                        |
+| 领域     | 选型                                                                       |
+| -------- | -------------------------------------------------------------------------- |
+| 框架     | Next.js 16.3（App Router、PPR、`cacheComponents`）+ React 19.3             |
+| 语言     | TypeScript 5.9 严格模式（`noUnusedLocals` / `noUncheckedIndexedAccess`）   |
+| 样式     | Tailwind CSS 4.3 + 手写 utility（`src/app/styles/*.css`）                  |
+| 数据库   | PostgreSQL（Neon Serverless）+ Drizzle ORM 0.45（`drizzle-orm/neon-http`） |
+| 认证     | JWT（httpOnly Cookie + `tokenVersion` 失效）+ bcryptjs                     |
+| 内容渲染 | marked + marked-highlight + highlight.js + sanitize-html（白名单清洗）     |
+| 校验     | zod 4，且只允许 `zod/mini` 子路径（ESLint 强制）                           |
+| 其他     | next-themes、sonner、lucide-react                                          |
 
 ## 目录与服务端分层
 
@@ -30,11 +30,12 @@ src/
 │   ├── post/         # 文章域
 │   ├── comment/      # 评论域
 │   ├── user/         # 用户域（只有 repository + service：无面向客户端的动作，也无自有缓存）
+│   ├── db/           # schema.ts：Drizzle 表与索引定义（列名 snake_case）
 │   └── common/       # 基础设施：db、errors、http、rate-limit、policy、token、password、logger
 ├── shared/           # 前后端共享：types/、validation/、constants、format、markdown
 └── texts/            # 中文词条命名空间（texts.postDetail.xxx）+ formatTemplate 插值
-prisma/               # schema + migrations（含 pg_trgm 搜索索引）
-scripts/              # dev.mjs（端口清理 / dev / start）、strip-comments.mjs
+drizzle.config.ts     # Drizzle Kit 配置：schema 路径、连接串、strict
+scripts/              # dev.mjs（端口清理 / dev / start）、db-push.mjs（建扩展 + push）、strip-comments.mjs
 comment-template/     # 注释风格模板，不参与构建，仅被 .prettierignore 排除
 ```
 
@@ -47,7 +48,7 @@ comment-template/     # 注释风格模板，不参与构建，仅被 .prettieri
 | `*.controller.ts` | `"use server"`，只做编排：限流 → 鉴权 → 校验 → 调 service → 失效缓存 |
 | `*.guard.ts`      | 会话/权限校验                                                        |
 | `*.service.ts`    | 业务规则与事务                                                       |
-| `*.repository.ts` | 唯一碰 Prisma 的层                                                   |
+| `*.repository.ts` | 唯一碰 Drizzle 的层                                                  |
 | `*.cache.ts`      | `use cache` 读 + `invalidate*` / `revalidate*`                       |
 | `*.validator.ts`  | 入参解析，不依赖任何人                                               |
 | `*.cookie.ts`     | Cookie 读写                                                          |
@@ -86,7 +87,7 @@ comment-template/     # 注释风格模板，不参与构建，仅被 .prettieri
 | `/write`、`/profile`、`/settings`     | 登录后：写作与草稿、个人主页、账户设置            |
 | `/login`、`/register`                 | 认证                                              |
 | `/rss`、`/sitemap.xml`、`/robots.txt` | SEO；`/rss.xml` 有到 `/rss` 的非永久重定向        |
-| `/api/health`                         | 探活（含一次 Prisma 查询）                        |
+| `/api/health`                         | 探活（含一次 `SELECT 1`）                         |
 | `/api/posts/[id]/comments`            | 评论列表 JSON，供客户端分页拉取                   |
 | `/api/posts/[id]/view`                | 浏览计数上报                                      |
 | `/api/auth/refresh`                   | 令牌续期与 Cookie 重发                            |
@@ -97,8 +98,7 @@ comment-template/     # 注释风格模板，不参与构建，仅被 .prettieri
 
 ```bash
 pnpm install
-pnpm db:generate      # 生成 Prisma Client
-pnpm db:push          # 同步 schema 到数据库
+pnpm db:push          # 同步 schema 到数据库（先建 pg_trgm 扩展，再 drizzle-kit push）
 pnpm dev              # 开发服务器（scripts/dev.mjs 会先清理占用端口）
 ```
 
@@ -114,7 +114,7 @@ pnpm dev              # 开发服务器（scripts/dev.mjs 会先清理占用端�
 | `COOKIE_MAX_AGE`            | 否       | 令牌秒数 + 刷新宽限期                               |
 | `NEXT_PUBLIC_BASE_URL`      | 生产必填 | `http://localhost:3000`；用于 sitemap / OG 绝对链接 |
 
-搜索依赖 `pg_trgm` 扩展与两个 GIN 索引，位于 `prisma/migrations/20260929000000_post_search_trgm/migration.sql`。它们刻意不写进 `schema.prisma`（Prisma 无法声明 `gin_trgm_ops` 操作符类），所以 `pnpm db:push` 不会创建它们；语句幂等，必要时重跑该迁移。
+搜索依赖 `pg_trgm` 扩展与两个 `gin_trgm_ops` 索引。索引直接声明在 `src/server/db/schema.ts`，`pnpm db:push` 会一并创建；扩展无法由 Drizzle 声明，所以 `scripts/db-push.mjs` 在 push 前先执行一次幂等的 `CREATE EXTENSION IF NOT EXISTS pg_trgm`。
 
 ## 常用脚本
 
@@ -126,7 +126,7 @@ pnpm dev              # 开发服务器（scripts/dev.mjs 会先清理占用端�
 | `pnpm typecheck` / `pnpm lint` / `pnpm format` | 分步检查                                                |
 | `pnpm check`                                   | typecheck + lint + format:check                         |
 | `pnpm analyze`                                 | 构建并输出 bundle 分析（`@next/bundle-analyzer`）       |
-| `pnpm db:push` / `pnpm db:generate`            | 同步 schema / 生成 Client                               |
+| `pnpm db:push` / `pnpm db:studio`              | 同步 schema 到数据库 / 打开数据浏览面板                 |
 | `pnpm strip-comments` / `:check`               | 剥离注释 / 校验；保留 `eslint-disable`、`@ts-*`         |
 
 ## 安全
@@ -139,15 +139,15 @@ pnpm dev              # 开发服务器（scripts/dev.mjs 会先清理占用端�
 
 ## 部署
 
-仓库同时留有 `railway.json`（构建 `pnpm db:generate && pnpm build`，启动 `pnpm start`，健康检查 `/`）与 `netlify.toml`（`@netlify/plugin-nextjs`，Node 22）。按目标平台选用，需要配置 `DATABASE_URL`、`JWT_SECRET`（≥ 32 字符）、`NEXT_PUBLIC_BASE_URL`。
+仓库同时留有 `railway.json`（构建 `pnpm build`，启动 `pnpm start`，健康检查 `/`）与 `netlify.toml`（`@netlify/plugin-nextjs`，Node 22）。按目标平台选用，需要配置 `DATABASE_URL`、`JWT_SECRET`（≥ 32 字符）、`NEXT_PUBLIC_BASE_URL`。
 
 ## 已知限制
 
 - `updatePostAction` / `deletePostAction` 未接限流，`RATE_LIMITS` 里也没有对应条目（创建、点赞、收藏、浏览、评论三条都有）。
-- `PostIdMap` 表只有读路径（`redirectIfRenamed` → `getRenamedPostId` → `findRenamedPostId`），全项目没有写入点，改名重定向实际空转。
 - 已删除文章的 `/posts/[id]` 返回 HTTP 200 + 404 界面（PPR 静态壳先锁定状态码）；不存在的路径 `/no-such-page` 正常 404。
+- 库里有 0 篇文章时 `pnpm build` 会失败：`generateStaticParams` 拿不到 id 就回退到 `/posts/placeholder`，预渲染该路径时抛 `Post not found`。先建一篇再构建即可。
 - 详情页首屏以 `user={null}` 渲染（viewer-blind 缓存），登录态由 `usePostPageAuth` 在客户端再解析，点赞/收藏按钮会有一次状态回落。
 - 评论区滚动进入视口前只渲染静态卡片（`DeferredPostWidgets.tsx` 的 IntersectionObserver），输入框与操作按钮此时不存在。
 - 评论的 `updatedAt` 一路传到前端但界面不显示，编辑过的评论与未编辑的无法区分。
 - 分页常量有两处同名不同源的值：`config/site.ts` 的 `COMMENT_PAGE_SIZE` 与 `common/policy.ts` 的 `PAGE_LIMITS.commentListDefaultLimit`，改一处忘另一处会导致分页错位。
-- `*.service.ts` / `*.cache.ts` 里有若干纯转发 re-export（如 `post.service.ts` 的 `updatePostsAuthorName`、`incrementPostCounter`），是为满足 R1/R2 的跨域 facade，删掉会断依赖。
+- `*.service.ts` / `*.cache.ts` 里有若干纯转发 re-export（如 `post.service.ts` 的 `updatePostsAuthorName`、`incrementPostCounterStmt`），是为满足 R1/R2 的跨域 facade，删掉会断依赖。

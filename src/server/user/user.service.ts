@@ -1,8 +1,7 @@
 import "server-only";
 
-import type { DbClient } from "@server/common/db";
 import { joinName } from "@shared/format";
-import type { User, UserPostAssociation, UserPostState, UserStatField } from "@shared";
+import type { User, UserPostState } from "@shared";
 import {
   countUsersByEmailOrUsername,
   createUserRecord,
@@ -11,10 +10,10 @@ import {
   findUserPostState,
   findUserWithPostAssociations,
   incrementTokenVersion,
-  incrementUserStatColumn,
-  toggleUserPostAssociationRecord,
   updateUserRecord,
 } from "./user.repository";
+
+export { incrementUserStatStmt } from "./user.repository";
 
 export function getUserById(id: string): Promise<User | undefined> {
   return findUserById(id);
@@ -48,24 +47,6 @@ export function updateUser(id: string, partial: Partial<User>): Promise<User | u
 
 export function invalidateUserSessions(id: string): Promise<void> {
   return incrementTokenVersion(id);
-}
-
-export function incrementUserStat(
-  id: string,
-  field: UserStatField,
-  delta: number,
-  tx?: DbClient,
-): Promise<void> {
-  return incrementUserStatColumn(id, field, delta, tx);
-}
-
-export function toggleUserPostAssociation(
-  userId: string,
-  association: UserPostAssociation,
-  postId: string,
-  tx?: DbClient,
-): Promise<boolean> {
-  return toggleUserPostAssociationRecord(userId, association, postId, tx);
 }
 
 export function getUserPostState(userId: string, postId: string): Promise<UserPostState> {

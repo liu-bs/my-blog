@@ -124,7 +124,7 @@ const eslintConfig = defineConfig([
 
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { args: "after-used", ignoreRestSiblings: true },
+        { args: "after-used", argsIgnorePattern: "^_", ignoreRestSiblings: true },
       ],
 
       "react-hooks/set-state-in-effect": "off",

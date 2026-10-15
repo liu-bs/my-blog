@@ -8,18 +8,18 @@ import type { Comment, CommentsListData, CreateCommentDto } from "@shared";
 import {
   assertPostCommentable,
   assertPostReadable,
-  incrementPostCounter,
+  incrementPostCounterStmt,
 } from "@server/post/post.service";
 import { getUserById, getUserDisplayName } from "@server/user/user.service";
-import { isForeignKeyViolation, isRecordMissingError, runInTransaction } from "@server/common/db";
+import { getDb, isForeignKeyViolation } from "@server/common/db";
 import { ForbiddenError, NotFoundError, ValidationError } from "@server/common/errors";
 import { PAGE_LIMITS } from "@server/common/policy";
 import {
   countComments,
-  createCommentRecord,
-  deleteCommentRecord,
+  deleteCommentAndDecrementCounter,
   findCommentById,
   findCommentOwnership,
+  insertCommentStmt,
   listCommentsByPostId,
   updateCommentRecord,
 } from "./comment.repository";
@@ -79,14 +79,12 @@ export async function createComment(
   };
 
   try {
-    await runInTransaction(async (tx) => {
-      await createCommentRecord(comment, tx);
-      await incrementPostCounter(dto.postId, "commentsCount", 1, tx);
-    });
+    await getDb().batch([
+      insertCommentStmt(comment),
+      incrementPostCounterStmt(dto.postId, "commentsCount", 1),
+    ]);
   } catch (err) {
-    if (isRecordMissingError(err) || isForeignKeyViolation(err)) {
-      throw new NotFoundError("Post not found");
-    }
+    if (isForeignKeyViolation(err)) throw new NotFoundError("Post not found");
     throw err;
   }
 
@@ -128,15 +126,7 @@ export async function deleteComment(
     throw new ForbiddenError("Not authorized to delete this comment");
   }
 
-  try {
-    await runInTransaction(async (tx) => {
-      await deleteCommentRecord(id, tx);
-      await incrementPostCounter(ownership.postId, "commentsCount", -1, tx);
-    });
-  } catch (err) {
-    if (isRecordMissingError(err)) return { postId: ownership.postId };
-    throw err;
-  }
+  await deleteCommentAndDecrementCounter(id);
 
   return { postId: ownership.postId };
 }

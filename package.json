@@ -20,17 +20,17 @@
     "check": "pnpm typecheck && pnpm lint && pnpm format:check",
     "strip-comments": "node scripts/strip-comments.mjs --yes",
     "strip-comments:check": "node scripts/strip-comments.mjs --check",
-    "db:push": "prisma db push",
-    "db:generate": "prisma generate"
+    "db:push": "node scripts/db-push.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
-    "@prisma/adapter-neon": "^6.19.3",
-    "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
+    "drizzle-orm": "0.45.4",
     "highlight.js": "^11.12.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.46.0",
@@ -55,12 +55,12 @@
     "@types/react-dom": "^19.3.0",
     "@types/sanitize-html": "^2.16.1",
     "dotenv": "^17.2.3",
+    "drizzle-kit": "0.31.11",
     "eslint": "^9.39.5",
     "eslint-config-next": "16.3.5",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "prisma": "6.19.3",
     "tailwindcss": "4.3.3",
     "typescript": "^5.9.3"
   },

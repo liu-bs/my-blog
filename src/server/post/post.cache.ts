@@ -23,7 +23,7 @@ import {
   type ListPostsOptions,
 } from "./post.service";
 
-export { getRenamedPostId, listPostsByAuthor } from "./post.service";
+export { listPostsByAuthor } from "./post.service";
 
 const POSTS_LIFE = { stale: 300, revalidate: 300, expire: 86_400 } as const;
 

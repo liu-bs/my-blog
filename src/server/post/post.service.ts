@@ -15,12 +15,7 @@ import type {
   UpdatePostDto,
   UserPostAssociation,
 } from "@shared";
-import {
-  IMAGE_URL_INVALID_MESSAGE,
-  assertValidPostId,
-  isSafeImageUrl,
-  isValidPostId,
-} from "@shared";
+import { IMAGE_URL_INVALID_MESSAGE, assertValidPostId, isSafeImageUrl } from "@shared";
 import { stripMarkdown } from "@shared/markdown";
 import {
   ForbiddenError,
@@ -30,29 +25,29 @@ import {
 } from "@server/common/errors";
 import { logger } from "@server/common/logger";
 import { PAGE_LIMITS } from "@server/common/policy";
-import { runInTransaction } from "@server/common/db";
+import { getDb } from "@server/common/db";
 import {
   getUserById,
   getUserDisplayName,
   getUserWithPostAssociations,
-  incrementUserStat,
-  toggleUserPostAssociation,
+  incrementUserStatStmt,
 } from "@server/user/user.service";
 import { renderPostBody } from "./post.render";
 import type { PostStatus, PostUpdateData } from "./post.repository";
 import {
   countPosts,
-  createPostRecord,
-  deletePostRecord,
+  deletePostStmt,
   findNeighborPosts,
   findPostById,
   findPostStatus,
-  listPostsByQuery,
-  findRenamedPostId,
-  incrementPostCounter,
+  incrementPostCounterStmt,
+  insertPostStmt,
   listDistinctCategories,
+  listPostsByQuery,
   listTagCounts,
-  updatePostRecord,
+  postFromUpdateResult,
+  togglePostAssociationAndCounters,
+  updatePostStmt,
 } from "./post.repository";
 
 export { updatePostsAuthorName } from "./post.repository";
@@ -230,12 +225,10 @@ export async function createPost(dto: CreatePostDto & { authorId: string }): Pro
     ...(isDraft ? {} : { publishedAt: now }),
   };
 
-  await runInTransaction(async (tx) => {
-    await createPostRecord(post, tx);
-    if (!isDraft) {
-      await incrementUserStat(dto.authorId, "posts", 1, tx);
-    }
-  });
+  await getDb().batch([
+    insertPostStmt(post),
+    ...(isDraft ? [] : [incrementUserStatStmt(dto.authorId, "posts", 1)]),
+  ]);
 
   return post;
 }
@@ -289,16 +282,17 @@ export async function updatePost(
     ...(!wasDraft && isDraft ? { publishedAt: null } : {}),
   };
 
-  return runInTransaction(async (tx) => {
-    const updated = await updatePostRecord(id, changes, tx);
+  const statDelta = wasDraft && !isDraft ? 1 : !wasDraft && isDraft ? -1 : 0;
+  const authorId = existing.authorId;
 
-    const isPublishing = wasDraft && !updated.isDraft;
-    const isUnpublishing = !wasDraft && updated.isDraft;
-    if ((isPublishing || isUnpublishing) && existing.authorId) {
-      await incrementUserStat(existing.authorId, "posts", isPublishing ? 1 : -1, tx);
-    }
-    return updated;
-  });
+  const [updatedRow] = await getDb().batch([
+    updatePostStmt(id, changes),
+    ...(statDelta !== 0 && authorId ? [incrementUserStatStmt(authorId, "posts", statDelta)] : []),
+  ]);
+
+  const updated = postFromUpdateResult(updatedRow);
+  if (!updated) throw new NotFoundError("Post not found");
+  return updated;
 }
 
 export async function deletePost(id: string, currentUserId: string): Promise<void> {
@@ -306,17 +300,13 @@ export async function deletePost(id: string, currentUserId: string): Promise<voi
   if (!post) throw new NotFoundError("Post not found");
   assertPostOwnedBy(post, currentUserId);
 
-  await runInTransaction(async (tx) => {
-    await deletePostRecord(id, tx);
-    if (!post.authorId) return;
-
-    if (!post.isDraft) {
-      await incrementUserStat(post.authorId, "posts", -1, tx);
-    }
-    if (post.likes > 0) {
-      await incrementUserStat(post.authorId, "likes", -post.likes, tx);
-    }
-  });
+  await getDb().batch([
+    deletePostStmt(id),
+    ...(post.authorId && !post.isDraft ? [incrementUserStatStmt(post.authorId, "posts", -1)] : []),
+    ...(post.authorId && post.likes > 0
+      ? [incrementUserStatStmt(post.authorId, "likes", -post.likes)]
+      : []),
+  ]);
 }
 
 export async function recordPostView(id: string): Promise<void> {
@@ -328,12 +318,10 @@ export async function recordPostView(id: string): Promise<void> {
 
   after(async () => {
     try {
-      await runInTransaction(async (tx) => {
-        await incrementPostCounter(postId, "views", 1, tx);
-        if (authorId) {
-          await incrementUserStat(authorId, "views", 1, tx);
-        }
-      });
+      await getDb().batch([
+        incrementPostCounterStmt(postId, "views", 1),
+        ...(authorId ? [incrementUserStatStmt(authorId, "views", 1)] : []),
+      ]);
 
       logger.info("View recorded", { postId });
     } catch (err) {
@@ -350,34 +338,21 @@ async function togglePostAssociation(
   postId: string,
   currentUserId: string,
   association: UserPostAssociation,
-  counterField: "likes" | "favorites",
 ): Promise<{ isRemoval: boolean; count: number }> {
   const post = await findPostStatus(postId);
   if (!post) throw new NotFoundError("Post not found");
   if (post.isDraft) throw new ForbiddenError("Cannot perform action on draft post");
 
-  const authorId = post.authorId;
-  const shouldTrackAuthorLikes = association === "likedPosts";
-
-  return runInTransaction(async (tx) => {
-    const isRemoval = await toggleUserPostAssociation(currentUserId, association, postId, tx);
-    const delta = isRemoval ? -1 : 1;
-
-    const count = await incrementPostCounter(postId, counterField, delta, tx);
-
-    if (shouldTrackAuthorLikes && authorId) {
-      await incrementUserStat(authorId, "likes", delta, tx);
-    }
-
-    return { isRemoval, count };
-  });
+  const result = await togglePostAssociationAndCounters(postId, currentUserId, association);
+  if (!result) throw new NotFoundError("Post not found");
+  return result;
 }
 
 export async function togglePostLike(
   postId: string,
   currentUserId: string,
 ): Promise<LikeToggleData> {
-  const result = await togglePostAssociation(postId, currentUserId, "likedPosts", "likes");
+  const result = await togglePostAssociation(postId, currentUserId, "likedPosts");
   return { liked: !result.isRemoval, likes: result.count };
 }
 
@@ -385,7 +360,7 @@ export async function togglePostFavorite(
   postId: string,
   currentUserId: string,
 ): Promise<FavoriteToggleData> {
-  const result = await togglePostAssociation(postId, currentUserId, "favoritedPosts", "favorites");
+  const result = await togglePostAssociation(postId, currentUserId, "favoritedPosts");
   return { favorited: !result.isRemoval, favorites: result.count };
 }
 
@@ -434,10 +409,4 @@ export async function assertPostCommentable(postId: string): Promise<void> {
   if (post.isDraft) throw new ForbiddenError("Cannot comment on draft posts");
 }
 
-export { incrementPostCounter };
-
-export async function getRenamedPostId(oldId: string): Promise<string | null> {
-  if (isValidPostId(oldId)) return null;
-  const newId = await findRenamedPostId(oldId);
-  return newId && isValidPostId(newId) ? newId : null;
-}
+export { incrementPostCounterStmt };

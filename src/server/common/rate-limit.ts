@@ -1,5 +1,7 @@
 import "server-only";
-import { getPrisma } from "@server/common/db";
+import { sql } from "drizzle-orm";
+import { getDb } from "@server/common/db";
+import { rateLimits } from "@server/db/schema";
 import { logger } from "@server/common/logger";
 import type { RateLimitPolicy } from "@server/common/policy";
 
@@ -8,22 +10,32 @@ export async function isRateLimited(key: string, policy: RateLimitPolicy): Promi
   const now = new Date();
   const expiresAt = new Date(now.getTime() + policy.windowMs);
 
-  try {
-    const rows = await getPrisma().$queryRaw<{ count: number }[]>`
-      INSERT INTO "RateLimit" (id, count, "expiresAt")
-      VALUES (${id}, 1, ${expiresAt})
-      ON CONFLICT (id) DO UPDATE SET
-        count = CASE WHEN "RateLimit"."expiresAt" <= ${now} THEN 1 ELSE "RateLimit"."count" + 1 END,
-        "expiresAt" = CASE WHEN "RateLimit"."expiresAt" <= ${now} THEN ${expiresAt} ELSE "RateLimit"."expiresAt" END
-      RETURNING count
-    `;
-    const count = rows[0]?.count ?? 1;
+  const upsert = getDb()
+    .insert(rateLimits)
+    .values({ id, count: 1, expiresAt })
+    .onConflictDoUpdate({
+      target: rateLimits.id,
+      set: {
+        count: sql`CASE WHEN ${rateLimits.expiresAt} <= ${now} THEN 1 ELSE ${rateLimits.count} + 1 END`,
+        expiresAt: sql`CASE WHEN ${rateLimits.expiresAt} <= ${now} THEN ${expiresAt} ELSE ${rateLimits.expiresAt} END`,
+      },
+    })
+    .returning({ count: rateLimits.count });
 
-    if (Math.random() < 0.01) {
-      void getPrisma()
-        .rateLimit.deleteMany({ where: { expiresAt: { lt: now } } })
-        .catch(() => {});
-    }
+  try {
+    const results = await getDb().batch([
+      upsert,
+      ...(Math.random() < 0.01
+        ? [
+            getDb()
+              .delete(rateLimits)
+              .where(sql`${rateLimits.expiresAt} <= ${now}`),
+          ]
+        : []),
+    ]);
+
+    const rows = results[0] as { count: number }[];
+    const count = rows[0]?.count ?? 1;
 
     return count > policy.limit;
   } catch (err) {
