@@ -133,15 +133,16 @@ export default async function PostDetailPage({ params }: { params: Promise<{ id:
 
   const id = decodePostId(rawId);
 
-  const neighborsPromise = getNeighborPostsCached(id).catch(() => null);
-
-  const commentsPromise = listCommentsCached(id, COMMENT_PAGE_SIZE).catch(() => null);
-
   const postResult = await withDbRetry(() => getPostCached(id));
   if (!postResult) {
     notFound();
   }
   const { post } = postResult;
+
+  // 先确认文章存在再取评论/上下篇：use cache 里的 NotFoundError 中断构建期预渲染
+  const neighborsPromise = getNeighborPostsCached(id).catch(() => null);
+
+  const commentsPromise = listCommentsCached(id, COMMENT_PAGE_SIZE).catch(() => null);
 
   const seedComments = await commentsPromise;
 

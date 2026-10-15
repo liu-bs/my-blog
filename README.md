@@ -145,7 +145,6 @@ pnpm dev              # 开发服务器（scripts/dev.mjs 会先清理占用端�
 
 - `updatePostAction` / `deletePostAction` 未接限流，`RATE_LIMITS` 里也没有对应条目（创建、点赞、收藏、浏览、评论三条都有）。
 - 已删除文章的 `/posts/[id]` 返回 HTTP 200 + 404 界面（PPR 静态壳先锁定状态码）；不存在的路径 `/no-such-page` 正常 404。
-- 库里有 0 篇文章时 `pnpm build` 会失败：`generateStaticParams` 拿不到 id 就回退到 `/posts/placeholder`，预渲染该路径时抛 `Post not found`。先建一篇再构建即可。
 - 详情页首屏以 `user={null}` 渲染（viewer-blind 缓存），登录态由 `usePostPageAuth` 在客户端再解析，点赞/收藏按钮会有一次状态回落。
 - 评论区滚动进入视口前只渲染静态卡片（`DeferredPostWidgets.tsx` 的 IntersectionObserver），输入框与操作按钮此时不存在。
 - 评论的 `updatedAt` 一路传到前端但界面不显示，编辑过的评论与未编辑的无法区分。
