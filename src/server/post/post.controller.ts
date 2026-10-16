@@ -1,5 +1,6 @@
 "use server";
 
+import type { z } from "zod/mini";
 import type {
   CreatePostDto,
   FavoriteToggleData,
@@ -17,6 +18,8 @@ import {
   type ActionResult,
 } from "@server/common/action-result";
 import { RATE_LIMITS } from "@server/common/policy";
+import { createParser } from "@server/common/zod";
+import { postCreateSchema, postUpdateSchema } from "@/shared/validation/post";
 import { getUserPostState } from "@server/user/user.service";
 import {
   invalidatePostCache,
@@ -32,7 +35,16 @@ import {
   togglePostLike,
   updatePost,
 } from "./post.service";
-import { parseCreatePostBody, parseUpdatePostBody } from "./post.validator";
+
+const parseCreatePostBody = createParser<CreatePostDto>(
+  postCreateSchema as unknown as z.ZodMiniType<CreatePostDto>,
+  "Post validation failed",
+);
+
+const parseUpdatePostBody = createParser<UpdatePostDto>(
+  postUpdateSchema as unknown as z.ZodMiniType<UpdatePostDto>,
+  "Post validation failed",
+);
 
 function invalidateAfterContentWrite(postId?: string): void {
   invalidatePostsCache(postId);

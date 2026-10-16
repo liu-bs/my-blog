@@ -10,10 +10,16 @@ import {
   type ActionResult,
 } from "@server/common/action-result";
 import { RATE_LIMITS } from "@server/common/policy";
+import { createParser } from "@server/common/zod";
+import { createCommentSchema } from "@/shared/validation/comment";
 import { invalidatePostCache, revalidatePostPath } from "@server/post/post.cache";
 import { createComment, deleteComment, updateComment } from "./comment.service";
 import { invalidateCommentsCache } from "./comment.cache";
-import { parseCreateCommentBody } from "./comment.validator";
+
+const parseCreateCommentBody = createParser<CreateCommentDto>(
+  createCommentSchema,
+  "Comment validation failed",
+);
 
 export async function createCommentAction(
   postId: string,

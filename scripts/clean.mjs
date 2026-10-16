@@ -9,7 +9,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const TARGETS = [
   ".next",
   "tsconfig.tsbuildinfo",
-  ...(process.argv.includes("--all") ? [".e2e-shots", "debug.log"] : []),
+  ...(process.argv.includes("--all") ? ["debug.log"] : []),
 ];
 
 let removed = 0;
