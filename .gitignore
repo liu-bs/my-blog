@@ -30,8 +30,11 @@ yarn-error.log*
 # pnpm local store
 .pnpm-store/
 
-# Playwright/e2e artifacts
+# 端到端测试产物（截图等）
 .e2e-shots/
+
+# scripts/pexels-find.mjs 的图片候选缓存
+.pexels/
 
 # Environment files
 .env

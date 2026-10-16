@@ -78,7 +78,6 @@ export async function deleteCommentAndDecrementCounter(
   id: string,
   currentUserId: string,
 ): Promise<{ postId: string } | null> {
-  // 授权条件写进同一条 SQL：避免「读授权 → 再删除」两个事务之间的 TOCTOU 窗口
   const { rows } = await getDb().execute<{ post_id: string }>(sql`
     WITH target AS (
       SELECT ${comments.id} AS id, ${comments.postId} AS post_id

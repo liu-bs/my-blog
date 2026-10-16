@@ -1,9 +1,5 @@
 import type { NextConfig } from "next";
-import createBundleAnalyzer from "@next/bundle-analyzer";
 import { OPTIMIZED_IMAGE_HOSTS } from "./src/config/site";
-
-const withBundleAnalyzer = (config: NextConfig): NextConfig =>
-  process.env.ANALYZE === "true" ? createBundleAnalyzer({ enabled: true })(config) : config;
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
@@ -72,4 +68,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withBundleAnalyzer(nextConfig);
+export default nextConfig;

@@ -47,7 +47,6 @@ function mapToPost(row: PostRow): Post {
   };
 }
 
-/** update...returning 的结果行，供原子批的调用方还原成领域对象 */
 export function postFromUpdateResult(result: unknown): Post | null {
   const row = (result as PostRow[] | undefined)?.[0];
   return row ? mapToPost(row) : null;
@@ -150,7 +149,6 @@ export async function listPostsByQuery(q: PostQueryOptions): Promise<Post[]> {
     .where(buildWhere(q))
     .orderBy(...buildOrderBy(q));
 
-  // 不传 take 时不写 LIMIT，而不是塞一个 Number.MAX_SAFE_INTEGER 当"无界"占位
   const bounded = q.take !== undefined ? query.limit(q.take) : query;
   const rows = await bounded.offset(q.skip ?? 0);
   return rows.map(mapToListPost);

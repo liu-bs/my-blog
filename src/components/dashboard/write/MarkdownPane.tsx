@@ -52,7 +52,6 @@ export function MarkdownPane({
           if (!cancelled) setPreviewHtml(html);
         })
         .catch(() => {
-          // 渲染失败时留空，绝不把原始 Markdown 当 HTML 注入
           if (!cancelled) setPreviewHtml("");
         });
     }, PREVIEW_DEBOUNCE_MS);

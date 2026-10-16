@@ -1,31 +1,14 @@
 #!/usr/bin/env node
 
 import { spawn } from "node:child_process";
-import { existsSync, mkdtempSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { chromiumArgs, findChromium, sleep } from "./lib/cross-platform.mjs";
 
 const BASE = process.argv[2] ?? "http://127.0.0.1:3000";
 const DEBUG_PORT = 9222;
 const SHOT_DIR = path.resolve(".e2e-shots");
-
-const CHROME_CANDIDATES = [
-  `${process.env.ProgramFiles}\\Google\\Chrome\\Application\\chrome.exe`,
-  `${process.env["ProgramFiles(x86)"]}\\Google\\Chrome\\Application\\chrome.exe`,
-  `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe`,
-  `${process.env.ProgramFiles}\\Microsoft\\Edge\\Application\\msedge.exe`,
-  `${process.env["ProgramFiles(x86)"]}\\Microsoft\\Edge\\Application\\msedge.exe`,
-];
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-function findBrowser() {
-  for (const p of CHROME_CANDIDATES) {
-    if (!p || p.includes("undefined")) continue;
-    if (existsSync(p)) return p;
-  }
-  throw new Error("未找到 Chrome/Edge");
-}
 
 class Cdp {
   #ws;
@@ -75,9 +58,7 @@ class Cdp {
   close() {
     try {
       this.#ws.close();
-    } catch {
-
-    }
+    } catch {}
   }
 }
 
@@ -93,25 +74,16 @@ function skip(name, why) {
 }
 
 async function main() {
-  const browserPath = findBrowser();
+  const browserPath = await findChromium();
   const userDataDir = mkdtempSync(path.join(tmpdir(), "e2e-chrome-"));
   mkdirSync(SHOT_DIR, { recursive: true });
 
-  console.log(`浏览器: ${browserPath}`);
-  console.log(`目标:   ${BASE}\n`);
+  console.log(`browser: ${browserPath}`);
+  console.log(`target : ${BASE}\n`);
 
   const chrome = spawn(
     browserPath,
-    [
-      "--headless=new",
-      `--remote-debugging-port=${DEBUG_PORT}`,
-      `--user-data-dir=${userDataDir}`,
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--disable-gpu",
-      "--window-size=1440,900",
-      "about:blank",
-    ],
+    [...chromiumArgs({ port: DEBUG_PORT, userDataDir, windowSize: "1440,900" }), "about:blank"],
     { stdio: "ignore" },
   );
 
@@ -123,9 +95,7 @@ async function main() {
         version = await r.json();
         break;
       }
-    } catch {
-
-    }
+    } catch {}
     await sleep(200);
   }
   if (!version) throw new Error("Chrome CDP 未就绪");
@@ -171,17 +141,23 @@ async function main() {
     failedRequests.length = 0;
     pageExceptions.length = 0;
 
-    await cdp.send("Page.navigate", { url }, sessionId);
+    const wantPath = new URL(url).pathname;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await cdp.send("Page.navigate", { url }, sessionId);
 
-    await new Promise((res) => {
-      const t = setTimeout(res, 15000);
-      const h = () => {
-        clearTimeout(t);
-        res();
-      };
-      cdp.on("Page.loadEventFired", h);
-    });
-    await sleep(1200); 
+      await new Promise((res) => {
+        const t = setTimeout(res, 15000);
+        cdp.on("Page.loadEventFired", () => {
+          clearTimeout(t);
+          res();
+        });
+      });
+      await sleep(1200);
+
+      const nowPath = await evaluate(`location.pathname`);
+      if (nowPath === wantPath) break;
+      console.log(`    (goto ${wantPath} -> landed on ${nowPath}, retrying)`);
+    }
 
     const { result } = await cdp.send(
       "Runtime.evaluate",
@@ -389,9 +365,7 @@ async function main() {
   await sleep(500);
   try {
     rmSync(userDataDir, { recursive: true, force: true });
-  } catch {
-
-  }
+  } catch {}
 
   process.exit(failures.length ? 1 : 0);
 }

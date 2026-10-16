@@ -41,7 +41,6 @@ export async function generateStaticParams() {
     const params = indexedPosts.posts.map((post) => ({ id: encodePostId(post.id) }));
     if (params.length > 0) return params;
   } catch (error) {
-
     logger.error("generateStaticParams failed; falling back to on-demand rendering", {
       error: error instanceof Error ? error.message : String(error),
     });

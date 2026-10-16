@@ -7,7 +7,6 @@ export const PROTECTED_ROUTES = ["/write", "/settings", "/profile"];
 
 export const STATIC_PARAMS_LIMIT = 100;
 
-/** sitemap 分批拉取的批大小（不再一次性拉全量） */
 export const SITEMAP_BATCH_SIZE = 500;
 
 export const OPTIMIZED_IMAGE_HOSTS = ["images.pexels.com"];

@@ -113,7 +113,6 @@ export async function deleteComment(
   id: string,
   currentUserId: string,
 ): Promise<{ postId: string }> {
-  // 授权与删除在同一条 SQL 内完成（评论作者或文章作者），消除 TOCTOU 窗口
   const deleted = await deleteCommentAndDecrementCounter(id, currentUserId);
   if (!deleted) throw new NotFoundError("Comment not found or not authorized to delete");
 

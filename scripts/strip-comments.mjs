@@ -318,6 +318,8 @@ function main() {
   console.log(`删除注释块数: ${totalRangesRemoved}`);
   if (checkOnly) {
     console.log(`\n提示：去掉 --check 参数执行写入。`);
+
+    if (changed > 0) process.exit(1);
   } else {
     console.log(`\n下一步建议：pnpm typecheck && pnpm lint && pnpm build`);
   }

@@ -35,7 +35,7 @@ src/
 ├── shared/           # 前后端共享：types/、validation/、constants、format、markdown
 └── texts/            # 中文词条命名空间（texts.postDetail.xxx）+ formatTemplate 插值
 drizzle.config.ts     # Drizzle Kit 配置：schema 路径、连接串、strict
-scripts/              # dev.mjs（端口清理 / dev / start）、db-push.mjs（建扩展 + push）、strip-comments.mjs
+scripts/              # 全部跨平台 Node 脚本，见「常用脚本」；共用工具在 scripts/lib/
 comment-template/     # 注释风格模板，不参与构建，仅被 .prettierignore 排除
 ```
 
@@ -118,16 +118,31 @@ pnpm dev              # 开发服务器（scripts/dev.mjs 会先清理占用端�
 
 ## 常用脚本
 
-| 命令                                           | 作用                                                    |
-| ---------------------------------------------- | ------------------------------------------------------- |
-| `pnpm dev` / `pnpm dev:free-port`              | 启动开发服务器 / 仅清理占用端口                         |
-| `pnpm build` / `pnpm start`                    | 生产构建 / 启动（`start` 走 `scripts/dev.mjs --start`） |
-| `pnpm build:clean`                             | 先清 `.next` 再构建                                     |
-| `pnpm typecheck` / `pnpm lint` / `pnpm format` | 分步检查                                                |
-| `pnpm check`                                   | typecheck + lint + format:check                         |
-| `pnpm analyze`                                 | 构建并输出 bundle 分析（`@next/bundle-analyzer`）       |
-| `pnpm db:push` / `pnpm db:studio`              | 同步 schema 到数据库 / 打开数据浏览面板                 |
-| `pnpm strip-comments` / `:check`               | 剥离注释 / 校验；保留 `eslint-disable`、`@ts-*`         |
+全部脚本都是跨平台的（macOS / Windows / Linux），统一用 Node 驱动，
+不依赖 POSIX shell 语法或平台专有命令。
+
+| 命令                                                   | 作用                                                                                           |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `pnpm dev` / `pnpm dev:free-port`                      | 启动开发服务器 / 仅清理占用端口                                                                |
+| `pnpm build` / `pnpm start`                            | 生产构建 / 启动（`start` 走 `scripts/dev.mjs --start`）                                        |
+| `pnpm build:clean` / `pnpm clean`                      | 先清 `.next` 再构建 / 仅清理构建产物（含 tsbuildinfo）                                         |
+| `pnpm typecheck` / `pnpm lint` / `pnpm format`         | 分步检查                                                                                       |
+| `pnpm check`                                           | typecheck + lint + format:check                                                                |
+| `pnpm analyze`                                         | Turbopack bundle 分析，结果写到 `.next/diagnostics/analyze`（加 `-- --port 4000` 起交互式 UI） |
+| `pnpm db:push` / `pnpm db:generate` / `pnpm db:studio` | 同步 schema / 生成迁移 SQL / 打开数据浏览面板                                                  |
+| `pnpm seed` / `pnpm seed:remove`                       | 灌入 3 篇示例文章（含 Pexels 配图）/ 删除它们                                                  |
+| `pnpm e2e` / `pnpm e2e:write`                          | 只读端到端 / 写路径端到端（真实 Chrome，见下）                                                 |
+| `pnpm e2e:verify` / `pnpm e2e:cleanup`                 | 核对写路径数据是否落库 / 清理测试数据（只删 `e2e-test-` 前缀）                                 |
+| `pnpm strip-comments` / `:check`                       | 剥离注释 / 校验；保留 `eslint-disable`、`@ts-*`                                                |
+
+### 端到端测试
+
+`scripts/e2e-*.mjs` 用真实 Chrome 的 DevTools Protocol 驱动，**不依赖 Playwright**。
+浏览器按平台自动定位（Windows 的 Program Files、macOS 的 /Applications、Linux 的 /usr/bin…），
+也可用 `CHROME_PATH` 显式指定。需要先 `pnpm build && pnpm start`。
+
+`.env.local` 由 `scripts/lib/cross-platform.mjs` 用 dotenv 自动加载，
+所以 `pnpm e2e:verify` / `pnpm e2e:cleanup` / `pnpm seed` 无需 `--env-file`。
 
 ## 安全
 

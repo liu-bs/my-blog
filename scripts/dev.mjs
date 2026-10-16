@@ -17,33 +17,60 @@ const isStart = argv.includes("--start");
 delete process.env.NODE_ENV;
 
 function pidsOnPort(port) {
-  if (process.platform === "win32") {
-    try {
-      const out = execSync("netstat -ano", { encoding: "utf8" });
-      const pids = new Set();
-      const re = new RegExp(`:${port}\\s`);
-      for (const line of out.split("\n")) {
-        const t = line.trim();
-
-        if (t.startsWith("TCP") && re.test(t) && /LISTENING/i.test(t)) {
-          const pid = Number(t.split(/\s+/).pop());
-          if (Number.isInteger(pid) && pid > 0 && pid !== process.pid) pids.add(pid);
-        }
-      }
-      return [...pids];
-    } catch {
-      return [];
+  if (process.platform !== "win32") {
+    const runners = [
+      { cmd: `lsof -ti tcp:${port}`, parse: (out) => out.split("\n").map(Number) },
+      { cmd: `ss -lptnH sport = :${port}`, parse: parseSsOutput },
+      { cmd: `netstat -lptn`, parse: (out) => parseNetstatOutput(out, port) },
+    ];
+    for (const { cmd, parse } of runners) {
+      try {
+        const out = execSync(cmd, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+        const pids = parse(out).filter(
+          (pid) => Number.isInteger(pid) && pid > 0 && pid !== process.pid,
+        );
+        if (pids.length > 0) return [...new Set(pids)];
+      } catch {}
     }
+    return [];
   }
+
   try {
-    const out = execSync(`lsof -ti tcp:${port}`, { encoding: "utf8" });
-    return out
-      .split("\n")
-      .map(Number)
-      .filter((pid) => Number.isInteger(pid) && pid > 0 && pid !== process.pid);
+    const out = execSync("netstat -ano", { encoding: "utf8" });
+    const pids = new Set();
+    const re = new RegExp(`:${port}\\s`);
+    for (const line of out.split("\n")) {
+      const t = line.trim();
+
+      if (t.startsWith("TCP") && re.test(t) && /LISTENING/i.test(t)) {
+        const pid = Number(t.split(/\s+/).pop());
+        if (Number.isInteger(pid) && pid > 0 && pid !== process.pid) pids.add(pid);
+      }
+    }
+    return [...pids];
   } catch {
     return [];
   }
+}
+
+function parseSsOutput(out) {
+  const pids = [];
+  for (const line of out.split("\n")) {
+    const m = /pid=(\d+)/.exec(line);
+    if (m) pids.push(Number(m[1]));
+  }
+  return pids;
+}
+
+function parseNetstatOutput(out, port) {
+  const pids = [];
+  const re = new RegExp(`[:.]${port}\\s`);
+  for (const line of out.split("\n")) {
+    if (!re.test(line) || !/LISTEN/i.test(line)) continue;
+    const pid = Number(line.trim().split(/\s+/).pop().split("/")[0]);
+    if (Number.isInteger(pid)) pids.push(pid);
+  }
+  return pids;
 }
 
 function sleepSync(ms) {

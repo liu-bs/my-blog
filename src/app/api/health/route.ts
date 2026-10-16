@@ -6,7 +6,6 @@ import { logger } from "@server/common/logger";
 import { getDb } from "@server/common/db";
 
 export async function GET() {
-
   await connection();
 
   try {

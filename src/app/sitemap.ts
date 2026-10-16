@@ -11,7 +11,7 @@ async function collectAllPosts(): Promise<Post[]> {
     all.push(...batch.posts);
     if (batch.posts.length < SITEMAP_BATCH_SIZE) break;
     if (page * SITEMAP_BATCH_SIZE >= batch.total) break;
-    if (page > 200) break; 
+    if (page > 200) break;
   }
   return all;
 }

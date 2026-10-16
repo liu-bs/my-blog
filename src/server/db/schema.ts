@@ -84,7 +84,7 @@ export const posts = pgTable(
     index("posts_is_draft_published_at_idx").on(t.isDraft, t.publishedAt),
     index("posts_created_at_idx").on(t.createdAt),
     index("posts_tags_idx").using("gin", t.tags),
-    // %term% 中缀搜索走 trgm GIN；声明在此而非带外迁移，db:push 即可复现
+
     index("posts_title_trgm_idx").using("gin", sql`${t.title} gin_trgm_ops`),
     index("posts_content_trgm_idx").using("gin", sql`${t.content} gin_trgm_ops`),
   ],

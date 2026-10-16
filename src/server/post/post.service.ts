@@ -71,7 +71,7 @@ export interface ListPostsOptions {
 const SUMMARY_MAX_LENGTH = 100;
 
 const MIN_PAGE = 1;
-/** 页码上界：避免 ?page=100000000 触发十亿级 OFFSET（先付代价再被重定向回末页） */
+
 const MAX_PAGE = 1000;
 
 function buildSummary(content: string): string {
@@ -415,10 +415,6 @@ export async function assertPostCommentable(postId: string): Promise<void> {
 
 const PREVIEW_MAX_LENGTH = 200_000;
 
-/**
- * 写作页实时预览用的渲染：与公开文章页复用同一个渲染器与白名单清洗，
- * 保证"预览所见"与"发布所得"一致，并避免客户端自行 marked 渲染绕过净化。
- */
 export function renderPostPreview(content: string): string {
   const markdown = typeof content === "string" ? content.slice(0, PREVIEW_MAX_LENGTH) : "";
   return renderPostBody(markdown);
